@@ -2,36 +2,6 @@
 
 ## To Do
 
-- [001] Implement Commit Message Validation (Husky + Commitlint)
-  - due: 2025-07-03
-  - tags: [tooling, git, automation, code-quality]
-  - priority: medium
-    ```md
-    Explore and implement automated commit message validation using Husky and Commitlint.
-    
-    **Objectives:**
-    - Install and configure Husky for Git hooks management
-    - Set up Commitlint with conventional commit format validation
-    - Create pre-commit hooks for linting and type checking
-    - Configure commit-msg hook for message format validation
-    - Document commit message conventions for the team
-    
-    **Conventional Commit Format:**
-    - feat: new features
-    - fix: bug fixes  
-    - docs: documentation changes
-    - style: formatting changes
-    - refactor: code refactoring
-    - test: adding tests
-    - chore: maintenance tasks
-    
-    **Benefits:**
-    - Consistent commit history for portfolio demonstration
-    - Automated changelog generation
-    - Better code review process
-    - Professional development workflow
-    ```
-
 - [002] Monorepo Tooling Selection
   - due: 2025-07-02
   - tags: [setup, tooling, architecture]
@@ -77,6 +47,18 @@
     Consider development ease vs production security. Document choice rationale.
     ```
 
+- [008] Migrate Existing Frontend to packages/frontend
+  - due: 2025-07-02
+  - tags: [frontend, migration, refactoring]
+  - priority: medium
+    ```md
+    Move the existing frontend code from the current structure into the new
+    packages/frontend directory. Update import paths, build configurations,
+    and ensure all functionality works within the monorepo structure.
+    
+    Update Docker configurations to reflect new paths.
+    ```
+
 - [005] Fix Backend Package.json Issues
   - due: 2025-07-02
   - tags: [backend, dependencies, cleanup]
@@ -91,7 +73,7 @@
     - Remove redundant nodemon dependency (ts-node-dev includes this)
     ```
 
-- [006] Fix Frontend Package.json Issues  
+- [006] Fix Frontend Package.json Issues
   - due: 2025-07-02
   - tags: [frontend, dependencies, cleanup]
   - priority: high
@@ -102,6 +84,61 @@
     - Update Node.js version requirement to >=22.0.0
     - Add missing fields: private: true, repository, homepage
     - Update React and related packages to latest compatible versions
+    ```
+
+- [001] Implement Commit Message Validation (Husky + Commitlint)
+  - due: 2025-07-03
+  - tags: [tooling, git, automation, code-quality]
+  - priority: medium
+    ```md
+    Explore and implement automated commit message validation using Husky and Commitlint.
+    
+    **Objectives:**
+    - Install and configure Husky for Git hooks management
+    - Set up Commitlint with conventional commit format validation
+    - Create pre-commit hooks for linting and type checking
+    - Configure commit-msg hook for message format validation
+    - Document commit message conventions for the team
+    
+    **Conventional Commit Format:**
+    - feat: new features
+    - fix: bug fixes  
+    - docs: documentation changes
+    - style: formatting changes
+    - refactor: code refactoring
+    - test: adding tests
+    - chore: maintenance tasks
+    
+    **Benefits:**
+    - Consistent commit history for portfolio demonstration
+    - Automated changelog generation
+    - Better code review process
+    - Professional development workflow
+    ```
+
+- [009] Set up Core Dev Tools (ESLint, Prettier at root)
+  - due: 2025-07-03
+  - tags: [tooling, code-quality, standards]
+  - priority: medium
+    ```md
+    Configure ESLint and Prettier at the monorepo root level to ensure
+    consistent code formatting and linting across all packages. Set up
+    shared configurations that can be extended by individual packages.
+    
+    Include TypeScript strict mode configuration.
+    ```
+
+- [013] Define Initial Cursor Rules
+  - due: 2025-07-02
+  - tags: [tooling, ai-assistance, documentation]
+  - priority: low
+    ```md
+    Create comprehensive Cursor rules to provide AI context about the
+    monorepo structure, coding standards, and project conventions.
+    Include rules for different file types and project areas.
+    
+    Cover: package.json standards, TypeScript config, Docker conventions,
+    testing patterns, and documentation requirements.
     ```
 
 - [007] Bun Integration Decision (Frontend Only)
@@ -119,30 +156,6 @@
     - Docker image complexity increase
     - Migration effort from npm/yarn
     - Long-term maintenance implications
-    ```
-
-- [008] Migrate Existing Frontend to packages/frontend
-  - due: 2025-07-02
-  - tags: [frontend, migration, refactoring]
-  - priority: medium
-    ```md
-    Move the existing frontend code from the current structure into the new
-    packages/frontend directory. Update import paths, build configurations,
-    and ensure all functionality works within the monorepo structure.
-    
-    Update Docker configurations to reflect new paths.
-    ```
-
-- [009] Set up Core Dev Tools (ESLint, Prettier at root)
-  - due: 2025-07-03
-  - tags: [tooling, code-quality, standards]
-  - priority: medium
-    ```md
-    Configure ESLint and Prettier at the monorepo root level to ensure
-    consistent code formatting and linting across all packages. Set up
-    shared configurations that can be extended by individual packages.
-    
-    Include TypeScript strict mode configuration.
     ```
 
 - [010] Production Environment Strategy Documentation
@@ -188,19 +201,6 @@
     - File-based secrets with proper permissions
     
     Implement for JWT_SECRET, database passwords, API keys.
-    ```
-
-- [013] Define Initial Cursor Rules
-  - due: 2025-07-02
-  - tags: [tooling, ai-assistance, documentation]
-  - priority: low
-    ```md
-    Create comprehensive Cursor rules to provide AI context about the
-    monorepo structure, coding standards, and project conventions.
-    Include rules for different file types and project areas.
-    
-    Cover: package.json standards, TypeScript config, Docker conventions,
-    testing patterns, and documentation requirements.
     ```
 
 - [014] Automated Backup System Setup
@@ -249,42 +249,35 @@
     Requirements: log aggregation, searchability, alerting, retention policy.
     ```
 
-- [017] Windows Development Environment Strategy
+## In Progress
+
+- [017] WSL2 Development Environment Setup
   - due: 2025-07-02
-  - tags: [environment, windows, development, tooling]
+  - tags: [environment, wsl2, development, tooling]
   - priority: high
     ```md
-    **DECISION NEEDED**: Finalize Windows 11 development environment approach.
+    **DECISION MADE**: Switched to WSL2 development environment.
     
-    Current consideration: Native Windows vs WSL2
-    
-    **Native Windows Pros:**
-    - Direct network access (no IP/port forwarding issues)
-    - Simpler Docker networking (localhost just works)
-    - Better Windows tool integration
-    - No cross-filesystem performance issues
-    - PowerShell native environment
-    
-    **WSL2 Pros:**
+    **WSL2 Advantages:**
     - Familiar Linux environment (2 years experience)
     - Better compatibility with many dev tools
     - Consistent with Linux production environments
+    - Native Git performance
+    - Better Docker integration within Linux context
     
-    **WSL2 Cons:**
-    - Network complexity (different IPs between systems)
-    - Port forwarding required for services
-    - Docker Desktop networking complications
-    - File system performance issues crossing boundaries
-    - Additional complexity layer
+    **WSL2 Considerations:**
+    - Cross-filesystem performance (keep code in WSL filesystem)
+    - Docker Desktop configuration for WSL2 backend
+    - VS Code/Cursor Remote-WSL extension setup
+    - Port forwarding and network access
     
-    **Recommendation:** Native Windows for portfolio project simplicity
     **Action Items:**
-    - Document PowerShell command equivalents for common tasks
-    - Set up Windows-compatible development scripts
-    - Configure Docker Desktop for optimal Windows experience
-    - Create development environment setup guide
+    - ✅ Configure Git safe directories for cross-filesystem access
+    - Configure Docker Desktop WSL2 backend integration
+    - Set up development scripts for WSL2 environment
+    - Update development environment documentation
+    - Configure optimal WSL2 performance settings
     ```
 
-## In Progress
-
 ## Done
+

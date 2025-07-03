@@ -28,10 +28,10 @@ alwaysApply: true
 - **Environment Strategy:** [DECISION PENDING - task #004]
 
 ### **Development Environment**
-- **Operating System:** Windows 11 (native development)
-- **Shell:** PowerShell (primary command interface)
-- **Container Platform:** Docker Desktop for Windows
-- **Development Approach:** Native Windows development for simplified networking and integration
+- **Operating System:** Windows 11 with WSL2 (Ubuntu)
+- **Shell:** Bash (WSL2 environment) / PowerShell (Windows host)
+- **Container Platform:** Docker Desktop for Windows (WSL2 backend)
+- **Development Approach:** WSL2 development for Linux compatibility and familiar environment
 
 ### **Portfolio-Specific Features**
 - **Project Showcase:** Dynamic project galleries with filtering and search
