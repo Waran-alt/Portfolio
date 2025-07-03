@@ -1,0 +1,132 @@
+---
+description: Provides context about the Markdown Kanban project board.
+globs: .cursor/project-board.md
+alwaysApply: false
+---
+# Project Board Context
+
+This file contains the Portfolio project's Markdown Kanban board with simple sequential task IDs for easy reference.
+
+## Board Structure
+
+**Columns:**
+- **To Do**: Tasks that are planned but not yet started (17 active tasks)
+- **In Progress**: Tasks currently being worked on
+- **Done**: Completed tasks
+
+## Simple ID System
+
+### **Current Highest ID: 017**
+
+Tasks use simple sequential IDs in format `[XXX]`:
+- **Format**: `[001]`, `[002]`, `[003]`, etc.
+- **Padding**: Always 3 digits (handles up to 999 tasks)
+- **Auto-increment**: Always check current highest + 1 for new tasks
+
+### **Usage Examples**
+- **Easy reference**: "Work on #005" or "Start task [010]"
+- **Commit messages**: `fix(deps): resolve package issues (#005)`
+- **Discussions**: "Let's prioritize #002 before #008"
+- **Progress tracking**: "Completed #001, moving to #003"
+
+## Current Task Summary
+
+### **High Priority (Due July 2, 2025)**
+- [002] Monorepo Tooling Selection (DECISION NEEDED)
+- [003] Initialize Monorepo Structure
+- [004] Environment Variable Strategy (DECISION NEEDED)
+- [005] Fix Backend Package.json Issues
+- [006] Fix Frontend Package.json Issues
+- [008] Migrate Frontend to Monorepo
+- [013] Define Initial Cursor Rules
+- [017] Windows Development Environment Strategy (DECISION NEEDED)
+
+### **Medium Priority (July 3-6, 2025)**
+- [001] Implement Commit Validation (Husky + Commitlint)
+- [007] Bun Integration Decision (DECISION NEEDED)
+- [009] Set up Dev Tools (ESLint, Prettier)
+- [010] Production Strategy Documentation
+- [011] Database Migration System
+- [012] Docker Secret Management (DECISION NEEDED)
+
+### **Low Priority (July 7-9, 2025)**
+- [014] Automated Backup System
+- [015] SSL Certificate Automation
+- [016] Centralized Logging Implementation (DECISION NEEDED)
+
+## Decision Points Requiring Input
+
+Several tasks need **DECISION NEEDED** resolution:
+
+1. **[002]**: Monorepo tooling (Yarn+Changesets vs Nx vs Turborepo vs Lerna)
+2. **[004]**: Environment strategy (explicit vs env_file vs hybrid vs external secrets)
+3. **[007]**: Bun integration (development vs production use assessment)
+4. **[012]**: Secret management (Docker Secrets vs External Vault vs File-based)
+5. **[016]**: Logging solution (ELK Stack vs Grafana Loki vs Cloud solutions)
+6. **[017]**: Windows development approach (Native Windows vs WSL2)
+
+## Technical Context
+
+**Based on Analysis From:**
+- MONOREPO_SETUP_GUIDE.md: Detailed Yarn+Changesets implementation
+- PACKAGE_AUDIT.md: Critical package.json issues and fixes
+- ENV_STRATEGY_ANALYSIS.md: Environment variable strategy options
+- PRODUCTION_READINESS_ASSESSMENT.md: Critical production gaps
+- ASSISTANT_MEMO.md: User preferences and to-do items
+
+**Related Cursor Rules:**
+- commit-message-guide.mdc: Provides conventional commit message guidance
+
+## Auto-Increment Instructions for AI
+
+**When adding new tasks:**
+
+1. **Find highest existing ID** in the board (currently 016)
+2. **Increment by 1** (next would be 017)
+3. **Zero-pad to 3 digits** ([017])
+4. **Update this rule** with new highest ID
+5. **Format**: `- [XXX] Task Title`
+
+**When removing tasks:**
+- **Don't reuse IDs** - once used, always skip that number
+- **Keep sequential integrity** for reference history
+
+**Auto-increment Algorithm:**
+```
+HIGHEST_ID = scan_board_for_highest_id()
+NEW_ID = HIGHEST_ID + 1
+FORMAT = f"[{NEW_ID:03d}]"  # Zero-pad to 3 digits
+UPDATE_CONTEXT_RULE(NEW_ID)
+```
+
+## Task Categories (via tags, not IDs)
+
+Tasks are categorized by their `tags` field:
+- **Setup/Infrastructure**: `[setup, tooling, architecture]`
+- **Dependencies**: `[dependencies, cleanup, backend, frontend]`
+- **Development Tools**: `[tooling, code-quality, git, automation]`
+- **Production**: `[production, security, monitoring, deployment]`
+- **Documentation**: `[documentation, ai-assistance]`
+
+## AI Assistant Instructions
+
+When working with this project board:
+
+1. **Use simple ID references**: "#005" or "[005]" or "task 005"
+2. **Auto-increment new tasks**: Always check highest ID + 1
+3. **Update this rule**: When adding tasks, update "Current Highest ID" 
+4. **Respect priority order**: High priority blocks medium/low priority work
+5. **Track decisions**: Update task descriptions when choices are made
+6. **Maintain simplicity**: No complex categorization schemes
+7. **Focus on completion**: IDs are for reference, not organization
+8. **Easy commands**: User can say "work on #005" and you know exactly what they mean
+
+## Current Focus
+
+**Immediate blockers**: Tasks [002], [003], [004], [017] are foundational - other tasks depend on these decisions.
+
+**Quick wins**: Tasks [005], [006], [013] can be completed independently.
+
+**Sequential dependencies**: [017] → [002] → [003] → [008] (environment setup, then monorepo setup chain)
+
+This simple system prioritizes **ease of reference** over **categorization complexity**.

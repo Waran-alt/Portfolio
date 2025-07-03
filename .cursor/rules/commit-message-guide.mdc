@@ -1,0 +1,321 @@
+---
+description: Assists the user in drafting and validating Git commit messages . This rule acts as a pre-validation helper, providing real-time feedback and suggestions *before* Git hooks enforce the standard. Crucial for ensuring clear, structured, and compliant commit messages.
+globs: 
+alwaysApply: false
+---
+# Commit Message Guide
+
+This rule helps create consistent, professional commit messages following the Conventional Commits specification.
+
+## Conventional Commit Format
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+## Project Board Integration
+
+### Simple Task ID References
+When working on project board tasks, include the task ID for traceability:
+
+```
+<type>(<scope>): <description> (#XXX)
+
+# Examples:
+chore(tooling): implement husky validation (#001)
+fix(deps): move types to devDependencies (#005)
+feat(db): add migration system (#011)
+```
+
+### ID Format
+- **Simple sequential**: [001], [002], [003], etc.
+- **Easy reference**: Use #XXX in commits for clean reference
+- **Auto-increment**: Always increment from highest existing ID
+- **No categorization**: IDs are just for reference, not organization
+
+## Commit Types
+
+### Primary Types
+- **feat**: A new feature for the user
+- **fix**: A bug fix
+- **docs**: Documentation only changes
+- **style**: Changes that do not affect the meaning of the code (white-space, formatting, etc.)
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **test**: Adding missing tests or correcting existing tests
+- **chore**: Changes to the build process or auxiliary tools and libraries
+
+### Additional Types
+- **perf**: A code change that improves performance
+- **ci**: Changes to CI configuration files and scripts
+- **build**: Changes that affect the build system or external dependencies
+- **revert**: Reverts a previous commit
+
+## Scope Guidelines
+
+### Frontend Scopes
+- **ui**: User interface components
+- **styles**: CSS/styling changes
+- **components**: React/Vue components
+- **pages**: Page-level changes
+- **hooks**: Custom hooks
+- **utils**: Frontend utilities
+
+### Backend Scopes
+- **api**: API endpoints and routes
+- **auth**: Authentication and authorization
+- **db**: Database related changes
+- **models**: Data models and schemas
+- **middleware**: Express middleware
+- **services**: Business logic services
+- **utils**: Backend utilities
+
+### Infrastructure Scopes
+- **docker**: Docker configuration
+- **nginx**: Nginx configuration
+- **ci**: Continuous integration
+- **deploy**: Deployment configuration
+- **env**: Environment configuration
+
+### General Scopes
+- **deps**: Dependencies
+- **config**: Configuration files
+- **scripts**: Build/utility scripts
+- **tests**: Test files
+- **docs**: Documentation
+
+## Message Format Rules
+
+### Subject Line (Required)
+- **Length**: Maximum 50 characters (including task ID)
+- **Capitalization**: Lowercase for type and scope, sentence case for description
+- **Punctuation**: No period at the end
+- **Imperative mood**: Use imperative mood ("add" not "added" or "adds")
+
+### Body (Optional)
+- **Length**: Wrap at 72 characters
+- **Content**: Explain what and why, not how
+- **Separation**: Blank line between subject and body
+
+### Footer (Optional)
+- **Breaking changes**: Start with "BREAKING CHANGE:"
+- **Issues**: Reference issues with "Closes #123" or "Fixes #456"
+- **Task reference**: Can include task ID here instead of subject line
+
+## Examples
+
+### Good Commit Messages with Task IDs
+
+```
+chore(tooling): implement husky validation (#001)
+
+Add commit message validation using Husky and Commitlint
+to ensure consistent conventional commit format across
+the project.
+
+- Configure pre-commit hooks for linting
+- Set up commit-msg validation
+- Document commit conventions
+```
+
+```
+fix(deps): move types to devDependencies (#005)
+
+Move all @types/* packages from dependencies to devDependencies
+to reduce production bundle size and improve security.
+
+Affects both frontend and backend package.json files.
+```
+
+```
+feat(db): add migration system (#011)
+
+Implement proper database migration system with schema
+versioning and rollback capability.
+
+- Replace init scripts with migration runner
+- Add versioning for schema changes
+- Support rollback operations
+
+BREAKING CHANGE: Database initialization now requires
+running migrations instead of init scripts.
+```
+
+```
+refactor(frontend): migrate to monorepo structure (#008)
+
+Move existing frontend code to packages/frontend directory
+and update all import paths and build configurations.
+
+Related to monorepo restructuring initiative.
+```
+
+### Alternative Footer Reference
+
+```
+chore(tooling): implement husky validation
+
+Add commit message validation using Husky and Commitlint
+to ensure consistent conventional commit format.
+
+Task: #001
+```
+
+### Good Commit Messages (Original Examples)
+
+```
+feat(auth): add JWT token refresh mechanism
+
+Implement automatic token refresh to improve user experience
+by reducing the need for manual re-authentication.
+
+Closes #123
+```
+
+```
+fix(api): resolve user registration validation error
+
+The email validation was incorrectly rejecting valid addresses
+containing plus signs. Updated regex pattern to handle RFC 5322
+compliant email addresses.
+```
+
+```
+docs(readme): update installation instructions
+
+Add missing environment variable setup steps and clarify
+Docker Compose usage for new contributors.
+```
+
+```
+refactor(ui): extract reusable button component
+
+Move button styles and logic into shared component to reduce
+code duplication across pages.
+```
+
+### Bad Commit Messages (Avoid)
+
+```
+❌ Fixed stuff
+❌ Updated files
+❌ WIP
+❌ asdf
+❌ Fix bug in login (no scope, too vague)
+❌ FEAT: ADD NEW FEATURE (wrong capitalization)
+❌ feat: Added new feature. (wrong mood, has period)
+❌ chore: stuff (#001) (too vague, even with task ID)
+```
+
+## Quick Templates
+
+### Feature Addition with Task ID
+```
+feat(<scope>): add <feature_name> (#XXX)
+
+<description of what the feature does>
+<why it was needed>
+
+Closes #<issue_number>
+```
+
+### Bug Fix with Task ID
+```
+fix(<scope>): resolve <bug_description> (#XXX)
+
+<explanation of the bug>
+<how it was fixed>
+
+Fixes #<issue_number>
+```
+
+### Chore/Tooling with Task ID
+```
+chore(<scope>): <action> <tool/configuration> (#XXX)
+
+<brief explanation of changes>
+<benefits or reasoning>
+```
+
+### Documentation with Task ID
+```
+docs(<scope>): <action> <documentation_item> (#XXX)
+
+<brief explanation of changes>
+```
+
+### Refactoring with Task ID
+```
+refactor(<scope>): <action> <component/functionality> (#XXX)
+
+<reason for refactoring>
+<benefits achieved>
+```
+
+## AI Assistant Instructions
+
+When helping with commit messages:
+
+1. **ALWAYS check git status first**: Before any commit, run `git status` to see what's staged vs modified
+2. **Stage missing changes**: If files are modified but not staged, add them before committing
+3. **Ask for context**: What changed, why, and what scope it affects
+4. **Identify task ID**: Check if work relates to a project board task (simple #XXX format)
+5. **Suggest appropriate type**: Based on the nature of changes 
+6. **Recommend scope**: Based on affected files/functionality
+7. **Craft clear subject**: Imperative mood, under 50 characters (including task ID)
+8. **Add body if needed**: For complex changes requiring explanation
+9. **Include footers**: For breaking changes or issue references
+10. **Validate format**: Ensure compliance with conventional commits
+11. **Check spelling**: Ensure professional appearance
+12. **Keep it simple**: Use #XXX format for easy reference, not categorization
+
+### **Pre-Commit Checklist**
+Before every commit:
+```bash
+git status  # Check what's staged vs modified
+git add .   # Stage any missing changes (if appropriate)
+git status  # Verify everything is staged correctly
+git commit  # Now safe to commit
+```
+
+## Breaking Change Format
+
+For breaking changes, include in footer:
+```
+BREAKING CHANGE: <description of the breaking change>
+<migration instructions if applicable>
+```
+
+AND use `!` after type/scope:
+```
+feat(api)!: change user authentication endpoint (#XXX)
+
+BREAKING CHANGE: The /auth endpoint now requires different parameters.
+Update client code to use email instead of username.
+```
+
+## Multi-line Message Template with Task ID
+
+```
+<type>(<scope>): <short description> (#XXX)
+
+Why this change was needed:
+- <reason 1>
+- <reason 2>
+
+What was changed:
+- <change 1>
+- <change 2>
+
+Impact:
+- <impact 1>
+- <impact 2>
+
+Closes #<issue>
+
+
+
+```

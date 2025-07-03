@@ -1,0 +1,48 @@
+---
+description: Provides rules on the structure and content of the Markdown Kanban project board.
+globs: .cursor/project-board.md
+alwaysApply: false
+---
+# Project Board Description
+
+The board uses a simple three-column structure with detailed task descriptions.
+
+## Board Structure
+
+**Columns:**
+- **To Do**: Tasks that are planned but not yet started
+- **In Progress**: Tasks currently being worked on
+- **Done**: Completed tasks
+
+## Task Format
+
+Tasks use bullet points (not checkboxes) with detailed attributes and descriptions:
+
+```md
+- Task Title
+  - due: YYYY-MM-DD
+  - tags: [tag1, tag2, tag3]
+  - priority: high|medium|low
+    ```md
+    Detailed description of the task in a markdown code block.
+    Can include multiple lines and specific requirements.
+    ```
+```
+
+## Task Attributes
+
+- **due**: Due date in YYYY-MM-DD format
+- **tags**: Array of categorical tags in brackets
+- **priority**: high, medium, or low priority level
+- **description**: Detailed markdown description in code block
+
+## AI Assistant Instructions
+
+When working with the project board:
+1. Understand this represents current project planning and progress
+2. Tasks are moved between columns by cutting and pasting entire task blocks
+3. Maintain the bullet point format (no checkboxes)
+4. Preserve all task attributes (due, tags, priority) when moving tasks
+5. Keep detailed descriptions in markdown code blocks
+6. Add new tasks following the established format
+7. You can marked tasks with "DECISION NEEDED" when it require user input before implementation

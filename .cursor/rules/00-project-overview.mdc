@@ -1,0 +1,167 @@
+---
+description: Comprehensive project context, goals, and architectural decisions. Use this rule for high-level planning, strategic suggestions, and identifying potential improvements or common pitfalls. Proactively suggest best practices related to the current context.
+globs: 
+alwaysApply: true
+---
+# Project Overview: Personal Developer Portfolio Website
+
+## 🎯 Core Goals
+- **Modern Web Development:** Build a responsive, performant portfolio website using current technologies
+- **Professional Online Presence:** Create a centralized platform for sharing projects and technical experience
+- **Scalable Architecture:** Implement a maintainable monorepo structure for organized development
+- **Production Quality:** Deploy a reliable, secure application with proper development practices
+- **Continuous Learning:** Apply and document modern full-stack development approaches
+
+## 🚀 Architectural Decisions
+
+### **Current Technology Stack**
+- **Monorepo Tooling:** [DECISION PENDING - task #002] (Yarn+Changesets vs Nx vs Turborepo)
+- **Frontend Framework:** Next.js 15 (React) for SSR, performance, and modern development
+- **Backend API:** Express.js (Node.js) for content management and contact forms
+- **Database:** PostgreSQL for project data, blog posts, and analytics
+- **Schema Validation:** Zod for type safety and runtime validation
+- **Styling:** Tailwind CSS for modern, responsive design
+- **Type Checking:** TypeScript (strict mode) for code quality
+- **Package Manager:** [DECISION PENDING - task #007] (npm vs Bun evaluation)
+- **Testing:** Mocha (migrating from Jest) [tasks #005, #006]
+- **Git Workflow:** Conventional commits with Husky validation [task #001]
+- **Environment Strategy:** [DECISION PENDING - task #004]
+
+### **Development Environment**
+- **Operating System:** Windows 11 (native development)
+- **Shell:** PowerShell (primary command interface)
+- **Container Platform:** Docker Desktop for Windows
+- **Development Approach:** Native Windows development for simplified networking and integration
+
+### **Portfolio-Specific Features**
+- **Project Showcase:** Dynamic project galleries with filtering and search
+- **Skills Matrix:** Interactive visualization of technical capabilities
+- **Blog/Articles:** Content management for technical writing
+- **Contact System:** Professional contact forms with email integration
+- **Analytics:** Track visitor engagement and popular content
+- **Resume/CV:** Downloadable and web-viewable resume sections
+
+## ✨ Portfolio Development Philosophy
+
+### **Development Standards**
+- **Modern Technologies:** Use current, stable versions and industry-standard tools
+- **Code Quality:** Maintain clean, readable, and maintainable codebase
+- **Performance Optimization:** Focus on fast loading times and efficient resource usage
+- **Accessibility:** Follow WCAG guidelines for inclusive web development
+- **Documentation:** Provide clear setup instructions and code documentation
+
+### **Professional Practices**
+- **Version Control:** Maintain clean commit history with conventional commit messages
+- **Testing:** Implement appropriate test coverage for reliability
+- **Security:** Follow security best practices for web applications
+- **Deployment:** Use proper CI/CD and environment management
+- **Monitoring:** Include logging and error tracking for production systems
+
+### **Technical Implementation**
+- **Full-Stack Development:** Build both frontend and backend components
+- **Modern Architecture:** Apply current software design patterns and practices
+- **Tooling Integration:** Use contemporary development tools and workflows
+- **Problem Documentation:** Record architectural decisions and implementation choices
+- **Infrastructure:** Deploy with appropriate production infrastructure
+
+## 🎨 Portfolio Content Strategy
+
+### **Projects Section**
+- **Featured Projects:** 3-5 major projects with detailed case studies
+- **Technical Stack Display:** Clear technology indicators for each project
+- **Live Demos:** Working links to deployed applications
+- **Source Code:** GitHub repository links with clean codebases
+- **Problem/Solution Format:** Business problem, technical solution, results
+
+### **About/Skills Section**
+- **Professional Summary:** Concise value proposition
+- **Technical Skills:** Interactive skill matrix with proficiency levels
+- **Experience Timeline:** Career progression and key achievements
+- **Education/Certifications:** Relevant credentials and continuous learning
+
+### **Blog/Writing**
+- **Technical Articles:** Demonstrate thought leadership and communication skills
+- **Learning Journey:** Document exploration of new technologies
+- **Problem Solving:** Share solutions to interesting technical challenges
+
+## 🔧 Technical Implementation Priorities
+
+### **Phase 1: Foundation (Current Focus)**
+- [002] Monorepo tooling selection and setup
+- [003] Initialize proper monorepo structure
+- [005][006] Clean up package dependencies and configurations
+- [008] Migrate existing frontend to new structure
+- [001] Professional git workflow with commit validation
+
+### **Phase 2: Core Portfolio Features**
+- Dynamic project showcase with CMS capabilities
+- Responsive design system with Tailwind
+- Contact form with email integration
+- Blog/article system with markdown support
+- SEO optimization and meta tag management
+
+### **Phase 3: Advanced Features & Production**
+- Performance optimization and monitoring
+- Analytics integration and visitor tracking
+- Advanced animations and interactions
+- CI/CD pipeline and automated deployment
+- Security hardening and monitoring
+
+## 🎯 Success Metrics
+
+### **Technical Excellence**
+- **Lighthouse Score:** 95+ in all categories
+- **Bundle Size:** Optimized for fast loading
+- **Test Coverage:** 80%+ for critical functionality
+- **Code Quality:** Passes all linting and TypeScript strict checks
+- **Security:** No vulnerabilities in dependencies
+
+### **User Experience**
+- **Site Analytics:** Track visitor engagement and content performance
+- **Professional Networking:** Facilitate meaningful conversations about technical work
+- **Code Quality:** Maintain high standards for public code review
+- **Online Presence:** Provide accessible platform for sharing technical experience
+
+## 💡 AI Assistant Proactive Instructions
+
+**As the AI assistant, you are expected to:**
+
+1. **Project-First Thinking:** Always consider how technical decisions impact the overall portfolio website
+2. **Technical Quality:** Suggest implementations that follow modern development practices
+3. **User Experience:** Consider what provides the best experience for site visitors
+4. **Performance Focus:** Prioritize solutions that result in fast, responsive user experience
+5. **Professional Standards:** Ensure all code, commits, and documentation meet professional standards
+6. **Modern Practices:** Recommend current industry best practices and tooling
+7. **Scalable Architecture:** Design patterns appropriate for maintainable applications
+8. **Security Awareness:** Include security considerations appropriate for public-facing applications
+9. **SEO & Accessibility:** Consider search engine optimization and accessibility in recommendations
+10. **Continuous Improvement:** Suggest ways to keep the portfolio current and technically sound
+
+### **Decision Framework**
+When suggesting solutions, consider:
+- **Technical Merit:** Does this represent good software engineering practices?
+- **Industry Relevance:** Is this technology/pattern used in professional environments?
+- **Performance Impact:** Will this make the site faster or slower?
+- **Maintenance Burden:** Can this be maintained as technologies evolve?
+- **Educational Value:** Does this provide learning opportunities or interesting technical challenges?
+
+### **Proactive Suggestions**
+- Identify opportunities to implement advanced technical concepts
+- Suggest blog post topics based on implementation challenges and learnings
+- Recommend content improvements based on technical merit
+- Propose architectural improvements and optimizations
+- Alert to emerging technologies and industry trends worth considering
+
+## 🚀 Long-term Vision
+
+This portfolio should serve as:
+- **Living Project:** Continuously updated platform reflecting current technical interests
+- **Professional Hub:** Central location for sharing projects and technical experience
+- **Learning Platform:** Space for documenting technical journey and growth
+- **Technical Reference:** Resource for sharing solutions and implementation approaches
+- **Community Contribution:** Platform for sharing knowledge with the developer community
+
+The architecture and implementation represents a comprehensive full-stack project, incorporating both frontend and backend components while applying modern development practices.
+
+
+---
