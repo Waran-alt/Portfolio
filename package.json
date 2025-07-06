@@ -1,0 +1,81 @@
+{
+  "name": "@portfolio/root",
+  "private": true,
+  "description": "Personal developer portfolio website - monorepo root",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Waran-alt/Portfolio.git"
+  },
+  "homepage": "https://github.com/Waran-alt/Portfolio",
+  "workspaces": [
+    "apps/frontend",
+    "apps/backend", 
+    "packages/*",
+    "tools/*"
+  ],
+  "packageManager": "yarn@4.0.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "yarn": ">=4.0.0"
+  },
+  "scripts": {
+    "build": "yarn workspaces foreach -A run build",
+    "dev": "yarn workspaces foreach -pi run dev",
+    "test": "yarn workspaces foreach -A run test",
+    "lint": "yarn workspaces foreach -A run lint",
+    "lint:fix": "yarn workspaces foreach -A run lint:fix",
+    "type-check": "yarn workspaces foreach -A run type-check",
+    "clean": "yarn workspaces foreach -A run clean",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "docker:dev": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "setup": "yarn install && yarn build",
+    "prepare": "husky install",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:root": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:root:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "code-quality": "yarn format && yarn lint:root:fix && yarn lint:fix",
+    "code-quality:check": "yarn format:check && yarn lint:root && yarn lint"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.1",
+    "@commitlint/cli": "^18.4.0",
+    "@commitlint/config-conventional": "^18.4.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "eslint-config-next": "^15.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0"
+  },
+  "resolutions": {
+    "@types/node": "^22.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "apps/*/package.json": [
+      "prettier --write"
+    ],
+    "packages/*/package.json": [
+      "prettier --write"
+    ]
+  }
+} 

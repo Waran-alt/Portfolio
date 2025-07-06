@@ -1,5 +1,5 @@
 ---
-description: Provides rules on the structure and content of the Markdown Kanban project board.
+description: Provides rules about the Markdown Kanban project board.
 globs: .cursor/project-board.md
 alwaysApply: false
 ---

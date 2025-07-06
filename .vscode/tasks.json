@@ -1,0 +1,516 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build:backend",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/backend", "build"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Build backend TypeScript to JavaScript"
+    },
+    {
+      "label": "build:frontend",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/frontend", "build"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Build frontend Next.js application"
+    },
+    {
+      "label": "build:all",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["build"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Build all workspaces in the monorepo"
+    },
+    {
+      "label": "dev:frontend",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/frontend", "dev"],
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": {
+        "base": ["$tsc"],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*ready started server.*"
+        }
+      },
+      "detail": "Start frontend development server"
+    },
+    {
+      "label": "dev:backend",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/backend", "dev"],
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": {
+        "base": ["$tsc"],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*Server running on port.*"
+        }
+      },
+      "detail": "Start backend development server"
+    },
+    {
+      "label": "dev:full",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["dev"],
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": {
+        "base": ["$tsc"],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*ready started server.*",
+          "endsPattern": ".*Server running on port.*"
+        }
+      },
+      "detail": "Start all development services"
+    },
+    {
+      "label": "test:frontend",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/frontend", "test"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$jest"],
+      "detail": "Run frontend tests"
+    },
+    {
+      "label": "test:backend",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/backend", "test"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$mocha"],
+      "detail": "Run backend tests"
+    },
+    {
+      "label": "test:all",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["test"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$jest", "$mocha"],
+      "detail": "Run all tests across the monorepo"
+    },
+    {
+      "label": "test:watch",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspaces", "foreach", "-pi", "run", "test:watch"],
+      "group": "test",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$jest-watch", "$mocha"],
+      "detail": "Run tests in watch mode across all workspaces"
+    },
+    {
+      "label": "test:coverage",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspaces", "foreach", "-A", "run", "test:coverage"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$jest", "$mocha"],
+      "detail": "Run tests with coverage across all workspaces"
+    },
+    {
+      "label": "lint:all",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["lint"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$eslint-stylish"],
+      "detail": "Lint all workspaces"
+    },
+    {
+      "label": "lint:fix",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["lint:fix"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$eslint-stylish"],
+      "detail": "Lint and fix all workspaces"
+    },
+    {
+      "label": "type-check",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["type-check"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Run TypeScript type checking across all workspaces"
+    },
+    {
+      "label": "format",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["format"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Format all files with Prettier"
+    },
+    {
+      "label": "format:check",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["format:check"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Check formatting without making changes"
+    },
+    {
+      "label": "clean:all",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["clean"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Clean all build outputs across workspaces"
+    },
+    {
+      "label": "docker:up",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "up", "-d"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Start all Docker services in background"
+    },
+    {
+      "label": "docker:down",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "down"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Stop and remove all Docker services"
+    },
+    {
+      "label": "docker:logs",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "logs", "-f"],
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Follow Docker service logs"
+    },
+    {
+      "label": "code-quality:check",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["code-quality:check"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$eslint-stylish", "$tsc"],
+      "detail": "Run all code quality checks (lint, format, type-check)"
+    },
+    {
+      "label": "code-quality",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["code-quality"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$eslint-stylish", "$tsc"],
+      "detail": "Fix all code quality issues (lint, format)"
+    },
+    {
+      "label": "db:migrate",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/backend", "migrate"],
+      "group": "db",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Run database migrations"
+    },
+    {
+      "label": "db:seed",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/backend", "seed"],
+      "group": "db",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Seed the database with initial data"
+    },
+    {
+      "label": "db:reset",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/backend", "db:reset"],
+      "group": "db",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Reset the database (migrate + seed)"
+    },
+    {
+      "label": "docker:build",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "build"],
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Build all Docker images"
+    },
+    {
+      "label": "docker:rebuild",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "build", "--no-cache"],
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Rebuild all Docker images without cache"
+    },
+    {
+      "label": "storybook",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/frontend", "storybook"],
+      "group": "storybook",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Start Storybook for component development"
+    },
+    {
+      "label": "storybook:build",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/frontend", "build-storybook"],
+      "group": "storybook",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Build Storybook static site"
+    },
+    {
+      "label": "analyze",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["workspace", "@portfolio/frontend", "analyze"],
+      "group": "analysis",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Run bundle analysis for frontend"
+    },
+
+    {
+      "label": "db:up:postgres",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "up", "-d", "postgres"],
+      "group": "db",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": [],
+      "detail": "Start PostgreSQL database service"
+    },
+    {
+      "label": "dev:full-with-db",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["dev"],
+      "group": "build",
+      "isBackground": true,
+      "dependsOn": "db:up:postgres",
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
+      "problemMatcher": {
+        "base": ["$tsc"],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*ready started server.*",
+          "endsPattern": ".*Server running on port.*"
+        }
+      },
+      "detail": "Start all development services with database"
+    }
+  ]
+} 

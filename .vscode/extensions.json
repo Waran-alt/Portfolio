@@ -1,0 +1,57 @@
+{
+  "recommendations": [
+    // Code Quality & Formatting
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+    
+    // Styling & UI
+    "bradlc.vscode-tailwindcss",
+    "bradlc.vscode-tailwindcss-intellisense",
+    
+    // Language Support
+    "ms-vscode.vscode-json",
+    "yzhang.markdown-all-in-one",
+    "ms-vscode.vscode-yaml",
+    "ms-vscode.vscode-docker",
+    "ms-vscode.vscode-sql",
+    
+    // Development Environment
+    "ms-vscode-remote.remote-wsl",
+    "ms-vscode-remote.remote-containers",
+    
+    // AI Assistance
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // Git & GitHub (Streamlined)
+    "eamodio.gitlens",
+    "ms-vscode.vscode-github-pull-request-github",
+    
+    // Productivity & UX
+    "usernamehw.errorlens",
+    "formulahendry.auto-rename-tag",
+    "ms-vscode.vscode-bracket-pair-colorizer-2",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-import-cost",
+    
+    // Portfolio-Specific
+    "ms-vscode.vscode-lighthouse",
+    "ms-vscode.vscode-web-vitals",
+    "ms-vscode.vscode-axe-devtools",
+    "humao.rest-client",
+    "rangav.vscode-thunder-client",
+    "ms-vscode.vscode-postgresql-client",
+    
+    // Testing & Debugging
+    "ms-vscode.vscode-jest",
+    "ms-vscode.vscode-js-debug",
+    "ms-vscode.vscode-js-debug-companion"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript",
+    "ms-vscode.vscode-git-graph",
+    "ms-vscode.vscode-github-issue-notebooks",
+    "ms-vscode.vscode-github-pull-request-github-insiders"
+  ]
+} 

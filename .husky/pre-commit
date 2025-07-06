@@ -1,0 +1,48 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Check if changeset is required for package changes
+echo "🔍 Checking for required changesets..."
+
+# Get list of changed files
+CHANGED_FILES=$(git diff --cached --name-only)
+
+# Check if any package files have changed
+PACKAGE_CHANGED=false
+
+# Check for changes in apps/ or packages/
+for file in $CHANGED_FILES; do
+  case $file in
+    apps/*/src/* | apps/*/package.json | apps/*/tsconfig.json)
+      PACKAGE_CHANGED=true
+      break
+      ;;
+    packages/*/src/* | packages/*/package.json | packages/*/tsconfig.json)
+      PACKAGE_CHANGED=true
+      break
+      ;;
+  esac
+done
+
+# If packages changed, check for changeset
+if [ "$PACKAGE_CHANGED" = true ]; then
+  # Check if there are unreleased changesets
+  if [ ! -d ".changeset" ] || [ -z "$(find .changeset -name '*.md' -not -name 'README.md' 2>/dev/null)" ]; then
+    echo "❌ Error: Package code has changed but no changeset found!"
+    echo ""
+    echo "📝 You need to create a changeset for your changes:"
+    echo "   yarn changeset"
+    echo ""
+    echo "🔄 Or if this is a non-breaking change, you can skip with:"
+    echo "   git commit --no-verify"
+    echo ""
+    exit 1
+  else
+    echo "✅ Changeset found - proceeding with commit"
+  fi
+else
+  echo "ℹ️  No package changes detected - skipping changeset check"
+fi
+
+# Run lint-staged for code quality
+npx lint-staged 

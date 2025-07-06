@@ -10,13 +10,13 @@ This file contains the Portfolio project's Markdown Kanban board with simple seq
 ## Board Structure
 
 **Columns:**
-- **To Do**: Tasks that are planned but not yet started (17 active tasks)
-- **In Progress**: Tasks currently being worked on
-- **Done**: Completed tasks
+- **To Do**: Tasks that are planned but not yet started (14 active tasks)
+- **In Progress**: Tasks currently being worked on (2 active tasks)
+- **Done**: Completed tasks (2 completed)
 
 ## Simple ID System
 
-### **Current Highest ID: 017**
+### **Current Highest ID: 033**
 
 Tasks use simple sequential IDs in format `[XXX]`:
 - **Format**: `[001]`, `[002]`, `[003]`, etc.
@@ -31,39 +31,44 @@ Tasks use simple sequential IDs in format `[XXX]`:
 
 ## Current Task Summary
 
-### **High Priority (Due July 2, 2025)**
-- [002] Monorepo Tooling Selection (DECISION NEEDED)
-- [003] Initialize Monorepo Structure
-- [004] Environment Variable Strategy (DECISION NEEDED)
-- [005] Fix Backend Package.json Issues
-- [006] Fix Frontend Package.json Issues
+### **High Priority (Due July 5-8, 2025)**
+- [003] Initialize Monorepo Structure (IN PROGRESS - mostly complete)
+- [017] WSL2 Development Environment Setup (IN PROGRESS - mostly complete)
+- [018] Create VS Code Tasks Configuration
+- [019] Add Environment Variable Support to Launch Configs
+- [024] Implement Dynamic Project Showcase System
+- [025] Create Contact Form System with Email Integration
+- [030] Create CI/CD Pipeline
+- [031] Implement Security Hardening
+
+### **Medium Priority (July 10-22, 2025)**
 - [008] Migrate Frontend to Monorepo
-- [013] Define Initial Cursor Rules
-- [017] Windows Development Environment Strategy (DECISION NEEDED)
+- [020] Create Docker Debug Configurations
+- [021] Add Missing Scripts to Root Package.json
+- [022] Implement Storybook for Component Development
+- [023] Add API Mocking with MSW (Mock Service Worker)
+- [026] Implement Blog/Articles System
+- [027] Create Skills Matrix Visualization
+- [028] Add Performance Monitoring and Analytics
+- [029] Implement SEO Optimization System
+- [032] Create Admin Dashboard
 
-### **Medium Priority (July 3-6, 2025)**
-- [001] Implement Commit Validation (Husky + Commitlint)
-- [007] Bun Integration Decision (DECISION NEEDED)
-- [009] Set up Dev Tools (ESLint, Prettier)
-- [010] Production Strategy Documentation
-- [011] Database Migration System
-- [012] Docker Secret Management (DECISION NEEDED)
-
-### **Low Priority (July 7-9, 2025)**
-- [014] Automated Backup System
-- [015] SSL Certificate Automation
-- [016] Centralized Logging Implementation (DECISION NEEDED)
+### **Low Priority (August 2025)**
+- [010] Production Environment Strategy Documentation
+- [011] Database Migration System Implementation
+- [012] Docker Secret Management Implementation
+- [014] Automated Backup System Setup
+- [015] SSL Certificate Automation (Let's Encrypt)
+- [016] Centralized Logging Implementation
 
 ## Decision Points Requiring Input
 
 Several tasks need **DECISION NEEDED** resolution:
 
-1. **[002]**: Monorepo tooling (Yarn+Changesets vs Nx vs Turborepo vs Lerna)
-2. **[004]**: Environment strategy (explicit vs env_file vs hybrid vs external secrets)
-3. **[007]**: Bun integration (development vs production use assessment)
-4. **[012]**: Secret management (Docker Secrets vs External Vault vs File-based)
-5. **[016]**: Logging solution (ELK Stack vs Grafana Loki vs Cloud solutions)
-6. **[017]**: Windows development approach (Native Windows vs WSL2)
+1. **[004]**: Environment strategy (explicit vs env_file vs hybrid vs external secrets)
+2. **[007]**: Bun integration (development vs production use assessment)
+3. **[012]**: Secret management (Docker Secrets vs External Vault vs File-based)
+4. **[016]**: Logging solution (ELK Stack vs Grafana Loki vs Cloud solutions)
 
 ## Technical Context
 
@@ -81,9 +86,9 @@ Several tasks need **DECISION NEEDED** resolution:
 
 **When adding new tasks:**
 
-1. **Find highest existing ID** in the board (currently 016)
-2. **Increment by 1** (next would be 017)
-3. **Zero-pad to 3 digits** ([017])
+1. **Find highest existing ID** in the board (currently 033)
+2. **Increment by 1** (next would be 018)
+3. **Zero-pad to 3 digits** ([018])
 4. **Update this rule** with new highest ID
 5. **Format**: `- [XXX] Task Title`
 
@@ -123,10 +128,49 @@ When working with this project board:
 
 ## Current Focus
 
-**Immediate blockers**: Tasks [002], [003], [004], [017] are foundational - other tasks depend on these decisions.
+**Immediate blockers**: Tasks [003], [004] are foundational - other tasks depend on these decisions.
 
 **Quick wins**: Tasks [005], [006], [013] can be completed independently.
 
-**Sequential dependencies**: [017] → [002] → [003] → [008] (environment setup, then monorepo setup chain)
+**Sequential dependencies**: [002] → [003] → [008] (monorepo setup chain)
+
+**Completed**: [001] Commit Message Validation ✅, [002] Monorepo Tooling Selection ✅
 
 This simple system prioritizes **ease of reference** over **categorization complexity**.
+
+## Date Management Guidelines
+
+### **CRITICAL: Always Check Current Date**
+
+**Before setting or updating any due dates, the AI assistant MUST:**
+
+1. **Check current date** using web search or other means
+2. **Set realistic due dates** based on actual current date
+3. **Consider priority levels** when spacing dates:
+   - **High Priority**: Due within 1-5 days of current date
+   - **Medium Priority**: Due within 1-2 weeks of current date  
+   - **Low Priority**: Due within 2-4 weeks of current date
+
+### **Date Update Protocol**
+
+**When updating task dates:**
+1. **Get current date first** - Never assume the date
+2. **High priority tasks**: Current date + 1-5 days
+3. **Medium priority tasks**: Current date + 7-14 days
+4. **Low priority tasks**: Current date + 14-28 days
+5. **Consider dependencies**: Dependent tasks must have later due dates than their prerequisites
+6. **Account for weekends**: Prefer business days for due dates when possible
+
+### **Example Date Setting (if current date is July 4, 2025)**
+- **High Priority Task**: Due July 6-9, 2025
+- **Medium Priority Task**: Due July 11-18, 2025  
+- **Low Priority Task**: Due July 18 - August 1, 2025
+
+### **Never Assume Dates**
+- **DO NOT** set dates in the past relative to current date
+- **DO NOT** assume it's a specific month/year without checking
+- **DO NOT** use placeholder dates like "2025-01-01"
+- **DO** verify current date before any date-related operations
+- **DO** update existing dates if they're unrealistic based on current date
+
+**This ensures the project board remains a practical planning tool rather than historical artifact.**
