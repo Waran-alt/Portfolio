@@ -6,7 +6,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/apps/frontend/node_modules/.bin/next",
-      "args": ["dev", "--hostname", "${env:HOSTNAME:-0.0.0.0}", "--inspect"],
+      "args": ["dev", "--hostname", "${env:HOSTNAME:-0.0.0.0}", "--inspect=${env:FRONTEND_DEBUG_PORT:-9228}"],
       "cwd": "${workspaceFolder}/apps/frontend",
       "console": "integratedTerminal",
       "env": {
@@ -19,37 +19,23 @@
         "!**/node_modules/**"
       ],
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/apps/frontend/.next/**/*.js"]
-    },
-    {
-      "name": "attach:frontend",
-      "type": "node",
-      "request": "attach",
-      "port": "${env:DEBUG_PORT:-9229}",
-      "address": "${env:HOSTNAME:-localhost}",
-      "cwd": "${workspaceFolder}/apps/frontend",
-      "protocol": "inspector",
-      "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/apps/frontend/.next/**/*.js"],
-      "resolveSourceMapLocations": [
-        "${workspaceFolder}/**",
-        "!**/node_modules/**"
-      ],
-      "envFile": "${workspaceFolder}/.env",
-      "skipFiles": ["<node_internals>/**"]
+      "smartStep": true,
+      "pauseForSourceMap": true,
+      "detail": "Launch Next.js development server with debugging enabled"
     },
+
     {
       "name": "debug:backend",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/apps/backend/node_modules/.bin/ts-node-dev",
-      "args": ["--respawn", "--transpile-only", "--host", "${env:HOSTNAME:-0.0.0.0}", "--inspect=${env:HOSTNAME:-0.0.0.0}:${env:DEBUG_PORT:-9229}", "--inspect-brk", "src/index.ts"],
+      "args": ["--respawn", "--transpile-only", "--host", "${env:HOSTNAME:-0.0.0.0}", "--inspect=${env:HOSTNAME:-0.0.0.0}:${env:BACKEND_DEBUG_PORT:-9229}", "--inspect-brk", "src/index.ts"],
       "cwd": "${workspaceFolder}/apps/backend",
       "console": "integratedTerminal",
       "env": {
         "NODE_ENV": "development",
-        "PORT": "${env:PORT:-4000}",
-        "DEBUG_PORT": "${env:DEBUG_PORT:-9229}"
+        "PORT": "${env:PORT:-4000}"
       },
       "envFile": "${workspaceFolder}/.env",
       "skipFiles": ["<node_internals>/**"],
@@ -57,24 +43,12 @@
         "${workspaceFolder}/**",
         "!**/node_modules/**"
       ],
-      "sourceMaps": true
-    },
-    {
-      "name": "attach:backend",
-      "type": "node",
-      "request": "attach",
-      "port": "${env:DEBUG_PORT:-9229}",
-      "address": "${env:HOSTNAME:-localhost}",
-      "cwd": "${workspaceFolder}/apps/backend",
-      "protocol": "inspector",
       "sourceMaps": true,
-      "envFile": "${workspaceFolder}/.env",
-      "skipFiles": ["<node_internals>/**"],
-      "resolveSourceMapLocations": [
-        "${workspaceFolder}/**",
-        "!**/node_modules/**"
-      ]
+      "smartStep": true,
+      "pauseForSourceMap": true,
+      "detail": "Launch Express development server with debugging enabled"
     },
+
     {
       "name": "debug:jest-tests",
       "type": "node",
@@ -91,7 +65,10 @@
       "skipFiles": ["<node_internals>/**", "node_modules/**"],
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/apps/frontend/**/*.js"],
-      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "smartStep": true,
+      "pauseForSourceMap": true,
+      "detail": "Debug Jest unit tests with breakpoints"
     },
     {
       "name": "debug:mocha-tests",
@@ -113,7 +90,10 @@
       "skipFiles": ["<node_internals>/**", "node_modules/**"],
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/apps/backend/dist/**/*.js"],
-      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "smartStep": true,
+      "pauseForSourceMap": true,
+      "detail": "Debug Mocha integration tests with breakpoints"
     },
     {
       "name": "debug:e2e-tests",
@@ -130,7 +110,75 @@
       "skipFiles": ["<node_internals>/**", "node_modules/**"],
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/apps/frontend/**/*.js"],
-      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"]
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "smartStep": true,
+      "pauseForSourceMap": true,
+      "detail": "Debug Playwright end-to-end tests with breakpoints"
+    },
+    {
+      "name": "docker:attach-backend",
+      "type": "node",
+      "request": "attach",
+      "port": "${env:BACKEND_DEBUG_PORT:-9229}",
+      "address": "${env:HOSTNAME:-localhost}",
+      "cwd": "${workspaceFolder}/apps/backend",
+      "protocol": "inspector",
+      "sourceMaps": true,
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "localRoot": "${workspaceFolder}/apps/backend",
+      "remoteRoot": "/app",
+      "restart": true,
+      "timeout": 30000,
+      "continueOnAttach": true,
+      "smartStep": true,
+      "pauseForSourceMap": true,
+      "detail": "Attach to Express backend running in Docker container"
+    },
+    {
+      "name": "docker:attach-frontend",
+      "type": "node",
+      "request": "attach",
+      "port": "${env:FRONTEND_DEBUG_PORT:-9228}",
+      "address": "${env:HOSTNAME:-localhost}",
+      "cwd": "${workspaceFolder}/apps/frontend",
+      "protocol": "inspector",
+      "sourceMaps": true,
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"],
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "localRoot": "${workspaceFolder}/apps/frontend",
+      "remoteRoot": "/app",
+      "restart": true,
+      "timeout": 30000,
+      "continueOnAttach": true,
+      "smartStep": true,
+      "pauseForSourceMap": true,
+      "outFiles": ["${workspaceFolder}/apps/frontend/.next/**/*.js"],
+      "detail": "Attach to Next.js frontend running in Docker container"
+    },
+    {
+      "name": "docker:monitor-postgres",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/tools/database/monitor.js",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "smartStep": true,
+      "detail": "Monitor PostgreSQL database connections and query performance"
     },
 
   ],
@@ -141,7 +189,8 @@
         "debug:frontend",
         "debug:backend"
       ],
-      "stopAll": true
+      "stopAll": true,
+      "detail": "Debug both frontend and backend simultaneously"
     },
     {
       "name": "debug:full-stack-with-db",
@@ -150,33 +199,40 @@
         "debug:backend"
       ],
       "stopAll": true,
-      "preLaunchTask": "db:up:postgres"
+      "preLaunchTask": "db:up:postgres",
+      "detail": "Debug full stack with database service"
     },
-    {
-      "name": "attach:full-stack",
-      "configurations": [
-        "attach:frontend",
-        "attach:backend"
-      ],
-      "stopAll": true,
-      "preLaunchTask": "dev:full"
-    },
-    {
-      "name": "attach:full-stack-with-db",
-      "configurations": [
-        "attach:frontend",
-        "attach:backend"
-      ],
-      "stopAll": true,
-      "preLaunchTask": "dev:full-with-db"
-    },
+
+
     {
       "name": "debug:all-tests",
       "configurations": [
         "debug:jest-tests",
         "debug:mocha-tests"
       ],
-      "stopAll": true
+      "stopAll": true,
+      "detail": "Debug all test suites simultaneously"
+    },
+    {
+      "name": "docker:debug-full-stack",
+      "configurations": [
+        "docker:attach-frontend",
+        "docker:attach-backend"
+      ],
+      "stopAll": true,
+      "preLaunchTask": "docker:up",
+      "detail": "Debug full stack in Docker containers"
+    },
+    {
+      "name": "docker:debug-full-stack-with-db",
+      "configurations": [
+        "docker:attach-frontend",
+        "docker:attach-backend",
+        "docker:monitor-postgres"
+      ],
+      "stopAll": true,
+      "preLaunchTask": "docker:up",
+      "detail": "Debug full stack with database monitoring"
     }
   ]
 } 

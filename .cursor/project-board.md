@@ -2,26 +2,6 @@
 
 ## To Do
 
-- [020] Create Docker Debug Configurations
-  - due: 2025-07-07
-  - tags: [tooling, docker, debugging]
-  - priority: medium
-    ```md
-    Add VS Code debug configurations for attaching to running Docker containers.
-    
-    **Configurations Needed:**
-    - Docker: Attach to Backend (port 9229)
-    - Docker: Attach to Frontend (port 9229)
-    - Docker: Debug Database (PostgreSQL debugging)
-    - Docker: Multi-container debugging
-    
-    **Features:**
-    - Source map support for container debugging
-    - Hot reload support for development
-    - Breakpoint debugging in containers
-    - Log streaming and monitoring
-    ```
-
 - [021] Add Missing Scripts to Root Package.json
   - due: 2025-07-08
   - tags: [tooling, scripts, automation]
@@ -450,6 +430,51 @@
 
 ## Done
 
+- [020] Create Docker Debug Configurations
+  - due: 2025-07-07
+  - tags: [tooling, docker, debugging]
+  - priority: medium
+  - completed: 2025-07-06
+    ```md
+    ✅ COMPLETED: Comprehensive Docker debug configurations implemented with optimizations.
+    
+    **Configurations Added:**
+    - ✅ docker:attach-backend - Attach to backend container (port 9229)
+    - ✅ docker:attach-frontend - Attach to frontend container (port 9228)
+    - ✅ docker:monitor-postgres - Monitor database connections (port 5432)
+    - ✅ docker:debug-full-stack - Multi-container debugging (frontend + backend)
+    - ✅ docker:debug-full-stack-with-db - Full stack with database monitoring
+    
+    **Features Implemented:**
+    - ✅ Source map support with localRoot/remoteRoot mapping
+    - ✅ Hot reload support for development
+    - ✅ Breakpoint debugging in containers
+    - ✅ Environment variable integration
+    - ✅ Automatic container startup with preLaunchTask
+    - ✅ Restart and timeout configuration
+    
+    **Additional Tasks Added:**
+    - ✅ docker:debug-backend - Start backend container for debugging
+    - ✅ docker:debug-frontend - Start frontend container for debugging
+    - ✅ docker:exec-backend - Open shell in backend container
+    - ✅ docker:exec-frontend - Open shell in frontend container
+    
+    **Optimizations Applied:**
+    - ✅ Removed redundant attach configurations (simplified launch.json)
+    - ✅ Eliminated duplicate Docker debug tasks (cleaned up tasks.json)
+    - ✅ Simplified presentation settings (reduced verbosity)
+    - ✅ Removed non-existent validation tasks
+    - ✅ Streamlined compound configurations
+    
+    **Documentation:**
+    - ✅ Created comprehensive DOCKER_DEBUGGING.md guide
+    - ✅ Covers workflow, troubleshooting, and best practices
+    - ✅ Includes advanced features and security considerations
+    
+    **Next:**
+    - Need testings
+    ```
+
 - [019] Add Environment Variable Support to Launch Configs
   - due: 2025-07-06
   - tags: [tooling, vscode, environment]
@@ -460,12 +485,12 @@
     
     **Already Implemented:**
     - ✅ envFile property: All configurations load .env files with `envFile: "${workspaceFolder}/.env"`
-    - ✅ Environment variables: Proper variables like PORT, DEBUG_PORT, HOSTNAME with defaults
+    - ✅ Environment variables: Proper variables like PORT, BACKEND_DEBUG_PORT, FRONTEND_DEBUG_PORT, HOSTNAME with defaults
     - ✅ Multi-environment support: Dev and test environments properly configured
     - ✅ Docker integration: Environment variables work seamlessly with Docker setup
     
     **Configurations Verified:**
-    - ✅ Backend: Express Dev (loads .env, sets PORT=4000, DEBUG_PORT=9229)
+    - ✅ Backend: Express Dev (loads .env, sets PORT=4000, BACKEND_DEBUG_PORT=9229)
     - ✅ Frontend: Next.js Dev (loads .env, sets NODE_ENV=development)
     - ✅ Test configurations: Jest and Mocha tests load test environment variables
     - ✅ Attach configurations: All attach configs include envFile support

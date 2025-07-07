@@ -1,214 +1,300 @@
-# Docker Container Debugging Setup
+# Docker Debugging Guide
 
-This document explains how to set up Docker container debugging for the Portfolio project using VS Code's attach configurations.
+This guide covers debugging applications running in Docker containers using VS Code.
 
 ## Overview
 
-The VS Code configuration includes `attach:frontend` and `attach:backend` configurations that can connect to Node.js processes running inside Docker containers. This allows you to debug applications as they run in containers, providing a production-like debugging environment.
+The project includes optimized Docker debugging configurations that allow you to:
+- Debug applications running inside Docker containers
+- Set breakpoints in containerized code
+- Hot reload during development
+- Multi-container debugging
+- Database monitoring capabilities
+- Clean, maintainable configuration structure
 
-## Required Docker Configuration
+## Prerequisites
 
-To enable container debugging, you must expose the Node.js debug ports in your `docker-compose.yml`:
+- Docker Desktop running
+- VS Code with Docker extension installed
+- Containers built and running with debug ports exposed
 
-### Backend Service Configuration
+## Debug Configurations
 
-```yaml
-services:
-  backend:
-    build: ./apps/backend
-    ports:
-      - "4000:4000"  # Application port
-      - "9229:9229"  # Node.js debug port
-    environment:
-      - NODE_ENV=development
-      - DEBUG_PORT=9229
-    command: >
-      ts-node-dev 
-      --respawn 
-      --transpile-only 
-      --host 0.0.0.0 
-      --inspect=0.0.0.0:9229 
-      --inspect-brk 
-      src/index.ts
+### Individual Container Debugging
+
+#### Backend Container Debugging
+```json
+"docker:attach-backend"
 ```
+- **Port**: 9229 (mapped from container)
+- **Purpose**: Debug Node.js/Express backend running in Docker
+- **Features**: Source maps, hot reload, breakpoint debugging
+- **Usage**: Start backend container, then attach debugger
 
-### Frontend Service Configuration
-
-```yaml
-services:
-  frontend:
-    build: ./apps/frontend
-    ports:
-      - "3000:3000"  # Application port
-      - "9228:9228"  # Next.js debug port (different from backend)
-    environment:
-      - NODE_ENV=development
-      - DEBUG_PORT=9228
-    command: >
-      next dev 
-      --hostname 0.0.0.0 
-      --port 3000 
-      --inspect=0.0.0.0:9228
+#### Frontend Container Debugging
+```json
+"docker:attach-frontend"
 ```
+- **Port**: 9228 (mapped from container)
+- **Purpose**: Debug Next.js frontend running in Docker
+- **Features**: Source maps, hot reload, breakpoint debugging
+- **Usage**: Start frontend container, then attach debugger
 
-## Environment Variables
+#### Database Monitoring
+```json
+"docker:monitor-postgres"
+```
+- **Port**: 5432 (PostgreSQL)
+- **Purpose**: Monitor database connections and queries
+- **Features**: Connection monitoring, query tracking
+- **Usage**: Monitor database interactions during debugging
 
-Configure debug ports in your `.env` file:
+### Multi-Container Debugging
 
+#### Full Stack Debugging
+```json
+"docker:debug-full-stack"
+```
+- **Components**: Frontend + Backend containers
+- **Pre-launch**: Starts all Docker services
+- **Features**: Simultaneous debugging of both services
+- **Usage**: Debug complete application flow
+
+#### Full Stack with Database
+```json
+"docker:debug-full-stack-with-db"
+```
+- **Components**: Frontend + Backend + Database
+- **Pre-launch**: Starts all Docker services
+- **Features**: Complete stack debugging including database
+- **Usage**: End-to-end debugging with data flow
+
+## VS Code Tasks for Docker Debugging
+
+### Container Management Tasks
+
+#### Start Individual Services
+- `docker:debug-backend` - Start backend container for debugging
+- `docker:debug-frontend` - Start frontend container for debugging
+
+#### Container Interaction
+- `docker:exec-backend` - Open shell in backend container
+- `docker:exec-frontend` - Open shell in frontend container
+- `docker:logs` - Follow container logs
+
+#### Container Management
+- `docker:up` - Start all services
+- `docker:down` - Stop all services
+- `docker:build` - Build all images
+- `docker:rebuild` - Rebuild without cache
+
+## Debugging Workflow
+
+### 1. Start Containers
 ```bash
-# Debug ports for container debugging
-DEBUG_PORT=9229        # Backend debug port
-FRONTEND_DEBUG_PORT=9228  # Frontend debug port (Next.js)
+# Start all services
+docker-compose up -d
 
-# Hostname for container access
-HOSTNAME=0.0.0.0       # Allow external access
-```
-
-## VS Code Debug Configurations
-
-### Available Attach Configurations
-
-1. **`attach:backend`** - Connect to backend container debugger
-   - Port: `${env:DEBUG_PORT:-9229}`
-   - Address: `${env:HOSTNAME:-localhost}`
-
-2. **`attach:frontend`** - Connect to frontend container debugger
-   - Port: `${env:FRONTEND_DEBUG_PORT:-9228}`
-   - Address: `${env:HOSTNAME:-localhost}`
-
-3. **`attach:full-stack`** - Attach to both frontend and backend
-   - PreLaunch Task: `dev:full` (starts containers)
-   - Attaches to both debuggers simultaneously
-
-4. **`attach:full-stack-with-db`** - Full stack with database
-   - PreLaunch Task: `dev:full-with-db` (starts DB + containers)
-   - Complete debugging environment
-
-## Usage Workflow
-
-### 1. Start Containers with Debugging
-
-```bash
-# Start all services with debug ports exposed
-docker-compose up --build
-
-# Or use VS Code task
-# Run: "docker:up" task
+# Or start individual services
+docker-compose up -d backend
+docker-compose up -d frontend
 ```
 
 ### 2. Attach Debugger
+1. Open VS Code Debug panel (Ctrl+Shift+D)
+2. Select appropriate debug configuration:
+   - `docker:attach-backend` for backend debugging
+   - `docker:attach-frontend` for frontend debugging
+   - `docker:debug-full-stack` for multi-container debugging
+3. Click "Start Debugging" (F5)
 
-1. Open VS Code Run and Debug panel
-2. Select `attach:backend` or `attach:frontend`
-3. Click the play button to attach
-4. Set breakpoints in your code
-5. Debug as normal
+### 3. Set Breakpoints
+- Set breakpoints in your source code
+- Breakpoints work across container boundaries
+- Source maps ensure accurate debugging
 
-### 3. Full Stack Debugging
+### 4. Debug Features
+- **Step through code**: F10 (step over), F11 (step into), Shift+F11 (step out)
+- **Variable inspection**: Hover over variables or use Debug Console
+- **Call stack**: View function call hierarchy
+- **Watch expressions**: Monitor specific variables
+- **Hot reload**: Code changes trigger automatic reload
 
-1. Select `attach:full-stack-with-db`
-2. VS Code will automatically:
-   - Start database service
-   - Start development servers
-   - Attach to both debuggers
-3. Debug both frontend and backend simultaneously
+## Configuration Details
 
-## Debug Port Configuration
-
-### Default Ports
-- **Backend**: 9229 (ts-node-dev)
-- **Frontend**: 9228 (Next.js)
-
-### Custom Ports
-To avoid conflicts, you can use different ports:
-
-```bash
-# .env file
-DEBUG_PORT=9230        # Backend debug port
-FRONTEND_DEBUG_PORT=9231  # Frontend debug port
+### Source Map Configuration
+```json
+{
+  "sourceMaps": true,
+  "localRoot": "${workspaceFolder}/apps/backend",
+  "remoteRoot": "/app",
+  "resolveSourceMapLocations": [
+    "${workspaceFolder}/**",
+    "!**/node_modules/**"
+  ]
+}
 ```
 
-### Multiple Debug Sessions
-You can run multiple debug sessions with different ports:
+### Environment Variables
+- All debug configurations load `.env` file
+- Container environment variables are preserved
+- Debug-specific variables can be overridden
 
-```bash
-# Terminal 1 - Backend
-DEBUG_PORT=9229 docker-compose up backend
-
-# Terminal 2 - Frontend  
-FRONTEND_DEBUG_PORT=9228 docker-compose up frontend
+### Timeout and Restart
+```json
+{
+  "restart": true,
+  "timeout": 30000
+}
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Port Already in Use**
-   - Change `DEBUG_PORT` in `.env`
-   - Kill existing Node.js processes
-   - Restart Docker containers
+#### Debugger Won't Attach
+1. **Check container status**: Ensure containers are running
+2. **Verify debug ports**: Check port mappings in docker-compose.yml
+3. **Check firewall**: Ensure ports 9228, 9229 are accessible
+4. **Container logs**: Check for debug port binding errors
 
-2. **Cannot Connect to Debugger**
-   - Verify ports are exposed in `docker-compose.yml`
-   - Check firewall settings
-   - Ensure containers are running with debug flags
+#### Source Maps Not Working
+1. **Verify source map generation**: Ensure TypeScript/webpack generates source maps
+2. **Check localRoot/remoteRoot**: Ensure paths match container structure
+3. **Container rebuild**: Rebuild containers after source map changes
 
-3. **Source Maps Not Working**
-   - Verify `sourceMaps: true` in launch configuration
-   - Check `outFiles` path matches your build output
-   - Ensure TypeScript compilation includes source maps
+#### Breakpoints Not Hit
+1. **Check file paths**: Ensure breakpoints are in correct source files
+2. **Verify source maps**: Check source map accuracy
+3. **Container restart**: Restart containers after code changes
 
 ### Debug Commands
 
+#### Check Container Status
 ```bash
-# Check if debug ports are exposed
 docker-compose ps
-netstat -tulpn | grep 9229
-
-# View container logs
 docker-compose logs backend
 docker-compose logs frontend
-
-# Restart with debug
-docker-compose down
-docker-compose up --build
 ```
 
-## Benefits
+#### Check Debug Ports
+```bash
+# Check if debug ports are listening
+netstat -an | grep 9228
+netstat -an | grep 9229
+```
 
-### Production-Like Environment
-- Debug in containerized environment
-- Test with production-like configuration
-- Identify container-specific issues
+#### Container Shell Access
+```bash
+# Access backend container
+docker-compose exec backend sh
 
-### Team Collaboration
-- Consistent debugging environment
-- Easy setup for new team members
-- Reproducible debugging scenarios
+# Access frontend container
+docker-compose exec frontend sh
+```
 
-### Advanced Debugging
-- Debug both frontend and backend simultaneously
-- Container-specific breakpoints
-- Network debugging capabilities
+#### VS Code Tasks
+```bash
+# Use VS Code tasks for common operations
+# Ctrl+Shift+P -> "Tasks: Run Task" -> Select task:
+# - docker:up - Start all services
+# - docker:debug-backend - Start backend for debugging
+# - docker:debug-frontend - Start frontend for debugging
+# - docker:exec-backend - Open shell in backend
+# - docker:exec-frontend - Open shell in frontend
+```
 
-## Security Considerations
+## Best Practices
 
-### Development Only
-- Debug ports should only be exposed in development
-- Use `HOSTNAME=localhost` for local-only access
-- Never expose debug ports in production
+### Development Workflow
+1. **Use Docker for consistency**: Ensures production-like environment
+2. **Leverage hot reload**: Make changes and see immediate results
+3. **Debug early and often**: Catch issues before they become problems
+4. **Use multi-container debugging**: Understand full application flow
 
-### Network Security
-- Debug ports allow code execution
-- Restrict access to trusted networks
-- Use VPN for remote debugging
+### Performance Optimization
+1. **Volume mounts**: Use volume mounts for fast file synchronization
+2. **Source maps**: Ensure accurate debugging with proper source maps
+3. **Container optimization**: Use multi-stage builds for smaller images
+4. **Resource limits**: Set appropriate memory and CPU limits
 
-## Next Steps
+### Security Considerations
+1. **Debug ports**: Only expose debug ports in development
+2. **Environment variables**: Use .env files for sensitive data
+3. **Container isolation**: Ensure proper network isolation
+4. **Access control**: Limit debug access to authorized developers
 
-1. Update your `docker-compose.yml` with debug port exposure
-2. Configure environment variables in `.env`
-3. Test attach configurations with simple breakpoints
-4. Set up full stack debugging workflow
-5. Document team debugging procedures
+## Integration with CI/CD
 
-This setup provides a powerful debugging environment that closely mirrors production while maintaining the convenience of local development. 
+### Development Environment
+- Debug configurations work seamlessly with local development
+- Hot reload supports rapid iteration
+- Source maps ensure accurate debugging
+
+### Production Considerations
+- Debug ports should not be exposed in production
+- Use proper logging instead of debugging in production
+- Implement health checks for container monitoring
+
+## Advanced Features
+
+### Custom Debug Configurations
+You can create custom debug configurations for specific scenarios:
+
+```json
+{
+  "name": "docker:debug-specific-feature",
+  "type": "node",
+  "request": "attach",
+  "port": 9229,
+  "address": "localhost",
+  "cwd": "${workspaceFolder}/apps/backend",
+  "protocol": "inspector",
+  "sourceMaps": true,
+  "localRoot": "${workspaceFolder}/apps/backend",
+  "remoteRoot": "/app",
+  "restart": true,
+  "timeout": 30000,
+  "detail": "Debug specific feature in backend container"
+}
+```
+
+### Environment-Specific Debugging
+Create different debug configurations for different environments:
+
+```json
+{
+  "name": "docker:debug-staging",
+  "type": "node",
+  "request": "attach",
+  "port": 9229,
+  "address": "staging-server",
+  "envFile": "${workspaceFolder}/.env.staging"
+}
+```
+
+## Configuration Optimizations
+
+### Recent Improvements
+The VS Code configurations have been optimized for better maintainability:
+
+- **Simplified launch.json**: Removed redundant attach configurations
+- **Streamlined tasks.json**: Eliminated duplicate Docker debug tasks
+- **Reduced verbosity**: Simplified presentation settings
+- **Cleaner structure**: Removed non-existent validation tasks
+- **Better organization**: Streamlined compound configurations
+
+### Benefits
+- **Reduced complexity**: Fewer configurations to maintain
+- **Improved performance**: Faster VS Code startup and configuration loading
+- **Better discoverability**: Clearer task and launch configuration names
+- **Professional standards**: Clean, maintainable configuration structure
+
+## Conclusion
+
+The optimized Docker debugging setup provides a powerful development environment that:
+- Mirrors production conditions
+- Enables rapid debugging and iteration
+- Supports complex multi-container scenarios
+- Integrates seamlessly with VS Code
+- Maintains clean, professional configuration standards

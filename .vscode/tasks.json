@@ -7,14 +7,7 @@
       "command": "yarn",
       "args": ["workspace", "@portfolio/backend", "build"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "silent",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "silent", "panel": "shared" },
       "problemMatcher": ["$tsc"],
       "detail": "Build backend TypeScript to JavaScript"
     },
@@ -24,14 +17,7 @@
       "command": "yarn",
       "args": ["workspace", "@portfolio/frontend", "build"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "silent",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "silent", "panel": "shared" },
       "problemMatcher": ["$tsc"],
       "detail": "Build frontend Next.js application"
     },
@@ -44,14 +30,7 @@
         "kind": "build",
         "isDefault": true
       },
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$tsc"],
       "detail": "Build all workspaces in the monorepo"
     },
@@ -62,14 +41,7 @@
       "args": ["workspace", "@portfolio/frontend", "dev"],
       "group": "build",
       "isBackground": true,
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
       "problemMatcher": {
         "base": ["$tsc"],
         "background": {
@@ -86,14 +58,7 @@
       "args": ["workspace", "@portfolio/backend", "dev"],
       "group": "build",
       "isBackground": true,
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
       "problemMatcher": {
         "base": ["$tsc"],
         "background": {
@@ -110,14 +75,7 @@
       "args": ["dev"],
       "group": "build",
       "isBackground": true,
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
       "problemMatcher": {
         "base": ["$tsc"],
         "background": {
@@ -134,14 +92,7 @@
       "command": "yarn",
       "args": ["workspace", "@portfolio/frontend", "test"],
       "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$jest"],
       "detail": "Run frontend tests"
     },
@@ -151,14 +102,7 @@
       "command": "yarn",
       "args": ["workspace", "@portfolio/backend", "test"],
       "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$mocha"],
       "detail": "Run backend tests"
     },
@@ -168,14 +112,7 @@
       "command": "yarn",
       "args": ["test"],
       "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$jest", "$mocha"],
       "detail": "Run all tests across the monorepo"
     },
@@ -186,14 +123,7 @@
       "args": ["workspaces", "foreach", "-pi", "run", "test:watch"],
       "group": "test",
       "isBackground": true,
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
       "problemMatcher": ["$jest-watch", "$mocha"],
       "detail": "Run tests in watch mode across all workspaces"
     },
@@ -203,14 +133,7 @@
       "command": "yarn",
       "args": ["workspaces", "foreach", "-A", "run", "test:coverage"],
       "group": "test",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$jest", "$mocha"],
       "detail": "Run tests with coverage across all workspaces"
     },
@@ -220,14 +143,7 @@
       "command": "yarn",
       "args": ["lint"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$eslint-stylish"],
       "detail": "Lint all workspaces"
     },
@@ -237,14 +153,7 @@
       "command": "yarn",
       "args": ["lint:fix"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$eslint-stylish"],
       "detail": "Lint and fix all workspaces"
     },
@@ -254,14 +163,7 @@
       "command": "yarn",
       "args": ["type-check"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$tsc"],
       "detail": "Run TypeScript type checking across all workspaces"
     },
@@ -271,14 +173,7 @@
       "command": "yarn",
       "args": ["format"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": [],
       "detail": "Format all files with Prettier"
     },
@@ -288,14 +183,7 @@
       "command": "yarn",
       "args": ["format:check"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": [],
       "detail": "Check formatting without making changes"
     },
@@ -305,14 +193,7 @@
       "command": "yarn",
       "args": ["clean"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": [],
       "detail": "Clean all build outputs across workspaces"
     },
@@ -321,15 +202,8 @@
       "type": "shell",
       "command": "docker",
       "args": ["compose", "up", "-d"],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": [],
       "detail": "Start all Docker services in background"
     },
@@ -338,15 +212,8 @@
       "type": "shell",
       "command": "docker",
       "args": ["compose", "down"],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": [],
       "detail": "Stop and remove all Docker services"
     },
@@ -355,16 +222,9 @@
       "type": "shell",
       "command": "docker",
       "args": ["compose", "logs", "-f"],
-      "group": "build",
+      "group": "docker",
       "isBackground": true,
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
       "problemMatcher": [],
       "detail": "Follow Docker service logs"
     },
@@ -374,14 +234,7 @@
       "command": "yarn",
       "args": ["code-quality:check"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$eslint-stylish", "$tsc"],
       "detail": "Run all code quality checks (lint, format, type-check)"
     },
@@ -391,14 +244,7 @@
       "command": "yarn",
       "args": ["code-quality"],
       "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true,
-        "clear": false
-      },
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$eslint-stylish", "$tsc"],
       "detail": "Fix all code quality issues (lint, format)"
     },
@@ -439,7 +285,7 @@
       "args": ["compose", "build"],
       "group": "docker",
       "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
-      "problemMatcher": [],
+      "problemMatcher": ["$docker-build"],
       "detail": "Build all Docker images"
     },
     {
@@ -449,9 +295,53 @@
       "args": ["compose", "build", "--no-cache"],
       "group": "docker",
       "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
-      "problemMatcher": [],
+      "problemMatcher": ["$docker-build"],
       "detail": "Rebuild all Docker images without cache"
     },
+    {
+      "label": "docker:debug-backend",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "up", "-d", "backend"],
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": ["$docker-up"],
+      "dependsOn": "docker:build",
+      "detail": "Start backend container for debugging"
+    },
+    {
+      "label": "docker:debug-frontend",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "up", "-d", "frontend"],
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "shared" },
+      "problemMatcher": ["$docker-up"],
+      "dependsOn": "docker:build",
+      "detail": "Start frontend container for debugging"
+    },
+
+    {
+      "label": "docker:exec-backend",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "exec", "backend", "sh"],
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
+      "problemMatcher": [],
+      "detail": "Open shell in backend container"
+    },
+    {
+      "label": "docker:exec-frontend",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "exec", "frontend", "sh"],
+      "group": "docker",
+      "presentation": { "echo": true, "reveal": "always", "panel": "new" },
+      "problemMatcher": [],
+      "detail": "Open shell in frontend container"
+    },
+
     {
       "label": "storybook",
       "type": "shell",
