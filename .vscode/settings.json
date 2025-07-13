@@ -1,6 +1,5 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
@@ -16,9 +15,12 @@
     "typescript",
     "typescriptreact"
   ],
+  "eslint.nodePath": ".yarn/sdks",
+  "eslint.useFlatConfig": true,
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.suggest.autoImports": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.tsdk": ".yarn/sdks/typescript/lib",
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true,
@@ -35,7 +37,9 @@
     "**/coverage": true,
     "**/.nyc_output": true,
     "**/yarn.lock": true,
-    "**/package-lock.json": true
+    "**/package-lock.json": true,
+    "**/.yarn": true,
+    "**/.pnp.*": true
   },
   "files.associations": {
     "*.env.example": "dotenv"
@@ -49,7 +53,15 @@
     "typescriptreact": "html"
   },
   "tailwindCSS.experimental.classRegex": [
-    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
-    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
-  ]
-} 
+    [
+      "clsx\\(([^)]*)\\)",
+      "(?:'|\"|`)([^']*)(?:'|\"|`)"
+    ],
+    [
+      "cn\\(([^)]*)\\)",
+      "(?:'|\"|`)([^']*)(?:'|\"|`)"
+    ]
+  ],
+  "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
