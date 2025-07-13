@@ -1,0 +1,189 @@
+---
+description: This document reflects the current technology stack and may be updated as the project evolves.
+alwaysApply: true
+---
+# Technology Stack & Architecture
+
+## 🏗️ Project Architecture
+
+### **Monorepo Structure**
+- **Package Manager**: Yarn 4.9.2 with Plug'n'Play (PnP)
+- **Workspace Management**: Yarn workspaces for monorepo coordination
+- **Build System**: TypeScript with strict configuration
+- **Code Quality**: ESLint + Prettier for consistent formatting
+
+### **Directory Structure**
+```
+Portfolio/
+├── apps/
+│   ├── backend/          # Node.js/Express API
+│   └── frontend/         # Next.js frontend
+├── packages/
+│   └── shared/           # Shared utilities and constants
+├── tools/
+│   ├── nginx/            # Nginx configuration
+│   └── database/         # Database initialization
+├── documentation/        # Project documentation
+├── scripts/              # Build and setup scripts
+└── private/              # Private documentation and scripts
+```
+
+## 🚀 Core Technologies
+
+### **Frontend Stack**
+- **Framework**: Next.js 15.3.5 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS 4.1.11
+- **State Management**: React hooks + Context API
+- **Form Handling**: React Hook Form + Zod validation
+- **UI Components**: Custom components with Framer Motion animations
+- **Icons**: Lucide React
+- **HTTP Client**: Axios
+- **Development**: Hot reload with development server
+
+### **Backend Stack**
+- **Runtime**: Node.js >=22.0.0 (Alpine Linux)
+- **Framework**: Express.js 5.1.0 with TypeScript
+- **Database**: PostgreSQL 17 (Alpine)
+- **Database Driver**: pg (PostgreSQL client)
+- **Validation**: Zod schemas for runtime type safety
+- **Authentication**: JWT with secure session management
+- **Security**: Helmet, CORS, Rate Limiting
+- **Logging**: Winston + Morgan
+- **Development**: tsx for hot reload
+
+### **Database & Storage**
+- **Primary Database**: PostgreSQL 17
+- **Connection Pooling**: pg connection management
+- **Migrations**: Custom migration scripts
+- **Seeding**: Custom seed scripts
+- **Backup**: Docker volume persistence
+
+## 🐳 Infrastructure & DevOps
+
+### **Containerization**
+- **Platform**: Docker with Docker Compose
+- **Base Images**: Alpine Linux for minimal footprint
+- **Multi-stage Builds**: Optimized for production and development
+- **Health Checks**: Built-in health monitoring
+- **Resource Limits**: Memory and CPU constraints
+
+### **Reverse Proxy & Load Balancing**
+- **Web Server**: Nginx 1.29 (Alpine)
+- **SSL/TLS**: Self-signed certificates for development
+- **CORS**: Configured for cross-origin requests
+- **Security Headers**: HSTS, CSP, and other security measures
+- **Rate Limiting**: Built-in rate limiting capabilities
+
+### **Development Environment**
+- **Local Development**: Docker Compose for full stack
+- **Hot Reload**: Live code updates for both frontend and backend
+- **Debugging**: Node.js debugging ports exposed
+- **Environment Management**: Service-specific .env files
+- **Package Management**: Yarn PnP for fast, reliable dependency resolution
+
+## 🔧 Development Tools
+
+### **Code Quality**
+- **Linting**: ESLint with TypeScript rules
+- **Formatting**: Prettier with consistent configuration
+- **Type Checking**: TypeScript strict mode
+- **Git Hooks**: Husky for pre-commit validation
+- **Commit Standards**: Conventional Commits with commitlint
+
+### **Testing Strategy**
+- **Frontend Testing**: Jest + Testing Library
+- **Backend Testing**: Mocha + Chai + Supertest
+- **Frontend E2E**: Playwright for full application testing
+- **Coverage**: Jest coverage (frontend), NYC coverage (backend)
+- **API Testing**: Supertest for backend API testing
+
+### **Build & Deployment**
+- **Build Process**: TypeScript compilation + bundling
+- **Optimization**: Tree shaking and code splitting
+- **Static Assets**: Optimized image and font loading
+- **Performance**: Lighthouse optimization targets
+- **Monitoring**: Application performance monitoring
+
+## 🔒 Security & Performance
+
+### **Security Measures**
+- **Authentication**: JWT with secure token management
+- **Authorization**: Role-based access control
+- **Input Validation**: Zod schemas for all inputs
+- **SQL Injection**: Parameterized queries with pg
+- **XSS Protection**: Content Security Policy
+- **CSRF Protection**: Token-based CSRF protection
+- **Rate Limiting**: Express Rate Limit
+- **HTTPS**: SSL/TLS encryption
+- **Security Headers**: Helmet middleware
+
+### **Performance Optimizations**
+- **Caching**: Redis for session and data caching
+- **CDN**: Static asset delivery optimization
+- **Database**: Connection pooling and query optimization
+- **Frontend**: Code splitting and lazy loading
+- **Images**: WebP format with responsive sizing
+- **Fonts**: Font optimization and preloading
+
+## 📊 Monitoring & Analytics
+
+### **Application Monitoring**
+- **Logging**: Winston structured logging with different levels
+- **HTTP Logging**: Morgan for request logging
+- **Health Checks**: Endpoint health monitoring
+- **Metrics**: Custom application metrics
+
+### **Analytics**
+- **Web Analytics**: Google Analytics 4 (planned)
+- **User Behavior**: Custom event tracking
+- **Performance**: Core Web Vitals monitoring
+- **SEO**: Search engine optimization tracking
+
+## 🚀 Deployment Strategy
+
+### **Environment Management**
+- **Development**: Local Docker Compose setup
+- **Staging**: Cloud-based staging environment
+- **Production**: Cloud deployment with CI/CD
+- **Environment Variables**: Service-specific configuration
+- **Secrets Management**: Secure secret handling
+
+### **CI/CD Pipeline**
+- **Version Control**: Git with feature branch workflow
+- **Automated Testing**: Pre-deployment test suite
+- **Code Quality**: Automated linting and formatting
+- **Security Scanning**: Dependency vulnerability scanning
+- **Deployment**: Automated deployment to staging/production
+
+## 📈 Scalability Considerations
+
+### **Horizontal Scaling**
+- **Load Balancing**: Nginx load balancer
+- **Database**: Read replicas and connection pooling
+- **Caching**: Redis cluster for distributed caching
+- **CDN**: Global content delivery network
+
+### **Vertical Scaling**
+- **Resource Optimization**: Memory and CPU optimization
+- **Database**: Query optimization and indexing
+- **Application**: Code optimization and bundling
+- **Infrastructure**: Auto-scaling capabilities
+
+## 🔄 Future Considerations
+
+### **Technology Evolution**
+- **Framework Updates**: Regular Next.js and Express updates
+- **Database**: PostgreSQL version upgrades
+- **Security**: Regular security patches and updates
+- **Performance**: Continuous performance optimization
+
+### **Feature Additions**
+- **Real-time**: WebSocket integration for live features
+- **Search**: Full-text search capabilities
+- **File Upload**: Secure file upload and storage
+- **API Versioning**: Backward-compatible API evolution
+- **Microservices**: Service decomposition if needed
+- **File Upload**: Secure file upload and storage
+- **API Versioning**: Backward-compatible API evolution
+- **Microservices**: Service decomposition if needed

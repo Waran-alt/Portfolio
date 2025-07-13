@@ -1,0 +1,99 @@
+---
+alwaysApply: true
+---
+
+# Environment Variables and Constants Management
+
+## AI Assistant Access Policy
+
+> **AI assistants do NOT have access to actual `.env` files.**
+>
+> - AI must never propose to generate, copy, or autofill `.env` files, except for the use of `make setup-env`.
+> - AI may only reference `.env.*.example` templates and `documentation/ENVIRONMENT_SETUP.md` for environment variable documentation.
+> - Any action involving `.env` files (creation, editing, copying, or value suggestions) must be performed manually by the user.
+> - AI should always prompt the user to review, create, or update `.env` files themselves.
+
+## Description
+
+This rule enforces a clear separation between environment variables (`.env` files) and static application constants (e.g., `constants.ts`, `config.ts`, `enums.ts`).
+
+ - **Environment variables** are for sensitive data (API keys, secrets) or values that change across deployment environments (development, staging, production like API URLs, port numbers, feature flags). They are loaded at runtime or build-time and **never committed to version control**.
+ - **Static constants** are for values intrinsic to the application's logic or design that are fixed at compile-time and **do not change across environments** (e.g., enum values, hardcoded limits, application name, fixed routes). They are part of your codebase and **committed to version control**.
+
+## Guidelines
+
+### Environment Variables (.env)
+
+*When manipulating variables, update the `scripts/setup-env.sh` script. Please first refer to `documentation/ENVIRONMENT_SETUP.md`.*
+
+1. **Purpose**:
+   - Store sensitive (e.g., API keys, database credentials) and environment-specific (e.g., different database URLs for development, staging, production) configuration values.
+   - Allow behavior changes without modifying code.
+
+2. **Security**:
+   - Never commit `.env` files to version control. Always add `.env` to your `.gitignore` file.
+   - Use `.env.*.example` files to document required environment variables without exposing sensitive data. They can be found in `documentation/env-templates/`.
+   - For highly sensitive production secrets, consider using dedicated secrets management services rather than solely relying on .env files in deployed environments.
+
+3. **Access**:
+   - Access environment variables using secure libraries or built-in methods.
+   - For frontend frameworks, use prefixes like `NEXT_PUBLIC_` to mark variables safe for client-side exposure.
+ 
+4. **Validation**:
+   - Validate crucial variables at startup to ensure they are present and correctly formatted.
+   - Use TypeScript and validation libraries to ensure type safety.
+   - Export validated environment variables as a typed configuration object.
+   - Provide clear error messages if required variables are missing or incorrectly formatted.
+   - Consider integrating automated validation into your CI/CD pipeline.
+
+5. **Environment-Specific Configuration**:
+   - Use service-specific `.env` files (e.g., `.env.backend`, `.env.frontend`, `.env.postgres`) for different services.
+   - Use `.env.common` for variables shared across all services.
+   - Public vs. Private: Frontend frameworks (like Next.js, Create React App, Vite) have mechanisms to differentiate between public environment variables (that are bundled into the client-side code, e.g., `NEXT_PUBLIC_API_URL`) and private ones (only accessible on the server-side, e.g., `STRIPE_SECRET_KEY`).
+   - *Never expose private keys to the browser.* Always ensure sensitive environment variables are only used on the server side or during the build process, and never embedded in client-side JavaScript.
+
+#### Common Variables
+- **Definition**: Define all common variables in `documentation/env-templates/env.common.example`. Ensure that these variables are truly common and needed by multiple services.
+- **Usage**: Load common variables in all relevant services to avoid redundancy and ensure consistency.
+
+#### Service-Specific Variables
+- **Definition**: Define service-specific variables in their respective templates (e.g., `env.frontend.example`, `env.backend.example`). Ensure that these variables are only relevant to the specific service.
+- **Usage**: Load service-specific variables only in their respective services to maintain a clear separation of concerns.
+
+#### Avoid References
+- **Avoid Direct References**: Avoid referencing specific variables from one example in another example. This can lead to complexity, maintenance issues, and potential security risks.
+- **Alternative Approaches**:
+  - **API Endpoints**: If a frontend service needs a value typically defined in the backend, consider exposing it through a secure API endpoint.
+  - **Constants**: If a value is truly needed across services and doesn't change across environments, define it in `packages/shared/src/constants.ts`.
+  - **Environment Variables**: If a value is truly needed across services and changes across environments, define it in `env.common.example`.
+
+### Constants
+
+1. **Purpose**:
+   - Store static, *non-sensitive*, application-wide values fixed at build-time or compile-time.
+   - Define universal truths or fixed behaviors of your application.
+
+2. **Naming Conventions**:
+   - Use `UPPER_SNAKE_CASE` for primitive values (e.g., `MAX_ITEMS_PER_PAGE`).
+   - Use `PascalCase` for constant objects/enums (e.g., `UserRoles`).
+
+3. **Organization**:
+   - Group related constants together in `packages/shared/src/constants.ts`.
+   - Use `as const` for type safety.
+
+4. **Usage**:
+   - Import constants where needed rather than hardcoding values.
+   - Provide sensible defaults in constants that can be overridden by environment variables if needed.
+
+## Documentation
+  - Document the purpose and usage of each environment variable and constant.
+  - Ensure `.env.*.example` and constants files are well-documented with comments explaining each variable.
+  - Keep `documentation/ENVIRONMENT_SETUP.md` simple and focused on practical usage.
+
+## Anti-Patterns to Avoid
+- **Committing `.env` files to Git**: Always include `.env` in your `.gitignore`.
+- **Hardcoding secrets**: Never hardcode secrets directly in your code or constant files.
+- **Scattering `process.env` calls**: Avoid accessing process.env directly throughout your codebase. Centralize environment variable access and validation in a dedicated config module.
+- **Lack of validation**: Always validate environment variables to prevent runtime errors.
+- **Mixing concerns**: Avoid using constants for environment-specific values or environment variables for static values.
+- **Direct References**: Avoid referencing specific variables from one example in another example. Use alternative approaches like `.env.common.example`, API endpoints or configuration files.

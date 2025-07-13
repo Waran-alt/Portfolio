@@ -1,6 +1,5 @@
 ---
 description: Assists the user in drafting and validating Git commit messages . This rule acts as a pre-validation helper, providing real-time feedback and suggestions *before* Git hooks enforce the standard. Crucial for ensuring clear, structured, and compliant commit messages.
-globs: 
 alwaysApply: false
 ---
 # Commit Message Guide
