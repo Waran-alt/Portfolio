@@ -1,0 +1,35 @@
+{
+  "name": "@portfolio/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared utilities and types for the Portfolio monorepo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Waran-alt/Portfolio.git",
+    "directory": "packages/shared"
+  },
+  "homepage": "https://github.com/Waran-alt/Portfolio",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "type-check": "tsc --noEmit",
+    "test": "mocha --require tsx 'src/**/*.test.ts'",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.25.75"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "yarn": ">=4.0.0"
+  }
+}

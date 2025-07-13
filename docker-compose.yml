@@ -1,0 +1,198 @@
+# Portfolio Development Environment
+# Docker Compose configuration for local development
+# Minimum Docker Compose version: 2.0
+
+services:
+  # ============================================================================
+  # DATABASE SERVICE
+  # ============================================================================
+  # PostgreSQL Database - Primary data store for the application
+  postgres:
+    image: postgres:17-alpine  # Lightweight Alpine-based PostgreSQL 17
+    container_name: portfolio_postgres_dev
+    restart: unless-stopped  # Restart container unless manually stopped
+    env_file:
+      - .env.common          # Shared environment variables
+      - .env.postgres        # PostgreSQL-specific environment variables
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistent data storage
+      - ./tools/database/init:/docker-entrypoint-initdb.d:ro  # Database initialization scripts
+    networks:
+      - portfolio_network    # Custom network for service communication
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]  # Check if PostgreSQL is ready to accept connections
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}    # How often to run health check
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}      # How long to wait for health check
+      retries: ${HEALTH_CHECK_RETRIES:-3}        # Number of consecutive failures before marking unhealthy
+    labels:
+      - "com.portfolio.service=postgres"         # Service identification
+      - "com.portfolio.environment=development"  # Environment identification
+    deploy:
+      resources:
+        limits:
+          memory: 512M       # Maximum memory allocation
+        reservations:
+          memory: 256M       # Minimum memory reservation
+
+  # ============================================================================
+  # BACKEND SERVICE
+  # ============================================================================
+  # Node.js/Express API - Handles business logic and data processing
+  backend:
+    build:
+      context: .              # Build context (root directory)
+      dockerfile: apps/backend/Dockerfile  # Path to backend Dockerfile
+      target: development     # Multi-stage build target for development
+    container_name: portfolio_backend_dev
+    restart: unless-stopped
+    env_file:
+      - .env.common          # Shared environment variables
+      - .env.postgres        # Database connection variables
+      - .env.backend         # Backend-specific environment variables
+    volumes:
+      - ./apps/backend:/app/apps/backend        # Mount backend source code for hot reload
+      - ./packages/shared:/app/packages/shared  # Mount shared package for hot reload
+      - /app/apps/backend/dist                  # Exclude built files from volume mount
+      - backend_logs:/app/apps/backend/logs     # Persistent log storage
+    ports:
+      - "${BACKEND_PORT:-4000}:${BACKEND_PORT:-4000}"           # API port mapping
+      - "${BACKEND_DEBUG_PORT:-9229}:${BACKEND_DEBUG_PORT:-9229}"  # Node.js debug port
+    depends_on:
+      postgres:
+        condition: service_healthy  # Wait for PostgreSQL to be healthy before starting
+    networks:
+      - portfolio_network
+    command: yarn dev        # Override default command to run development server
+    environment:
+      - NODE_ENV=development # Force development environment
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${BACKEND_PORT:-4000}/api/health || exit 1"]  # Check API health endpoint
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-3}
+    labels:
+      - "com.portfolio.service=backend"
+      - "com.portfolio.environment=development"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ============================================================================
+  # FRONTEND SERVICE
+  # ============================================================================
+  # Next.js Frontend - React-based user interface
+  frontend:
+    build:
+      context: .            # Build context (root directory)
+      dockerfile: apps/frontend/Dockerfile  # Path to frontend Dockerfile
+      target: development   # Multi-stage build target for development
+    container_name: portfolio_frontend_dev
+    restart: unless-stopped
+    env_file:
+      - .env.common         # Shared environment variables
+      - .env.frontend       # Frontend-specific environment variables
+    volumes:
+      - ./apps/frontend:/app/apps/frontend # Mount entire frontend directory for full sync and hot reload     
+      - ./packages/shared:/app/packages/shared # Mount shared package for hot reload when shared code changes
+      - /app/apps/frontend/.next # Prevent Next.js build cache from being overwritten by host
+    ports:
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"           # Frontend port mapping
+      - "${FRONTEND_DEBUG_PORT:-9228}:${FRONTEND_DEBUG_PORT:-9228}"  # Frontend debug port
+    depends_on:
+      backend:
+        condition: service_healthy # Wait for backend to be healthy before starting
+    networks:
+      - portfolio_network
+    environment:
+      - NODE_ENV=development # Force development environment
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:${FRONTEND_PORT:-3000} || exit 1"]  # Use IPv4 to avoid IPv6 issues
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-3}
+      start_period: 60s      # Give Next.js more time to start up
+    labels:
+      - "com.portfolio.service=frontend"
+      - "com.portfolio.environment=development"
+    deploy:
+      resources:
+        limits:
+          memory: 1G         # Frontend needs more memory for Next.js
+        reservations:
+          memory: 512M
+
+  # ============================================================================
+  # REVERSE PROXY SERVICE
+  # ============================================================================
+  # Nginx Reverse Proxy - Handles SSL termination, load balancing, and routing
+  nginx:
+    build:
+      context: ./tools/nginx  # Nginx configuration directory
+      dockerfile: Dockerfile
+      target: development
+      args:
+        GENERATE_DEV_CERTS: true  # Generate self-signed certificates for development
+    container_name: portfolio_nginx_dev
+    restart: unless-stopped
+    env_file:
+      - .env.common          # Shared environment variables
+      - .env.nginx           # Nginx-specific environment variables
+    ports:
+      - "80:80"              # HTTP port
+      - "443:443"            # HTTPS port
+    volumes:
+      - ./tools/nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro  # Mount nginx configuration
+    depends_on:
+      frontend:
+        condition: service_healthy  # Wait for frontend to be healthy
+      backend:
+        condition: service_healthy  # Wait for backend to be healthy
+    networks:
+      - portfolio_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]  # Check nginx health endpoint
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      retries: ${HEALTH_CHECK_RETRIES:-3}
+    labels:
+      - "com.portfolio.service=nginx"
+      - "com.portfolio.environment=development"
+    deploy:
+      resources:
+        limits:
+          memory: 256M       # Nginx is lightweight
+        reservations:
+          memory: 128M
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+# Named volumes for persistent data storage
+volumes:
+  postgres_data:
+    driver: local
+    labels:
+      - "com.portfolio.volume=postgres_data"
+      - "com.portfolio.environment=development"
+  backend_logs:
+    driver: local
+    labels:
+      - "com.portfolio.volume=backend_logs"
+      - "com.portfolio.environment=development"
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+# Custom network for inter-service communication
+networks:
+  portfolio_network:
+    driver: bridge          # Bridge network for container communication
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET:-172.20.0.0/16}  # Custom subnet for the network
+    labels:
+      - "com.portfolio.network=portfolio_network"
+      - "com.portfolio.environment=development" 

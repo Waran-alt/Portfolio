@@ -1,0 +1,50 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    // Override emit settings for building
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    
+    // Backend-specific settings
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // Backend-specific path mappings
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/controllers/*": ["./src/controllers/*"],
+      "@/middleware/*": ["./src/middleware/*"],
+      "@/models/*": ["./src/models/*"],
+      "@/routes/*": ["./src/routes/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/database/*": ["./src/database/*"],
+      "@/config/*": ["./src/config/*"]
+    },
+    
+    // Yarn PnP plugin
+    "plugins": [
+      {
+        "name": "@yarnpkg/plugin-typescript"
+      }
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "tsx": {
+    "require": ["tsconfig-paths/register"]
+  }
+} 
