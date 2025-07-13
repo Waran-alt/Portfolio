@@ -22,7 +22,9 @@
       "outFiles": ["${workspaceFolder}/apps/frontend/.next/**/*.js"],
       "smartStep": true,
       "pauseForSourceMap": true,
-      "detail": "Launch Next.js development server with debugging enabled"
+      "presentation": {
+        "description": "Launch Next.js development server with debugging enabled"
+      }
     },
 
     {
@@ -46,7 +48,9 @@
       "sourceMaps": true,
       "smartStep": true,
       "pauseForSourceMap": true,
-      "detail": "Launch Express development server with debugging enabled"
+      "presentation": {
+        "description": "Launch Express development server with debugging enabled"
+      }
     },
 
     {
@@ -68,7 +72,9 @@
       "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "smartStep": true,
       "pauseForSourceMap": true,
-      "detail": "Debug Jest unit tests with breakpoints"
+      "presentation": {
+        "description": "Debug Jest unit tests with breakpoints"
+      }
     },
     {
       "name": "debug:mocha-tests",
@@ -93,7 +99,9 @@
       "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "smartStep": true,
       "pauseForSourceMap": true,
-      "detail": "Debug Mocha integration tests with breakpoints"
+      "presentation": {
+        "description": "Debug Mocha integration tests with breakpoints"
+      }
     },
     {
       "name": "debug:e2e-tests",
@@ -113,7 +121,9 @@
       "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
       "smartStep": true,
       "pauseForSourceMap": true,
-      "detail": "Debug Playwright end-to-end tests with breakpoints"
+      "presentation": {
+        "description": "Debug Playwright end-to-end tests with breakpoints"
+      }
     },
     {
       "name": "docker:attach-backend",
@@ -122,7 +132,6 @@
       "port": "${env:BACKEND_DEBUG_PORT:-9229}",
       "address": "${env:HOSTNAME:-localhost}",
       "cwd": "${workspaceFolder}/apps/backend",
-      "protocol": "inspector",
       "sourceMaps": true,
       "envFile": "${workspaceFolder}/.env",
       "skipFiles": ["<node_internals>/**"],
@@ -137,7 +146,9 @@
       "continueOnAttach": true,
       "smartStep": true,
       "pauseForSourceMap": true,
-      "detail": "Attach to Express backend running in Docker container"
+      "presentation": {
+        "description": "Attach to Express backend running in Docker container"
+      }
     },
     {
       "name": "docker:attach-frontend",
@@ -146,7 +157,6 @@
       "port": "${env:FRONTEND_DEBUG_PORT:-9228}",
       "address": "${env:HOSTNAME:-localhost}",
       "cwd": "${workspaceFolder}/apps/frontend",
-      "protocol": "inspector",
       "sourceMaps": true,
       "envFile": "${workspaceFolder}/.env",
       "skipFiles": ["<node_internals>/**"],
@@ -162,7 +172,9 @@
       "smartStep": true,
       "pauseForSourceMap": true,
       "outFiles": ["${workspaceFolder}/apps/frontend/.next/**/*.js"],
-      "detail": "Attach to Next.js frontend running in Docker container"
+      "presentation": {
+        "description": "Attach to Next.js frontend running in Docker container"
+      }
     },
     {
       "name": "docker:monitor-postgres",
@@ -178,7 +190,9 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "smartStep": true,
-      "detail": "Monitor PostgreSQL database connections and query performance"
+      "presentation": {
+        "description": "Monitor PostgreSQL database connections and query performance"
+      }
     },
 
   ],
@@ -190,7 +204,9 @@
         "debug:backend"
       ],
       "stopAll": true,
-      "detail": "Debug both frontend and backend simultaneously"
+      "presentation": {
+        "description": "Debug both frontend and backend simultaneously"
+      }
     },
     {
       "name": "debug:full-stack-with-db",
@@ -200,7 +216,9 @@
       ],
       "stopAll": true,
       "preLaunchTask": "db:up:postgres",
-      "detail": "Debug full stack with database service"
+      "presentation": {
+        "description": "Debug full stack with database service"
+      }
     },
 
 
@@ -211,7 +229,9 @@
         "debug:mocha-tests"
       ],
       "stopAll": true,
-      "detail": "Debug all test suites simultaneously"
+      "presentation": {
+        "description": "Debug all test suites simultaneously"
+      }
     },
     {
       "name": "docker:debug-full-stack",
@@ -221,7 +241,9 @@
       ],
       "stopAll": true,
       "preLaunchTask": "docker:up",
-      "detail": "Debug full stack in Docker containers"
+      "presentation": {
+        "description": "Debug full stack in Docker containers"
+      }
     },
     {
       "name": "docker:debug-full-stack-with-db",
@@ -232,7 +254,9 @@
       ],
       "stopAll": true,
       "preLaunchTask": "docker:up",
-      "detail": "Debug full stack with database monitoring"
+      "presentation": {
+        "description": "Debug full stack with database monitoring"
+      }
     }
   ]
 } 
