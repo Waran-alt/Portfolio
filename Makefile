@@ -1,3 +1,8 @@
+ifneq (,$(wildcard .env))
+  include .env
+  export
+endif
+
 # Portfolio Docker Management Makefile
 # This Makefile provides convenient commands for managing the Docker environment
 
@@ -14,8 +19,8 @@ dev: ## Start development environment
 	@echo "Starting development environment..."
 	docker-compose up -d
 	@echo "Development environment started!"
-	@echo "Frontend: http://localhost:3000"
-	@echo "Backend: http://localhost:4000"
+	@echo "Frontend: http://localhost:$(or $(FRONTEND_PORT),3000)"
+	@echo "Backend: http://localhost:$(or $(BACKEND_PORT),4000)"
 	@echo "Nginx: http://localhost"
 
 dev-build: ## Build and start development environment
