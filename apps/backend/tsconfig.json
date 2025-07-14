@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    // Project reference requirements
+    "composite": true,
+    
     // Override emit settings for building
     "noEmit": false,
     "outDir": "./dist",

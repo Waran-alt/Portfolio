@@ -6,13 +6,8 @@
     "module": "ESNext",
     "moduleResolution": "node",
     
-    // Emit Configuration
-    "noEmit": true, // Override in packages that need to emit
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "declaration": false, // Override in packages that need declarations
-    "declarationMap": false,
-    "sourceMap": false,
+    // Emit Configuration - Root doesn't emit
+    "noEmit": true,
     
     // Interop Constraints
     "allowSyntheticDefaultImports": true,
@@ -59,7 +54,9 @@
     ".next",
     "coverage",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "**/*.config.js",
+    "**/*.config.ts"
   ],
   "references": [
     {
