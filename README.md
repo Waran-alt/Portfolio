@@ -255,7 +255,7 @@ docker-compose exec postgres psql -U postgres -d portfolio_db  # Database access
 
 The project uses service-specific environment files for secure configuration management:
 
-- `.env.common` - Shared across all services
+- `.env` - Shared across all services
 - `.env.frontend` - Frontend-specific configuration
 - `.env.backend` - Backend-specific configuration
 - `.env.postgres` - Database configuration

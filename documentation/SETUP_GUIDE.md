@@ -27,7 +27,7 @@ make setup-env
 ./scripts/setup-env.sh
 
 # Option 3: Manually
-cp documentation/env-templates/env.common.example .env.common
+cp documentation/env-templates/env.example .env
 cp documentation/env-templates/env.frontend.example .env.frontend
 cp documentation/env-templates/env.backend.example .env.backend
 cp documentation/env-templates/env.postgres.example .env.postgres

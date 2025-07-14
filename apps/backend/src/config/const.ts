@@ -8,7 +8,7 @@ import { envVar } from './env';
 
 // Internal URLs (Docker network communication)
 export const INTERNAL_URLS = {
-  FRONTEND: `http://${SERVICE_NAMES.FRONTEND}:${envVar.server.port}`,
+  FRONTEND: `http://${SERVICE_NAMES.FRONTEND}:${envVar.frontend.port}`,
   BACKEND: `http://${SERVICE_NAMES.BACKEND}:${envVar.server.port}`,
   POSTGRES: `postgresql://${SERVICE_NAMES.POSTGRES}:${PORTS.POSTGRES}`,
 } as const;

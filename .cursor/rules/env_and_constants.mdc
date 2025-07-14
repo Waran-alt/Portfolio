@@ -48,12 +48,12 @@ This rule enforces a clear separation between environment variables (`.env` file
 
 5. **Environment-Specific Configuration**:
    - Use service-specific `.env` files (e.g., `.env.backend`, `.env.frontend`, `.env.postgres`) for different services.
-   - Use `.env.common` for variables shared across all services.
+   - Use `.env` for variables shared across all services.
    - Public vs. Private: Frontend frameworks (like Next.js, Create React App, Vite) have mechanisms to differentiate between public environment variables (that are bundled into the client-side code, e.g., `NEXT_PUBLIC_API_URL`) and private ones (only accessible on the server-side, e.g., `STRIPE_SECRET_KEY`).
    - *Never expose private keys to the browser.* Always ensure sensitive environment variables are only used on the server side or during the build process, and never embedded in client-side JavaScript.
 
 #### Common Variables
-- **Definition**: Define all common variables in `documentation/env-templates/env.common.example`. Ensure that these variables are truly common and needed by multiple services.
+- **Definition**: Define all common variables in `documentation/env-templates/env.example`. Ensure that these variables are truly common and needed by multiple services.
 - **Usage**: Load common variables in all relevant services to avoid redundancy and ensure consistency.
 
 #### Service-Specific Variables
@@ -65,7 +65,7 @@ This rule enforces a clear separation between environment variables (`.env` file
 - **Alternative Approaches**:
   - **API Endpoints**: If a frontend service needs a value typically defined in the backend, consider exposing it through a secure API endpoint.
   - **Constants**: If a value is truly needed across services and doesn't change across environments, define it in `packages/shared/src/constants.ts`.
-  - **Environment Variables**: If a value is truly needed across services and changes across environments, define it in `env.common.example`.
+  - **Environment Variables**: If a value is truly needed across services and changes across environments, define it in `env.example`.
 
 ### Constants
 
@@ -96,4 +96,4 @@ This rule enforces a clear separation between environment variables (`.env` file
 - **Scattering `process.env` calls**: Avoid accessing process.env directly throughout your codebase. Centralize environment variable access and validation in a dedicated config module.
 - **Lack of validation**: Always validate environment variables to prevent runtime errors.
 - **Mixing concerns**: Avoid using constants for environment-specific values or environment variables for static values.
-- **Direct References**: Avoid referencing specific variables from one example in another example. Use alternative approaches like `.env.common.example`, API endpoints or configuration files.
+- **Direct References**: Avoid referencing specific variables from one example in another example. Use alternative approaches like `.env.example`, API endpoints or configuration files.

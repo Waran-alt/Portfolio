@@ -355,7 +355,7 @@ while IFS= read -r -d '' template_file; do
     
     # Parse the template name to extract service name
     # Expected format: env.{service}.example
-    # Example: env.common.example -> service_name = "common"
+    # Example: env.frontend.example -> service_name = "frontend"
     if [[ "$template_name" =~ ^env\.(.+)\.example$ ]]; then
         service_name="${BASH_REMATCH[1]}"
         env_file="$PROJECT_ROOT/.env.$service_name"

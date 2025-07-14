@@ -12,7 +12,7 @@ services:
     container_name: portfolio_postgres_dev
     restart: unless-stopped  # Restart container unless manually stopped
     env_file:
-      - .env.common          # Shared environment variables
+      - .env                 # Shared environment variables
       - .env.postgres        # PostgreSQL-specific environment variables
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Persistent data storage
@@ -46,7 +46,7 @@ services:
     container_name: portfolio_backend_dev
     restart: unless-stopped
     env_file:
-      - .env.common          # Shared environment variables
+      - .env                 # Shared environment variables
       - .env.postgres        # Database connection variables
       - .env.backend         # Backend-specific environment variables
     volumes:
@@ -66,7 +66,7 @@ services:
     environment:
       - NODE_ENV=development # Force development environment
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:${BACKEND_PORT:-4000}/api/health || exit 1"]  # Check API health endpoint
+      test: ["CMD-SHELL", "sh -c 'curl -f http://localhost:$${BACKEND_PORT:-4000}/api/health || exit 1'"]  # Check API health endpoint
       interval: ${HEALTH_CHECK_INTERVAL:-30s}
       timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
@@ -92,7 +92,7 @@ services:
     container_name: portfolio_frontend_dev
     restart: unless-stopped
     env_file:
-      - .env.common         # Shared environment variables
+      - .env                # Shared environment variables
       - .env.frontend       # Frontend-specific environment variables
     volumes:
       - ./apps/frontend:/app/apps/frontend # Mount entire frontend directory for full sync and hot reload     
@@ -138,13 +138,13 @@ services:
     container_name: portfolio_nginx_dev
     restart: unless-stopped
     env_file:
-      - .env.common          # Shared environment variables
+      - .env                 # Shared environment variables
       - .env.nginx           # Nginx-specific environment variables
+      - .env.backend         # Inherit backend port for upstream
     ports:
       - "80:80"              # HTTP port
       - "443:443"            # HTTPS port
-    volumes:
-      - ./tools/nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro  # Mount nginx configuration
+    environment: {}
     depends_on:
       frontend:
         condition: service_healthy  # Wait for frontend to be healthy

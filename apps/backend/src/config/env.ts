@@ -3,8 +3,11 @@ import { z } from 'zod';
 // Environment variable schema for backend service
 const envSchema = z.object({
   // Server Configuration
-  PORT: z.string().transform(Number).default('4000'),
+  BACKEND_PORT: z.string().transform(Number).default('4000'),
   HOST: z.string().default('0.0.0.0'),
+  
+  // Frontend Configuration
+  FRONTEND_PORT: z.string().transform(Number).default('3000'),
 
   // Database Connection
   DATABASE_URL: z.string().url(),
@@ -32,8 +35,11 @@ export const env = envSchema.parse(process.env);
 // Export validated environment variables
 export const envVar = {
   server: {
-    port: env.PORT,
+    port: env.BACKEND_PORT,
     host: env.HOST,
+  },
+  frontend: {
+    port: env.FRONTEND_PORT,
   },
   database: {
     url: env.DATABASE_URL,

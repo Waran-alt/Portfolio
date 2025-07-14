@@ -113,7 +113,7 @@ export const API_CONFIG = {
 - `.env.nginx` - Nginx configuration
 
 ### Common Variables
-- `.env.common` - Shared across all services
+- `.env` - Shared across all services
 
 ## Validation
 
