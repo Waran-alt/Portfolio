@@ -133,8 +133,6 @@ services:
       context: ./tools/nginx  # Nginx configuration directory
       dockerfile: Dockerfile
       target: development
-      args:
-        GENERATE_DEV_CERTS: true  # Generate self-signed certificates for development
     container_name: portfolio_nginx_dev
     restart: unless-stopped
     env_file:
@@ -166,6 +164,10 @@ services:
           memory: 256M       # Nginx is lightweight
         reservations:
           memory: 128M
+    command: ["/usr/local/bin/startup.sh"]
+    volumes:
+      - ./tools/nginx/startup.sh:/usr/local/bin/startup.sh
+      - nginx_ssl:/etc/nginx/ssl
 
 # ============================================================================
 # VOLUMES
@@ -181,6 +183,11 @@ volumes:
     driver: local
     labels:
       - "com.portfolio.volume=backend_logs"
+      - "com.portfolio.environment=development"
+  nginx_ssl:
+    driver: local
+    labels:
+      - "com.portfolio.volume=nginx_ssl"
       - "com.portfolio.environment=development"
 
 # ============================================================================

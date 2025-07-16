@@ -6,7 +6,7 @@ endif
 # Portfolio Docker Management Makefile
 # This Makefile provides convenient commands for managing the Docker environment
 
-.PHONY: help dev prod build up down restart logs clean install test lint format
+.PHONY: help dev prod build up down restart logs clean install test lint format rebuild prod-rebuild
 
 # Default target
 help: ## Show this help message
@@ -288,3 +288,9 @@ quick-prod: ## Quick production start (setup + prod)
 	@echo "Quick production setup..."
 	$(MAKE) setup-env
 	$(MAKE) prod-build 
+
+rebuild: ## Rebuild all Docker images without cache
+	docker-compose build --no-cache
+
+prod-rebuild: ## Rebuild production Docker images without cache
+	docker-compose -f docker-compose.prod.yml build --no-cache 

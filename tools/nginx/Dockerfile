@@ -1,37 +1,14 @@
-# Nginx reverse proxy Dockerfile - Two-stage build
+# Nginx reverse proxy Dockerfile - Multi-stage build
 
-# Build arguments for certificate handling
-ARG GENERATE_DEV_CERTS=true
-ARG SSL_CERT_PATH=/etc/nginx/ssl
-
-# Builder stage for SSL certificate generation (development only)
-FROM nginx:1.29-alpine AS builder
-
-# Install openssl for certificate generation
-RUN apk add --no-cache openssl
-
-# Create necessary directories
-RUN mkdir -p /etc/nginx/ssl
-
-# Generate self-signed SSL certificate for development (only if GENERATE_DEV_CERTS=true)
-RUN echo "Generating self-signed certificates for development..."; \
-  openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/nginx/ssl/nginx-selfsigned.key \
-  -out /etc/nginx/ssl/nginx-selfsigned.crt \
-  -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"; \
-  openssl dhparam -out /etc/nginx/ssl/dhparam.pem 4096; \
-  chmod 600 /etc/nginx/ssl/nginx-selfsigned.key; \
-  chmod 644 /etc/nginx/ssl/nginx-selfsigned.crt; \
-  chmod 644 /etc/nginx/ssl/dhparam.pem
-
-# Base runtime stage (no certificates included)
+# Base runtime stage
 FROM nginx:1.29-alpine AS runtime-base
 
-# Install only runtime dependencies
+# Install runtime dependencies
 RUN apk add --no-cache \
   curl \
   ca-certificates \
-  dumb-init
+  dumb-init \
+  openssl
 
 # Remove default nginx configuration
 RUN rm /etc/nginx/conf.d/default.conf
@@ -58,22 +35,16 @@ ENTRYPOINT ["dumb-init", "--"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost/health || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
-
-# Development target (includes self-signed certificates)
+# Development target (uses runtime certificate generation)
 FROM runtime-base AS development
 
-# Copy self-signed certificates from builder stage for development
-COPY --from=builder /etc/nginx/ssl /etc/nginx/ssl
-
-# Copy template and substitution script
+# Copy template and startup script
 COPY dev.conf /etc/nginx/conf.d/default.conf.template
-COPY substitute-env.sh /usr/local/bin/substitute-env.sh
-RUN chmod +x /usr/local/bin/substitute-env.sh
+COPY startup.sh /usr/local/bin/startup.sh
+RUN chmod +x /usr/local/bin/startup.sh
 
-# Use the substitution script as the command
-CMD ["/usr/local/bin/substitute-env.sh"]
+# Use the startup script as the command
+CMD ["/usr/local/bin/startup.sh"]
 
 # Production target (NO certificates included - must be provided via volume mount)
 FROM runtime-base AS production
