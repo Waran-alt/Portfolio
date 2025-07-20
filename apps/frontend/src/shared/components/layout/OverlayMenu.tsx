@@ -10,7 +10,7 @@
 import { ANIMATION_MANAGER, DEFAULT_ANIMATION_CONFIG, type AnimationConfig } from '@/constants';
 import ApiTest from '@/features/api-test/components/ApiTest';
 import { animationLogger } from '@/utils/logger';
-import { Activity, Bug, ChevronDown, ChevronUp, Info, Palette, Pause, Play, Settings, Wifi, Wrench } from 'lucide-react';
+import { Activity, Bug, ChevronDown, ChevronUp, Code, Info, Palette, Pause, Play, Settings, Wifi, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import AnimationConfigEditor from './AnimationConfigEditor';
 
@@ -330,6 +330,24 @@ export default function OverlayMenu({
               onToggle={() => toggleSection('api-test')}
             >
               <ApiTest />
+            </Section>
+
+            {/* SVG Test */}
+            <Section
+              title="SVG Test"
+              icon={<Code className="w-4 h-4" />}
+              isOpen={activeSection === 'svg-test'}
+              onToggle={() => toggleSection('svg-test')}
+            >
+              <div className="text-white text-xs space-y-2">
+                <p>Interactive SVG path testing with different curved shape methods.</p>
+                <a
+                  href="/svg-test"
+                  className="inline-block bg-blue-500/20 border border-blue-400/40 text-blue-400 px-3 py-1 rounded text-xs hover:bg-blue-500/30 transition-colors"
+                >
+                  Open SVG Test Lab
+                </a>
+              </div>
             </Section>
           </div>
         </div>
