@@ -4,8 +4,9 @@ const nextConfig = {
   output: 'standalone',
   
   // Environment variables that should be available on the client side
+  // Note: Build-time configuration uses direct process.env access as it runs before app config is available
   env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
+    // Add any client-side environment variables here
   },
   
   // Image optimization configuration
@@ -17,16 +18,25 @@ const nextConfig = {
       },
     ],
     // Disable image optimization in development Docker environment
-    unoptimized: process.env.NODE_ENV === 'development',
+    unoptimized: process.env.NODE_ENV === 'development', // Build-time config
   },
   
   // Webpack configuration for better Docker builds
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Enable polling for file watching in Docker
+    // Optimize file watching for WSL2/Docker
     if (dev) {
       config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
+        poll: 250, // Faster polling for WSL2
+        aggregateTimeout: 150, // Reduced timeout
+        ignored: ['**/node_modules', '**/.git', '**/.next', '**/dist', '**/.yarn'], // Ignore unnecessary files
+      };
+      
+      // Optimize for development
+      config.optimization = {
+        ...config.optimization,
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false,
       };
     }
     
@@ -44,14 +54,14 @@ const nextConfig = {
   
   // TypeScript configuration
   typescript: {
-    // Type checking is done separately in CI/CD
-    ignoreBuildErrors: false,
+    // Skip type checking during dev for faster hot reload
+    ignoreBuildErrors: process.env.NODE_ENV === 'development', // Build-time config
   },
   
   // ESLint configuration
   eslint: {
-    // ESLint is run separately in CI/CD
-    ignoreDuringBuilds: false,
+    // Skip ESLint during dev for faster hot reload
+    ignoreDuringBuilds: process.env.NODE_ENV === 'development', // Build-time config
   },
   
   // Compression
@@ -95,8 +105,8 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NODE_ENV === 'development' 
-          ? 'http://backend:4000/api/:path*'
+        destination: process.env.NODE_ENV === 'development' // Build-time config
+          ? `http://backend:${process.env.BACKEND_PORT}/api/:path*`
           : '/api/:path*',
       },
     ];

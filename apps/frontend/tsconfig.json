@@ -44,6 +44,8 @@
     "node_modules",
     ".next",
     "dist",
-    "build"
+    "build",
+    "tailwind.config.ts",
+    "postcss.config.js"
   ]
 } 
