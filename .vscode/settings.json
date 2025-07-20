@@ -42,7 +42,13 @@
     "**/.pnp.*": true
   },
   "files.associations": {
-    "*.env.example": "dotenv"
+    "env.example": "dotenv",
+    "*.env.example": "dotenv",
+    "env.*.example": "dotenv",
+    "*.css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
   },
   "emmet.includeLanguages": {
     "typescript": "html",

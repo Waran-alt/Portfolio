@@ -85,12 +85,16 @@ docker-compose up -d
 yarn dev
 ```
 
-### 3. Access Your Application
+### Development
+```bash
+# Start all services
+docker-compose up
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:4000
-- **Nginx Proxy**: http://localhost (with HTTPS)
-- **Database**: localhost:5432
+# Access services
+- **Frontend**: ${NGINX_URL}:${FRONTEND_PORT}
+- **Backend API**: ${NGINX_URL}:${BACKEND_PORT}
+- **Database**: ${NGINX_URL}:${POSTGRES_PORT}
+```
 
 ## 📁 Project Structure
 
@@ -314,9 +318,8 @@ make logs      # View service logs
 **Port conflicts:**
 ```bash
 # Check what's using the ports
-netstat -tulpn | grep :3000
-netstat -tulpn | grep :4000
-netstat -tulpn | grep :80
+netstat -tulpn | grep :${FRONTEND_PORT}
+netstat -tulpn | grep :${BACKEND_PORT}
 ```
 
 **Database connection issues:**

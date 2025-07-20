@@ -15,14 +15,12 @@ The application consists of four main services:
 ┌─────────────────┐    ┌─────────────────┐
 │     Nginx       │    │    Frontend     │
 │  (Port 80/443)  │◄──►│   (Next.js)     │
-│                 │    │   (Port 3000)   │
 └─────────┬───────┘    └─────────────────┘
           │
           ▼
 ┌─────────────────┐    ┌─────────────────┐
 │     Backend     │    │   PostgreSQL    │
 │(Node.js/Express)│◄──►│   Database      │
-│   (Port 4000)   │    │   (Port 5432)   │
 └─────────────────┘    └─────────────────┘
 ```
 
@@ -58,9 +56,9 @@ docker-compose up -d
 docker-compose logs -f
 
 # Access the application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:4000
-# Nginx: http://localhost
+# Frontend: ${NGINX_URL}:${FRONTEND_PORT}
+# Backend API: ${NGINX_URL}:${BACKEND_PORT}
+# Nginx: ${NGINX_URL}
 ```
 
 ### 3. Production Setup
@@ -91,13 +89,8 @@ NODE_ENV=development
 BACKEND_PORT=4000
 
 # Frontend
-NEXT_PUBLIC_API_URL=http://localhost/api
-NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
-
-# Production (uncomment for production)
-# NEXT_PUBLIC_API_URL=https://your-domain.com/api
-# NEXT_PUBLIC_FRONTEND_URL=https://your-domain.com
-# FRONTEND_URL=https://your-domain.com
+NEXT_PUBLIC_API_URL=${NGINX_URL}/api
+NGINX_URL=${NGINX_URL}
 ```
 
 See `env.example` for complete configuration options.
@@ -173,9 +166,6 @@ Both frontend and backend support hot reloading in development:
 ```bash
 # Start backend with debug mode
 docker-compose exec backend yarn debug
-
-# Connect debugger to port 9229
-# VS Code: Add debug configuration for port 9229
 ```
 
 ## 🏭 Production Deployment
@@ -208,11 +198,6 @@ For production SSL:
 1. Replace self-signed certificates in `nginx/ssl/`
 2. Update `nginx/prod.conf` with your domain
 3. Use Let's Encrypt or your SSL provider
-
-```bash
-# Generate production SSL certificates (example with Let's Encrypt)
-# Place certificates in nginx/ssl/ directory
-```
 
 ### Environment Variables for Production
 
@@ -300,169 +285,8 @@ docker-compose up -d postgres
 
 ```bash
 # Check what's using ports
-netstat -tulpn | grep :3000
-netstat -tulpn | grep :4000
-netstat -tulpn | grep :80
+netstat -tulpn | grep :${FRONTEND_PORT}
+netstat -tulpn | grep :${BACKEND_PORT}
 
 # Change ports in docker-compose.yml if needed
 ```
-
-#### 4. File Permission Issues
-
-```bash
-# Fix permissions (Linux/Mac)
-sudo chown -R $USER:$USER .
-
-# For Windows, ensure Docker has file sharing enabled
-```
-
-#### 5. Memory Issues
-
-```bash
-# Check container resource usage
-docker stats
-
-# Increase Docker memory limit
-# Docker Desktop -> Settings -> Resources -> Memory
-```
-
-#### 6. Hot Reloading Not Working
-
-```bash
-# For Windows/Mac, ensure WATCHPACK_POLLING=true
-# In .env or docker-compose.yml
-
-# Restart with clean volumes
-docker-compose down -v
-docker-compose up -d
-```
-
-### Network Issues
-
-```bash
-# Check Docker networks
-docker network ls
-
-# Inspect network configuration
-docker network inspect portfolio_portfolio_network
-
-# Test connectivity between services
-docker-compose exec frontend ping backend
-docker-compose exec backend ping postgres
-```
-
-### Debugging Build Issues
-
-```bash
-# Build with no cache
-docker-compose build --no-cache
-
-# Build specific service
-docker-compose build frontend --no-cache
-
-# Check build context
-docker-compose config
-```
-
-## 🧪 Testing
-
-### Running Tests
-
-```bash
-# Frontend tests
-docker-compose exec frontend yarn test
-
-# Backend tests
-docker-compose exec backend yarn test
-
-# E2E tests
-docker-compose exec frontend yarn test:e2e
-```
-
-### Test Database
-
-```bash
-# Use separate test environment
-cp docker-compose.yml docker-compose.test.yml
-# Modify for test configuration
-docker-compose -f docker-compose.test.yml up -d
-```
-
-## 📦 Adding New Dependencies
-
-### Frontend Dependencies
-```bash
-# Add runtime dependency
-docker-compose exec frontend yarn add package-name
-
-# Add development dependency
-docker-compose exec frontend yarn add -D package-name
-
-# Rebuild container after major changes
-docker-compose build frontend
-```
-
-### Backend Dependencies
-```bash
-# Add runtime dependency
-docker-compose exec backend yarn add package-name
-
-# Add development dependency
-docker-compose exec backend yarn add -D package-name
-
-# Rebuild container after major changes
-docker-compose build backend
-```
-
-## 🔄 Maintenance
-
-### Regular Maintenance Tasks
-
-```bash
-# Update base images
-docker-compose pull
-
-# Clean up unused images
-docker image prune -a
-
-# Clean up volumes (BE CAREFUL - DATA LOSS)
-docker volume prune
-
-# Backup database regularly
-docker-compose exec postgres pg_dump -U postgres portfolio_db > "backup_$(date +%Y%m%d_%H%M%S).sql"
-```
-
-### Database Migrations
-
-```bash
-# Run migrations (example)
-docker-compose exec backend yarn migrate
-
-# Seed database
-docker-compose exec backend yarn seed
-
-# Reset database
-docker-compose down -v postgres
-docker-compose up -d postgres
-```
-
-## 🔐 SSL Certificate Setup
-
-For production SSL certificates using Let's Encrypt, see:
-- [SSL Setup Guide](SSL_SETUP.md) - Complete Let's Encrypt configuration
-- [Automatic renewal](SSL_SETUP.md#automatic-renewal) - Zero-maintenance certificates
-- [Troubleshooting](SSL_SETUP.md#monitoring-and-troubleshooting) - Common issues and solutions
-
-## 📚 Additional Resources
-
-- [Docker Documentation](https://docs.docker.com/)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Nginx Documentation](https://nginx.org/en/docs/)
-- [Let's Encrypt Documentation](https://letsencrypt.org/docs/)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 

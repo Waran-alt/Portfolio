@@ -19,9 +19,9 @@ dev: ## Start development environment
 	@echo "Starting development environment..."
 	docker-compose up -d
 	@echo "Development environment started!"
-	@echo "Frontend: http://localhost:$(or $(FRONTEND_PORT),3000)"
-	@echo "Backend: http://localhost:$(or $(BACKEND_PORT),4000)"
-	@echo "Nginx: http://localhost"
+	@echo "Frontend: ${NGINX_URL}:${FRONTEND_PORT}"
+	@echo "Backend: ${NGINX_URL}:${BACKEND_PORT}"
+	@echo "Nginx: ${NGINX_URL}"
 
 dev-build: ## Build and start development environment
 	@echo "Building and starting development environment..."
@@ -35,7 +35,7 @@ prod: ## Start production environment
 	@echo "Starting production environment..."
 	docker-compose -f docker-compose.prod.yml up -d
 	@echo "Production environment started!"
-	@echo "Application: https://localhost"
+	@echo "Application: ${NGINX_URL}"
 
 prod-build: ## Build and start production environment
 	@echo "Building and starting production environment..."
@@ -254,7 +254,7 @@ ssl-setup: ## Set up SSL certificates for development
 		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 			-keyout tools/nginx/ssl/key.pem \
 			-out tools/nginx/ssl/cert.pem \
-			-subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"; \
+			-subj "/C=US/ST=State/L=City/O=Organization/CN=${NGINX_URL}"; \
 		echo "Self-signed certificates created!"; \
 	else \
 		echo "SSL certificates already exist"; \

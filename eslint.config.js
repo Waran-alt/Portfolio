@@ -184,7 +184,7 @@ export default [
       'jsx-a11y/role-supports-aria-props': 'error',
       
       // Console handling for frontend
-      'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+      'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn', // Build-time config - acceptable exception
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },

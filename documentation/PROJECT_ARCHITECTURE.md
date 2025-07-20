@@ -24,8 +24,7 @@
 │                                                                            │
 │     ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐      │
 │     │     NGINX       │    │    FRONTEND     │    │     BACKEND     │      │
-│     │  (Port 80/443)  │◄──►│   (Next.js)     │◄──►│  (Express API)  │      │
-│     │  Reverse Proxy  │    │   (Port 3000)   │    │   (Port 4000)   │      │
+│     │ (Reverse Proxy) │◄──►│   (Next.js)     │◄──►│  (Express API)  │      │
 │     │                 │    │                 │    │                 │      │
 │     └───────┬─────────┘    └─────────────────┘    └────────┬────────┘      │
 │             │                                              │               │
@@ -34,7 +33,7 @@
 │     ┌─────────────────┐                           ┌─────────────────┐      │
 │     │   POSTGRESQL    │                           │     REDIS       │      │
 │     │   DATABASE      │                           │   (Optional)    │      │
-│     │   (Port 5432)   │                           │   (Port 6379)   │      │
+│     │                 │                           │                 │      │
 │     └─────────────────┘                           └─────────────────┘      │
 │                                                                            │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -141,37 +140,25 @@ Portfolio/
 
 ### Quick Start Commands
 ```bash
-# Start development environment
-make dev                    # or: docker-compose up -d
-
-# View logs
-make logs                   # or: docker-compose logs -f
-
-# Stop services
-make down                   # or: docker-compose down
-
-# Access containers
+make dev                    # Start development environment
+make logs                   # View logs
+make down                   # Stop services
 make shell-frontend         # Frontend container
 make shell-backend          # Backend container
 make shell-database         # Database shell
 ```
 
-### Development URLs
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:4000
-- **Nginx Proxy**: http://localhost
-- **Database**: localhost:5432
+### Service URLs
+- **Frontend**: ${NGINX_URL}:${FRONTEND_PORT}
+- **Backend API**: ${NGINX_URL}:${BACKEND_PORT}
+- **Nginx Proxy**: ${NGINX_URL}
+- **Database**: ${NGINX_URL}:${POSTGRES_PORT}
 
 ### Code Quality Commands
 ```bash
-# Linting
-make lint                   # Run linting
+make lint                  # Run linting
 make lint-fix              # Fix linting issues
-
-# Type checking
 make type-check            # TypeScript validation
-
-# Testing
 make test                  # Run all tests
 make test-frontend         # Frontend tests only
 make test-backend          # Backend tests only
@@ -185,7 +172,7 @@ make test-e2e              # End-to-end tests
    ↓
 2. Nginx (Port 80/443)
    ↓
-3. Route to Frontend (Port 3000) or Backend (Port 4000)
+3. Route to Frontend (Port ${FRONTEND_PORT}) or Backend (Port ${BACKEND_PORT})
    ↓
 4. Frontend makes API calls to Backend
    ↓
@@ -238,5 +225,3 @@ make test-e2e              # End-to-end tests
 - **Commit Standards**: Conventional commit messages
 - **Documentation**: Comprehensive setup guides
 - **Environment Management**: Flexible configuration
-
----
