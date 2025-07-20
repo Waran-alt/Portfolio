@@ -296,7 +296,7 @@ RUN if [ "$GENERATE_DEV_CERTS" = "true" ]; then \
       openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout /etc/nginx/ssl/nginx-selfsigned.key \
         -out /etc/nginx/ssl/nginx-selfsigned.crt \
-        -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"; \
+        -subj "/C=US/ST=State/L=City/O=Organization/CN=${NGINX_URL}"; \
     fi
 
 FROM runtime-base AS development
@@ -423,7 +423,7 @@ dig focus-on-pixel.com
 
 ```bash
 # Test which server block Nginx selects
-curl -H "Host: focus-on-pixel.com" http://localhost
+curl -H "Host: focus-on-pixel.com" ${NGINX_URL}
 
 # Check Nginx configuration
 docker-compose -f docker-compose.prod.yml exec nginx nginx -t

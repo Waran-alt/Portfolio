@@ -155,7 +155,7 @@ docker-compose -f docker-compose.prod.yml ps
 docker-compose -f docker-compose.prod.yml ps --format "table {{.Name}}\t{{.Status}}\t{{.Health}}"
 
 # Test backend connectivity
-docker-compose -f docker-compose.prod.yml exec nginx curl -I http://backend:4000/health
+docker-compose -f docker-compose.prod.yml exec nginx curl -I http://backend:${BACKEND_PORT}/health
 
 # Check network connectivity
 docker network ls

@@ -23,9 +23,9 @@ A comprehensive guide to the Nginx reverse proxy configuration for the Portfolio
 # Start development environment with HTTPS
 docker-compose up nginx
 
-# Access your application
-# Frontend: https://localhost (accept self-signed certificate)
-# Backend API: https://localhost/api
+# Access Services
+# Frontend: ${NGINX_URL} (accept self-signed certificate)
+# Backend API: ${NGINX_URL}/api
 ```
 
 ### Production Environment
@@ -144,20 +144,20 @@ docker-compose exec nginx ls -la /etc/nginx/ssl/
 # Check certificate validity
 docker-compose exec nginx openssl x509 -in /etc/nginx/ssl/cert.pem -text -noout
 
-# Test SSL connection from inside container
-docker-compose exec nginx openssl s_client -connect localhost:443 -servername localhost
+# Test SSL connection
+docker-compose exec nginx openssl s_client -connect ${NGINX_URL}:443 -servername ${NGINX_URL}
 ```
 
 ### Upstream Service Issues
 ```bash
 # Test backend connectivity from Nginx
-docker-compose exec nginx curl -I http://backend:4000/health
+docker-compose exec nginx curl -I http://backend:${BACKEND_PORT}/health
 
 # Check upstream configuration
 docker-compose exec nginx nginx -T | grep upstream
 
 # Test frontend connectivity from Nginx
-docker-compose exec nginx curl -I http://frontend:3000
+docker-compose exec nginx curl -I http://frontend:${FRONTEND_PORT}
 
 # Check Nginx error logs for upstream issues
 docker-compose exec nginx tail -f /var/log/nginx/error.log
@@ -175,7 +175,7 @@ docker-compose exec nginx cat /proc/1/status | grep VmRSS
 docker-compose exec nginx tail -f /var/log/nginx/access.log | grep -E "(5[0-9]{2}|4[0-9]{2})"
 
 # Test Nginx response time
-docker-compose exec nginx curl -w "@-" -o /dev/null -s "http://localhost/health"
+docker-compose exec nginx curl -w "@-" -o /dev/null -s "${NGINX_URL}/health"
 ```
 
 ---
@@ -208,12 +208,12 @@ docker-compose exec nginx curl -w "@-" -o /dev/null -s "http://localhost/health"
 ```nginx
 # Frontend service (Next.js)
 upstream frontend {
-    server frontend:3000;
+    server frontend:${FRONTEND_PORT};
 }
 
 # Backend service (Express.js)
 upstream backend {
-    server backend:4000;
+    server backend:${BACKEND_PORT};
 }
 ```
 

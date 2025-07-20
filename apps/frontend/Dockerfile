@@ -85,10 +85,10 @@ COPY --from=frontend-builder --chown=nextjs:nodejs /app/apps/frontend/.next/stan
 # Security: Switch to non-root user
 USER nextjs
 
-EXPOSE ${FRONTEND_PORT:-3000}
+EXPOSE ${FRONTEND_PORT}
 
-ENV PORT ${FRONTEND_PORT:-3000}
-# set hostname to localhost
+ENV PORT ${FRONTEND_PORT}
+# set hostname to environment variable or default
 ENV HOSTNAME ${HOSTNAME:-"0.0.0.0"}
 
 # Security: Use dumb-init for proper signal handling
@@ -96,7 +96,7 @@ ENTRYPOINT ["dumb-init", "--"]
 
 # Health check with better timeout
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${FRONTEND_PORT:-3000} || exit 1
+  CMD wget --no-verbose --tries=1 --spider ${NGINX_URL}:${FRONTEND_PORT} || exit 1
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
@@ -118,11 +118,11 @@ WORKDIR /app
 RUN mkdir -p apps/frontend/src apps/frontend/public
 
 # Expose port
-EXPOSE ${FRONTEND_PORT:-3000}
+EXPOSE ${FRONTEND_PORT}
 
 # Health check for development
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${FRONTEND_PORT:-3000} || exit 1
+  CMD wget --no-verbose --tries=1 --spider ${NGINX_URL}:${FRONTEND_PORT} || exit 1
 
 # Start development server (this should keep the container running)
 WORKDIR /app

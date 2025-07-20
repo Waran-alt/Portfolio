@@ -80,20 +80,20 @@ RUN mkdir -p logs && chown nodejs:nodejs logs
 
 # Set environment
 ENV NODE_ENV=production
-ENV PORT=${BACKEND_PORT:-4000}
+ENV PORT=${BACKEND_PORT}
 
 # Security: Switch to non-root user
 USER nodejs
 
 # Expose port
-EXPOSE ${BACKEND_PORT:-4000}
+EXPOSE ${BACKEND_PORT}
 
 # Security: Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
 
 # Health check with better timeout
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:${BACKEND_PORT:-4000}/api/health || exit 1
+  CMD curl -f ${NGINX_URL}:${BACKEND_PORT}/api/health || exit 1
 
 # Start the application
 CMD ["node", "dist/index.js"]
@@ -116,14 +116,14 @@ WORKDIR /app/apps/backend
 
 # Set environment for development
 ENV NODE_ENV=development
-ENV PORT=${BACKEND_PORT:-4000}
+ENV PORT=${BACKEND_PORT}
 
-# Expose ports (4000 for app, 9229 for debugging)
-EXPOSE ${BACKEND_PORT:-4000} ${BACKEND_DEBUG_PORT:-9229}
+# Expose ports
+EXPOSE ${BACKEND_PORT} ${BACKEND_DEBUG_PORT}
 
 # Health check for development
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:${BACKEND_PORT:-4000}/api/health || exit 1
+  CMD curl -f ${NGINX_URL}:${BACKEND_PORT}/api/health || exit 1
 
 # Start development server with debugging
 CMD ["yarn", "dev"] 

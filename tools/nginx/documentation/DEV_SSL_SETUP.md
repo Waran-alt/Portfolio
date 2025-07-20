@@ -27,8 +27,9 @@ docker-compose ps
 
 ### 2. Access Your Application
 ```bash
-# Frontend: https://localhost
-# Backend API: https://localhost/api
+# Access your application
+# Frontend: ${NGINX_URL}
+# Backend: ${NGINX_URL}/api
 # Database: Available to backend service
 
 # Note: Accept the self-signed certificate warning in your browser
@@ -38,13 +39,13 @@ docker-compose ps
 
 ```bash
 # Test HTTPS connection
-curl -k -I https://localhost
+curl -k -I ${NGINX_URL}
 
 # Check certificate (self-signed)
 docker-compose exec nginx openssl x509 -in /etc/nginx/ssl/nginx-selfsigned.crt -text -noout
 
-# Test HTTP to HTTPS redirect
-curl -I http://localhost
+# Test HTTP redirect
+curl -I ${NGINX_URL}
 
 # Check all services are running
 docker-compose ps
@@ -145,7 +146,7 @@ docker-compose ps
 docker-compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Health}}"
 
 # Test backend connectivity
-docker-compose exec nginx curl -I http://backend:4000/health
+docker-compose exec nginx curl -I http://backend:${BACKEND_PORT}/health
 
 # Check network connectivity
 docker network ls
@@ -156,7 +157,7 @@ docker network inspect portfolio_portfolio_network
 ```bash
 # If browser shows certificate warning:
 # 1. Click "Advanced" or "Show Details"
-# 2. Click "Proceed to localhost (unsafe)" or similar
+# 2. Click "Proceed to ${NGINX_URL} (unsafe)" or similar
 # 3. Certificate will be accepted for this session
 
 # For Chrome/Edge: Type "thisisunsafe" when on the warning page
@@ -194,7 +195,7 @@ docker-compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
 | Feature         | Development           | Production              |
 |-----------------|-----------------------|-------------------------|
 | Certificates    | Self-signed           | Let's Encrypt           |
-| Domain          | localhost             | Your domain             |
+| Domain          | ${NGINX_URL}             | Your domain             |
 | Browser Warning | Yes (accept manually) | No (trusted CA)         |
 | Renewal         | Automatic (rebuild)   | Automatic (cron)        |
 | Security        | Basic                 | Full                    |
@@ -232,8 +233,8 @@ docker-compose up -d
 # Changes are hot-reloaded automatically
 
 # 3. Test changes
-# Frontend: https://localhost
-# Backend: https://localhost/api
+# Frontend: ${NGINX_URL}
+# Backend: ${NGINX_URL}/api
 
 # 4. Stop environment
 docker-compose down
