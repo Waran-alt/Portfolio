@@ -354,48 +354,53 @@ while IFS= read -r -d '' template_file; do
     template_name=$(basename "$template_file")
     
     # Parse the template name to extract service name
-    # Expected format: env.{service}.example
-    # Example: env.frontend.example -> service_name = "frontend"
-    if [[ "$template_name" =~ ^env\.(.+)\.example$ ]]; then
+    # Expected formats:
+    # - env.example -> service_name = "" (default .env file)
+    # - env.{service}.example -> service_name = "service" (service-specific .env file)
+    if [[ "$template_name" == "env.example" ]]; then
+        service_name=""
+        env_file="$PROJECT_ROOT/.env"
+    elif [[ "$template_name" =~ ^env\.(.+)\.example$ ]]; then
         service_name="${BASH_REMATCH[1]}"
         env_file="$PROJECT_ROOT/.env.$service_name"
-        
-        echo -e "\n${BLUE}📄 Processing $template_name...${NC}"
-        
-        # Process the template and track results
-        if copy_template "$template_file" "$env_file" "$template_name"; then
-            processed_files+=("$template_name")
-            
-            # Count actions for summary (handles both dry run and actual execution)
-            if [[ "$DRY_RUN" == "true" ]]; then
-                # Count would-be actions in dry run mode
-                if [[ ! -f "$env_file" ]]; then
-                    ((created_count++))
-                elif [[ "$FORCE_UPDATE" == "true" ]] || [[ "$LIGHT_UPDATE" == "true" ]]; then
-                    ((updated_count++))
-                else
-                    ((skipped_count++))
-                fi
-            else
-                # Count actual actions performed
-                if [[ ! -f "$env_file" ]]; then
-                    ((created_count++))
-                elif [[ "$FORCE_UPDATE" == "true" ]] || [[ "$LIGHT_UPDATE" == "true" ]]; then
-                    ((updated_count++))
-                else
-                    ((skipped_count++))
-                fi
-            fi
-        else
-            # Track errors but continue processing other files
-            ((errors++))
-            echo -e "${RED}❌ Error processing $template_name, continuing to next file...${NC}"
-        fi
-        echo -e "${YELLOW}--- Finished processing $template_name ---${NC}"
     else
         # Skip files that don't match the expected naming pattern
         echo -e "${YELLOW}⚠️  Skipping $template_name (doesn't match expected pattern)${NC}"
+        continue
     fi
+    
+    echo -e "\n${BLUE}📄 Processing $template_name...${NC}"
+    
+    # Process the template and track results
+    if copy_template "$template_file" "$env_file" "$template_name"; then
+        processed_files+=("$template_name")
+        
+        # Count actions for summary (handles both dry run and actual execution)
+        if [[ "$DRY_RUN" == "true" ]]; then
+            # Count would-be actions in dry run mode
+            if [[ ! -f "$env_file" ]]; then
+                ((created_count++))
+            elif [[ "$FORCE_UPDATE" == "true" ]] || [[ "$LIGHT_UPDATE" == "true" ]]; then
+                ((updated_count++))
+            else
+                ((skipped_count++))
+            fi
+        else
+            # Count actual actions performed
+            if [[ ! -f "$env_file" ]]; then
+                ((created_count++))
+            elif [[ "$FORCE_UPDATE" == "true" ]] || [[ "$LIGHT_UPDATE" == "true" ]]; then
+                ((updated_count++))
+            else
+                ((skipped_count++))
+            fi
+        fi
+    else
+        # Track errors but continue processing other files
+        ((errors++))
+        echo -e "${RED}❌ Error processing $template_name, continuing to next file...${NC}"
+    fi
+    echo -e "${YELLOW}--- Finished processing $template_name ---${NC}"
 done < <(find "$TEMPLATE_DIR" -name "*.example" -type f -print0)
 
 # =============================================================================

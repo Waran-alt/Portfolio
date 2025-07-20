@@ -2,21 +2,39 @@
 
 ## Overview
 
-This project uses a monorepo structure with multiple services, each with its own environment configuration. Environment variables are managed through service-specific `.env` files and validated using Zod schemas.
+This project uses a **single, comprehensive environment file** (`.env`) that contains all environment variables for the entire application stack. This approach simplifies configuration management and ensures consistency across all services.
+
+**Important**: The frontend communicates with the backend through Nginx reverse proxy, not directly. API calls should go to `/api/*` endpoints which Nginx routes to the backend service.
 
 ## Quick Start
 
-1. **Generate environment files**:
+1. **Generate environment file**:
    ```bash
    ./scripts/setup-env.sh
    ```
 
-
-
-3. **Start development**:
+2. **Start development**:
    ```bash
    docker-compose up
    ```
+
+## API Communication Flow
+
+```
+Browser → Nginx (${NGINX_URL}:443) → Frontend (${NGINX_URL}:${FRONTEND_PORT})
+Browser → Nginx (${NGINX_URL}:443/api/*) → Backend (${NGINX_URL}:${BACKEND_PORT})
+```
+
+### Frontend API Configuration
+- **Base URL**: Should point to Nginx proxy (same origin as frontend)
+- **Example**: `${NGINX_URL}/api/v1` (not `${NGINX_URL}:${BACKEND_PORT}/api/v1`)
+- **Why**: Nginx handles routing `/api/*` requests to the backend service
+
+### Environment Variables
+- `NEXT_PUBLIC_API_URL`: Points to Nginx proxy (e.g., `${NGINX_URL}/api/v1`)
+- `NGINX_URL`: Single URL for accessing both frontend and backend through Nginx
+- **Do NOT use**: Direct backend URLs with ports in frontend environment
+- **Use**: Nginx proxy URLs for all API communication
 
 ## Setup Script Options
 
@@ -24,9 +42,9 @@ The `setup-env.sh` script supports several modes:
 
 ### Basic Usage
 ```bash
-./scripts/setup-env.sh              # Create missing .env files only
-./scripts/setup-env.sh --force      # Update all .env files from templates (overwrites)
-./scripts/setup-env.sh --light      # Add new vars to existing files (preserves existing)
+./scripts/setup-env.sh              # Create missing .env file only
+./scripts/setup-env.sh --force      # Update .env file from template (overwrites)
+./scripts/setup-env.sh --light      # Add new vars to existing file (preserves existing)
 ./scripts/setup-env.sh --dry-run    # Show what would be updated
 ./scripts/setup-env.sh --help       # Show all options
 ```
@@ -34,8 +52,8 @@ The `setup-env.sh` script supports several modes:
 ### When to Use Each Option
 
 - **Default**: Use when setting up the project for the first time
-- **`--force`**: Use when you've updated environment templates and want to completely sync existing `.env` files (overwrites all content)
-- **`--light`**: Use when you want to add new variables from templates while preserving your existing custom variables
+- **`--force`**: Use when you've updated environment template and want to completely sync existing `.env` file (overwrites all content)
+- **`--light`**: Use when you want to add new variables from template while preserving your existing custom variables
 - **`--dry-run`**: Use to preview changes before applying them
 - **`--help`**: Shows detailed usage information
 
@@ -44,25 +62,17 @@ The `setup-env.sh` script supports several modes:
 The `--light` mode is perfect for incremental updates:
 
 - ✅ **Preserves existing variables**: Your custom values are kept
-- ✅ **Adds new variables**: New variables from templates are added
+- ✅ **Adds new variables**: New variables from template are added
 - ✅ **Organizes preserved vars**: Custom variables are moved to a "PRESERVED VARIABLES" section
 - ✅ **Safe**: Creates backups before making changes
 
-**Example output:**
-```
-📄 Processing env.backend.example...
-✅ Updated .env.backend with new variables from env.backend.example
-💡 Added variables: 2
-ℹ️  Preserved 3 existing variables in .env.backend
-```
-
 ### Workflow for Adding New Environment Variables
 
-1. **Update template**: Add new variables to appropriate `.env.*.example` files
+1. **Update template**: Add new variables to `documentation/env-templates/env.example`
 2. **Update validation**: Add corresponding Zod schemas in service `config/env.ts` files
 3. **Preview changes**: `./scripts/setup-env.sh --light --dry-run`
 4. **Apply changes**: `./scripts/setup-env.sh --light`
-5. **Update values**: Edit the generated `.env.*` files with your actual values
+5. **Update values**: Edit the generated `.env` file with your actual values
 6. **Test**: Start services to validate configuration
 
 ## Environment Variable Aggregation
@@ -72,13 +82,12 @@ When you need to combine environment variables with static constants, use **dire
 ### Backend Example
 ```typescript
 import { envVar } from './config/env';
-import { SERVICE_NAMES, PORTS } from '@portfolio/shared';
+import { SERVICE_NAMES } from '@portfolio/shared';
 
-// Create internal URLs using direct imports
 const INTERNAL_URLS = {
-  FRONTEND: `http://${SERVICE_NAMES.FRONTEND}:${envVar.server.port}`,
+  FRONTEND: `http://${SERVICE_NAMES.FRONTEND}:${envVar.frontend.port}`,
   BACKEND: `http://${SERVICE_NAMES.BACKEND}:${envVar.server.port}`,
-  POSTGRES: `postgresql://${SERVICE_NAMES.POSTGRES}:${PORTS.POSTGRES}`,
+  POSTGRES: `postgresql://${SERVICE_NAMES.POSTGRES}:${envVar.database.config.port}`,
 } as const;
 ```
 
@@ -87,7 +96,6 @@ const INTERNAL_URLS = {
 import { envVar } from './config/env';
 import { API } from '@portfolio/shared';
 
-// Create API configuration using direct imports
 export const API_CONFIG = {
   BASE_URL: envVar.api.url,
   ENDPOINTS: {
@@ -104,44 +112,33 @@ export const API_CONFIG = {
 - ✅ **Type-safe**: Uses validated `envVar` objects
 - ✅ **Maintainable**: Easy to understand and modify
 
-## Environment Files
-
-### Service-Specific Files
-- `.env.backend` - Backend service configuration
-- `.env.frontend` - Frontend service configuration  
-- `.env.postgres` - Database configuration
-- `.env.nginx` - Nginx configuration
-
-### Common Variables
-- `.env` - Shared across all services
-
 ## Validation
 
-**Important**: Environment variable validation must be created alongside the variables themselves. When you add new environment variables to templates, you must also update the corresponding Zod validation schemas in each service's `config/env.ts` file.
+**Important**: Environment variable validation must be created alongside the variables themselves. When you add new environment variables to the template, you must also update the corresponding Zod validation schemas in each service's `config/env.ts` file.
 
 All environment variables are validated using Zod schemas in each service's `config/env.ts` file. The validated variables are exported as `envVar` objects for type-safe access.
 
 ## Security
 
 - Never commit `.env` files to version control
-- Use `.env.*.example` files for documentation
+- Use `documentation/env-templates/env.example` for documentation
 - Validate all environment variables at startup
-- Use service-specific files to limit exposure
+- Use a single file to limit exposure and simplify management
 
 ## Development Workflow
 
 1. **Adding new variables**:
-   - Update environment templates in `documentation/env-templates/`
+   - Update environment template in `documentation/env-templates/env.example`
    - Add corresponding Zod validation schemas in service `config/env.ts` files
    - Run `./scripts/setup-env.sh --dry-run` to preview changes
    - Run `./scripts/setup-env.sh --force` to apply changes
-   - Update your values in the generated `.env.*` files
+   - Update your values in the generated `.env` file
 
 2. **Regular development**:
    - Use direct imports for environment variable aggregation
    - Test with `docker-compose up`
 
 3. **Troubleshooting**:
-   - Check template files in `documentation/env-templates/`
-   - Verify `.env.*` files exist and have proper values
+   - Check template file in `documentation/env-templates/env.example`
+   - Verify `.env` file exists and has proper values
    - Start services to see validation errors 

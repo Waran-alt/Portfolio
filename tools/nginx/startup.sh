@@ -16,7 +16,7 @@ if [ ! -f "$CERT" ] || [ ! -f "$KEY" ] || [ ! -f "$DHPARAM" ]; then
   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout "$KEY" \
     -out "$CERT" \
-    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=${NGINX_URL}"
   # Generate Diffie-Hellman parameters for extra security (2048 bits for dev speed)
   openssl dhparam -out "$DHPARAM" 2048
   # Set permissions for security
@@ -29,12 +29,14 @@ fi
 # Step 2: Substitute environment variables in nginx config
 echo "Substituting environment variables in nginx configuration..."
 # Default values
-FRONTEND_PORT=${FRONTEND_PORT:-3000}
-BACKEND_PORT=${BACKEND_PORT:-4000}
+FRONTEND_PORT=${FRONTEND_PORT}
+BACKEND_PORT=${BACKEND_PORT}
 
 # Substitute placeholders in the template
-sed -e "s/{{FRONTEND_PORT}}/$FRONTEND_PORT/g" \
-    -e "s/{{BACKEND_PORT}}/$BACKEND_PORT/g" \
+# Use '|' as delimiter to avoid issues with URLs containing forward slashes
+sed -e "s|{{FRONTEND_PORT}}|$FRONTEND_PORT|g" \
+    -e "s|{{BACKEND_PORT}}|$BACKEND_PORT|g" \
+    -e "s|{{NGINX_URL}}|$NGINX_URL|g" \
     /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
 echo "Starting nginx..."

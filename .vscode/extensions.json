@@ -41,7 +41,10 @@
     // API Testing (Better alternative to Thunder Client)
     "ms-vscode.vscode-rest-explorer",
     // Yarn PnP Support (Better alternative to zipfs)
-    "arcanis.vscode-zipfs"
+    "arcanis.vscode-zipfs",
+    // Documentation & Environment
+    "bierner.markdown-mermaid",
+    "mikestead.dotenv"
   ],
   "unwantedRecommendations": [
     "ms-vscode.vscode-typescript",

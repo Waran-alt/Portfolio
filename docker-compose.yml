@@ -12,8 +12,7 @@ services:
     container_name: portfolio_postgres_dev
     restart: unless-stopped  # Restart container unless manually stopped
     env_file:
-      - .env                 # Shared environment variables
-      - .env.postgres        # PostgreSQL-specific environment variables
+      - .env                 # Single environment file for all variables
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Persistent data storage
       - ./tools/database/init:/docker-entrypoint-initdb.d:ro  # Database initialization scripts
@@ -46,17 +45,15 @@ services:
     container_name: portfolio_backend_dev
     restart: unless-stopped
     env_file:
-      - .env                 # Shared environment variables
-      - .env.postgres        # Database connection variables
-      - .env.backend         # Backend-specific environment variables
+      - .env                 # Single environment file for all variables
     volumes:
       - ./apps/backend:/app/apps/backend        # Mount backend source code for hot reload
       - ./packages/shared:/app/packages/shared  # Mount shared package for hot reload
       - /app/apps/backend/dist                  # Exclude built files from volume mount
       - backend_logs:/app/apps/backend/logs     # Persistent log storage
     ports:
-      - "${BACKEND_PORT:-4000}:${BACKEND_PORT:-4000}"           # API port mapping
-      - "${BACKEND_DEBUG_PORT:-9229}:${BACKEND_DEBUG_PORT:-9229}"  # Node.js debug port
+      - "${BACKEND_PORT}:${BACKEND_PORT}"           # API port mapping
+      - "${BACKEND_DEBUG_PORT}:${BACKEND_DEBUG_PORT}"  # Node.js debug port
     depends_on:
       postgres:
         condition: service_healthy  # Wait for PostgreSQL to be healthy before starting
@@ -66,7 +63,7 @@ services:
     environment:
       - NODE_ENV=development # Force development environment
     healthcheck:
-      test: ["CMD-SHELL", "sh -c 'curl -f http://localhost:$${BACKEND_PORT:-4000}/api/health || exit 1'"]  # Check API health endpoint
+      test: ["CMD-SHELL", "sh -c 'curl -f $${NGINX_URL}:$${BACKEND_PORT}/api/health || exit 1'"]  # Check API health endpoint
       interval: ${HEALTH_CHECK_INTERVAL:-30s}
       timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
@@ -92,15 +89,14 @@ services:
     container_name: portfolio_frontend_dev
     restart: unless-stopped
     env_file:
-      - .env                # Shared environment variables
-      - .env.frontend       # Frontend-specific environment variables
+      - .env                # Single environment file for all variables
     volumes:
       - ./apps/frontend:/app/apps/frontend # Mount entire frontend directory for full sync and hot reload     
       - ./packages/shared:/app/packages/shared # Mount shared package for hot reload when shared code changes
       - /app/apps/frontend/.next # Prevent Next.js build cache from being overwritten by host
     ports:
-      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"           # Frontend port mapping
-      - "${FRONTEND_DEBUG_PORT:-9228}:${FRONTEND_DEBUG_PORT:-9228}"  # Frontend debug port
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"           # Frontend port mapping
+      - "${FRONTEND_DEBUG_PORT}:${FRONTEND_DEBUG_PORT}"  # Frontend debug port
     depends_on:
       backend:
         condition: service_healthy # Wait for backend to be healthy before starting
@@ -109,7 +105,7 @@ services:
     environment:
       - NODE_ENV=development # Force development environment
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:${FRONTEND_PORT:-3000} || exit 1"]  # Use IPv4 to avoid IPv6 issues
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:${FRONTEND_PORT} || exit 1"]  # Use IPv4 to avoid IPv6 issues
       interval: ${HEALTH_CHECK_INTERVAL:-30s}
       timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
@@ -136,9 +132,7 @@ services:
     container_name: portfolio_nginx_dev
     restart: unless-stopped
     env_file:
-      - .env                 # Shared environment variables
-      - .env.nginx           # Nginx-specific environment variables
-      - .env.backend         # Inherit backend port for upstream
+      - .env                 # Single environment file for all variables
     ports:
       - "80:80"              # HTTP port
       - "443:443"            # HTTPS port
@@ -151,7 +145,7 @@ services:
     networks:
       - portfolio_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]  # Check nginx health endpoint
+      test: ["CMD-SHELL", "curl -f $${NGINX_URL}/health || exit 1"]  # Check nginx health endpoint
       interval: ${HEALTH_CHECK_INTERVAL:-30s}
       timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
       retries: ${HEALTH_CHECK_RETRIES:-3}

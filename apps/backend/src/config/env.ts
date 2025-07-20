@@ -3,14 +3,25 @@ import { z } from 'zod';
 // Environment variable schema for backend service
 const envSchema = z.object({
   // Server Configuration
-  BACKEND_PORT: z.string().transform(Number).default('4000'),
+  BACKEND_PORT: z.string().transform(Number),
   HOST: z.string().default('0.0.0.0'),
   
   // Frontend Configuration
-  FRONTEND_PORT: z.string().transform(Number).default('3000'),
+  FRONTEND_PORT: z.string().transform(Number),
 
-  // Database Connection
-  DATABASE_URL: z.string().url(),
+  // External URL (Nginx proxy)
+  NGINX_URL: z.string().url(),
+
+  // Database Connection (can be provided directly or constructed from individual vars)
+  DATABASE_URL: z.string().optional(),
+  
+  // Individual database configuration (used to construct DATABASE_URL if not provided)
+  POSTGRES_DB: z.string().default('portfolio_db'),
+  POSTGRES_USER: z.string().default('postgres'),
+  POSTGRES_PASSWORD: z.string(),
+  POSTGRES_PORT: z.string().transform(Number).default('5432'),
+  POSTGRES_POOL_MIN: z.string().transform(Number).default('2'),
+  POSTGRES_POOL_MAX: z.string().transform(Number).default('10'),
 
   // Authentication
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
@@ -32,6 +43,15 @@ const envSchema = z.object({
 // Parse and validate environment variables
 export const env = envSchema.parse(process.env);
 
+// Construct DATABASE_URL from individual variables if not provided
+const constructDatabaseUrl = (): string => {
+  if (env.DATABASE_URL) {
+    return env.DATABASE_URL;
+  }
+  
+  return `postgresql://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@postgres:${env.POSTGRES_PORT}/${env.POSTGRES_DB}`;
+};
+
 // Export validated environment variables
 export const envVar = {
   server: {
@@ -41,8 +61,20 @@ export const envVar = {
   frontend: {
     port: env.FRONTEND_PORT,
   },
+  nginx: {
+    url: env.NGINX_URL,
+  },
   database: {
-    url: env.DATABASE_URL,
+    url: constructDatabaseUrl(),
+    config: {
+      host: 'postgres',
+      port: env.POSTGRES_PORT,
+      database: env.POSTGRES_DB,
+      user: env.POSTGRES_USER,
+      password: env.POSTGRES_PASSWORD,
+      poolMin: env.POSTGRES_POOL_MIN,
+      poolMax: env.POSTGRES_POOL_MAX,
+    },
   },
   auth: {
     jwtSecret: env.JWT_SECRET,

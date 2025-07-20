@@ -47,8 +47,6 @@ This rule enforces a clear separation between environment variables (`.env` file
    - Consider integrating automated validation into your CI/CD pipeline.
 
 5. **Environment-Specific Configuration**:
-   - Use service-specific `.env` files (e.g., `.env.backend`, `.env.frontend`, `.env.postgres`) for different services.
-   - Use `.env` for variables shared across all services.
    - Public vs. Private: Frontend frameworks (like Next.js, Create React App, Vite) have mechanisms to differentiate between public environment variables (that are bundled into the client-side code, e.g., `NEXT_PUBLIC_API_URL`) and private ones (only accessible on the server-side, e.g., `STRIPE_SECRET_KEY`).
    - *Never expose private keys to the browser.* Always ensure sensitive environment variables are only used on the server side or during the build process, and never embedded in client-side JavaScript.
 

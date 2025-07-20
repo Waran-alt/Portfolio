@@ -7,7 +7,7 @@ services:
     container_name: portfolio_postgres_prod
     restart: always
     env_file:
-      - .env.prod
+      - .env
     environment:
       # Critical security variables - explicit (no defaults in production)
       POSTGRES_DB: ${POSTGRES_DB}
@@ -39,15 +39,15 @@ services:
     container_name: portfolio_backend_prod
     restart: always
     env_file:
-      - .env.prod
+      - .env
     environment:
       # Critical security variables - explicit (no defaults in production)
       NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       SESSION_SECRET: ${SESSION_SECRET}
-      PORT: ${BACKEND_PORT:-4000}
-      FRONTEND_URL: ${FRONTEND_URL}
+      PORT: ${BACKEND_PORT}
+      NGINX_URL: ${NGINX_URL}
       CORS_ORIGIN: ${CORS_ORIGIN}
       CORS_CREDENTIALS: ${CORS_CREDENTIALS}
     volumes:
@@ -58,7 +58,7 @@ services:
     networks:
       - portfolio_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-4000}/api/health"]
+      test: ["CMD", "curl", "-f", "${NGINX_URL}:${BACKEND_PORT}/api/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -79,23 +79,23 @@ services:
       target: production
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL}
+        NGINX_URL: ${NGINX_URL}
     container_name: portfolio_frontend_prod
     restart: always
     env_file:
-      - .env.prod
+      - .env
     environment:
       # Critical configuration - explicit (no defaults in production)
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL}
+      NGINX_URL: ${NGINX_URL}
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - portfolio_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${FRONTEND_PORT:-3000}"]
+      test: ["CMD", "curl", "-f", "${NGINX_URL}:${FRONTEND_PORT}"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -150,7 +150,7 @@ services:
     container_name: portfolio_redis_prod
     restart: always
     env_file:
-      - .env.prod
+      - .env
     environment:
       # Critical security variables - explicit (no defaults in production)
       REDIS_PASSWORD: ${REDIS_PASSWORD}
