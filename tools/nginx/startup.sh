@@ -13,10 +13,12 @@ if [ ! -f "$CERT" ] || [ ! -f "$KEY" ] || [ ! -f "$DHPARAM" ]; then
   echo "Generating self-signed certificates for development..."
   mkdir -p "$CERT_DIR"
   # Generate self-signed certificate and private key
+  # Extract hostname from NGINX_URL (remove protocol and port)
+  HOSTNAME=$(echo "${NGINX_URL}" | sed -E 's|^https?://||' | sed -E 's|:.*$||')
   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout "$KEY" \
     -out "$CERT" \
-    -subj "/C=US/ST=State/L=City/O=Organization/CN=${NGINX_URL}"
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=${HOSTNAME}"
   # Generate Diffie-Hellman parameters for extra security (2048 bits for dev speed)
   openssl dhparam -out "$DHPARAM" 2048
   # Set permissions for security

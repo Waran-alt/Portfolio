@@ -63,7 +63,7 @@ services:
     environment:
       - NODE_ENV=development # Force development environment
     healthcheck:
-      test: ["CMD-SHELL", "sh -c 'curl -f $${NGINX_URL}:$${BACKEND_PORT}/api/health || exit 1'"]  # Check API health endpoint
+      test: ["CMD-SHELL", "sh -c 'curl -f http://127.0.0.1:$${BACKEND_PORT}/api/health || exit 1'"]  # Check API health endpoint directly
       interval: ${HEALTH_CHECK_INTERVAL:-30s}
       timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
@@ -145,7 +145,7 @@ services:
     networks:
       - portfolio_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f $${NGINX_URL}/health || exit 1"]  # Check nginx health endpoint
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1/health || exit 1"]  # Check nginx health endpoint internally
       interval: ${HEALTH_CHECK_INTERVAL:-30s}
       timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
