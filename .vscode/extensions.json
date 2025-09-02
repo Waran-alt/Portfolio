@@ -44,6 +44,7 @@
     "arcanis.vscode-zipfs",
     // Documentation & Environment
     "bierner.markdown-mermaid",
+    "holooooo.markdown-kanban",
     "mikestead.dotenv"
   ],
   "unwantedRecommendations": [

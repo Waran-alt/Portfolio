@@ -26,7 +26,6 @@
     "**/dist": true,
     "**/build": true,
     "**/.next": true,
-    "**/coverage": true,
     "**/.nyc_output": true
   },
   "search.exclude": {
@@ -34,7 +33,6 @@
     "**/dist": true,
     "**/build": true,
     "**/.next": true,
-    "**/coverage": true,
     "**/.nyc_output": true,
     "**/yarn.lock": true,
     "**/package-lock.json": true,
