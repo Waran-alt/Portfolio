@@ -638,8 +638,8 @@ describe('SvgVisualizer Unit', () => {
     });
   });
 
-  describe('Pan Indicator', () => {
-    it('should show pan indicator when panning is active', async () => {
+  describe('Pan Cursor Behavior', () => {
+    it('should show grabbing cursor when panning is active', async () => {
       render(<SvgVisualizer {...defaultProps} />);
       
       const svg = screen.getByRole('graphics-document');
@@ -647,18 +647,20 @@ describe('SvgVisualizer Unit', () => {
       // Start panning
       fireEvent.mouseDown(svg, { clientX: 0, clientY: 0 });
       
-      // Should show "Panning..." indicator
-      expect(screen.getByText('Panning...')).toBeInTheDocument();
+      // Should show grabbing cursor
+      expect(svg).toHaveClass('cursor-grabbing');
       
       // Clean up
       fireEvent.mouseUp(document);
     });
 
-    it('should hide pan indicator when not panning', () => {
+    it('should show grab cursor when not panning', () => {
       render(<SvgVisualizer {...defaultProps} />);
       
-      // Should not show pan indicator when not panning
-      expect(screen.queryByText('Panning...')).not.toBeInTheDocument();
+      const svg = screen.getByRole('graphics-document');
+      
+      // Should show grab cursor when not panning
+      expect(svg).toHaveClass('cursor-grab');
     });
   });
 

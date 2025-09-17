@@ -245,9 +245,12 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
       horizontalRulers.push(
         <g key={`hr-${x}`} transform={`translate(${x}, ${getHorizontalRulerY()})`}>
           <line y1="-5" y2="0" className={isAxis ? "stroke-gray-500" : "stroke-gray-400"} />
-          <text y="-8" textAnchor="middle" fontSize={RULER_TEXT_SIZE} fill={isAxis ? "rgb(75 85 99)" : RULER_TEXT_COLOR} fontWeight={isAxis ? "bold" : "normal"}>
-            {x}
-          </text>
+          {/* Don't render "0" text for cleaner appearance */}
+          {x !== 0 && (
+            <text y="-8" textAnchor="middle" fontSize={RULER_TEXT_SIZE} fill={isAxis ? "rgb(75 85 99)" : RULER_TEXT_COLOR} fontWeight={isAxis ? "bold" : "normal"}>
+              {x}
+            </text>
+          )}
         </g>
       );
     }
@@ -258,14 +261,51 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
       verticalRulers.push(
         <g key={`vr-${y}`} transform={`translate(${getVerticalRulerX(y)}, ${y})`}>
           <line x1="-5" x2="0" className={isAxis ? "stroke-gray-500" : "stroke-gray-400"} />
-          <text x="-8" y="3" textAnchor="end" fontSize={RULER_TEXT_SIZE} fill={isAxis ? "rgb(75 85 99)" : RULER_TEXT_COLOR} fontWeight={isAxis ? "bold" : "normal"}>
-            {y}
-          </text>
+          {/* Don't render "0" text for cleaner appearance */}
+          {y !== 0 && (
+            <text x="-8" y="3" textAnchor="end" fontSize={RULER_TEXT_SIZE} fill={isAxis ? "rgb(75 85 99)" : RULER_TEXT_COLOR} fontWeight={isAxis ? "bold" : "normal"}>
+              {y}
+            </text>
+          )}
         </g>
       );
     }
+
+    const horizontalRulerY = getHorizontalRulerY() -8;
+    const verticalRulerX = getVerticalRulerX(0) - 11;
     
-    return { horizontalRulers, verticalRulers };
+    const specialZeroMarker = (
+      <g key="special-zero" className="special-zero-marker">
+        {/* Background rectangle for the "0" */}
+        <rect
+          x={Math.min(6, verticalRulerX - 6)}
+          y={Math.min(6, horizontalRulerY - 9)}
+          width={12}
+          height={12}
+          fill="white"
+          fillOpacity={0.7}
+          rx={2}
+          ry={2}
+          className="SVGTestPage__ZeroMarkerBg"
+          style={{ pointerEvents: 'none' }}
+        />
+        {/* The "0" text */}
+        <text
+          x={Math.min(12, verticalRulerX)}
+          y={Math.min(15, horizontalRulerY)}
+          textAnchor="middle"
+          fontSize={RULER_TEXT_SIZE}
+          fill="rgb(75 85 99)"
+          fontWeight="bold"
+          className="SVGTestPage__ZeroMarker"
+          style={{ pointerEvents: 'none' }}
+        >
+          0
+        </text>
+      </g>
+    );
+
+    return { horizontalRulers, verticalRulers, specialZeroMarker };
   }, [viewBoxX, viewBoxY]); // Only recalculate when viewBox position changes
 
   // Memoize grid calculations to prevent expensive recalculations during panning
@@ -401,6 +441,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
               <g className="grid" aria-hidden="true">
                 {gridElements.verticalLines}
                 {gridElements.horizontalLines}
+                {rulerElements.specialZeroMarker}
               </g>
             );
           })()}
@@ -497,14 +538,6 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
           <Move size={18} />
         </div>
       </div>
-      {/* Pan indicator */}
-      {isPanning && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-black/20 text-white px-3 py-1 rounded-full text-sm font-medium">
-            Panning...
-          </div>
-        </div>
-      )}
     </div>
   );
 };

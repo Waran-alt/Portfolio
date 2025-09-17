@@ -104,7 +104,6 @@ describe('SvgVisualizer Integration', () => {
       // Start panning with proper mouse event sequence
       fireEvent.mouseDown(svg, { clientX: 0, clientY: 0 });
       expect(svg).toHaveClass('cursor-grabbing');
-      expect(screen.getByText('Panning...')).toBeInTheDocument();
       
       // Move mouse
       fireEvent.mouseMove(document, { clientX: 50, clientY: 50 });
@@ -115,7 +114,7 @@ describe('SvgVisualizer Integration', () => {
       // Check final state
       const finalViewBox = svg.getAttribute('viewBox');
       expect(finalViewBox).not.toBe(initialViewBox);
-      expect(screen.queryByText('Panning...')).not.toBeInTheDocument();
+      expect(svg).toHaveClass('cursor-grab'); // Should return to grab cursor
     });
 
     it('should handle toggle workflow for all controls', async () => {

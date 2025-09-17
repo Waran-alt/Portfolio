@@ -163,12 +163,30 @@ const PathCommandsOverlayComponent: React.FC<PathCommandsOverlayProps> = ({ path
     // Render the command letter (e.g., 'M', 'C') if a valid position was calculated.
     // This prevents rendering letters for commands like 'Z' (close path) and correctly handles commands at the origin (0,0).
     if (cmd.code && letterPos) {
+      // Add background rectangle for command letter
+      overlays.push(
+        <rect
+          key={`cmd-bg-${i}-${JSON.stringify(cmd)}`}
+          x={letterPos.x - 10}
+          y={letterPos.y - 12}
+          width={20}
+          height={16}
+          fill="white"
+          fillOpacity={0.9}
+          rx={3}
+          ry={3}
+          className="SVGTestPage__CmdLetterBg"
+          style={{ pointerEvents: 'none' }}
+        />
+      );
+      
+      // Add command letter text
       overlays.push(
         <text
           key={`cmd-${i}-${JSON.stringify(cmd)}`}
           x={letterPos.x}
           y={letterPos.y}
-          fontSize={14}
+          fontSize={16}
           fill={COMMAND_LETTER_COLOR}
           fontWeight="bold"
           textAnchor="middle"
@@ -182,36 +200,80 @@ const PathCommandsOverlayComponent: React.FC<PathCommandsOverlayProps> = ({ path
 
     // Render coordinates for the path's main anchor/end points.
     endPoints.forEach((point, j) => {
+      const coordText = `${formatNumber(point.x, digits)},${formatNumber(point.y, digits)}`;
+      const textWidth = coordText.length * 6; // Approximate character width
+      const textHeight = 12;
+      
+      // Add background rectangle for coordinates
+      overlays.push(
+        <rect
+          key={`num-bg-${i}-ep-${j}-${JSON.stringify(point)}`}
+          x={point.x - textWidth / 2 - 4}
+          y={point.y + COORDINATE_Y_OFFSET - textHeight + 2}
+          width={textWidth + 8}
+          height={textHeight + 2}
+          fill="white"
+          fillOpacity={0.9}
+          rx={2}
+          ry={2}
+          className="SVGTestPage__CmdNumBg"
+          style={{ pointerEvents: 'none' }}
+        />
+      );
+      
+      // Add coordinate text
       overlays.push(
         <text
           key={`num-${i}-ep-${j}-${JSON.stringify(point)}`}
           x={point.x}
           y={point.y + COORDINATE_Y_OFFSET}
-          fontSize={11}
+          fontSize={12}
           fill={ENDPOINT_COORDINATE_COLOR}
           textAnchor="middle"
           className="SVGTestPage__CmdNum"
           style={{ pointerEvents: 'none' }}
         >
-          {formatNumber(point.x, digits)},{formatNumber(point.y, digits)}
+          {coordText}
         </text>
       );
     });
 
     // Render coordinates for the path's control points (e.g., for Bezier curves).
     controlPoints.forEach((point, j) => {
+      const coordText = `${formatNumber(point.x, digits)},${formatNumber(point.y, digits)}`;
+      const textWidth = coordText.length * 6; // Approximate character width
+      const textHeight = 12;
+      
+      // Add background rectangle for control point coordinates
+      overlays.push(
+        <rect
+          key={`num-bg-${i}-cp-${j}-${JSON.stringify(point)}`}
+          x={point.x - textWidth / 2 - 4}
+          y={point.y + COORDINATE_Y_OFFSET - textHeight + 2}
+          width={textWidth + 8}
+          height={textHeight + 2}
+          fill="white"
+          fillOpacity={0.9}
+          rx={2}
+          ry={2}
+          className="SVGTestPage__CmdNumBg"
+          style={{ pointerEvents: 'none' }}
+        />
+      );
+      
+      // Add control point coordinate text
       overlays.push(
         <text
           key={`num-${i}-cp-${j}-${JSON.stringify(point)}`}
           x={point.x}
           y={point.y + COORDINATE_Y_OFFSET}
-          fontSize={11}
+          fontSize={12}
           fill={CONTROL_POINT_COORDINATE_COLOR}
           textAnchor="middle"
           className="SVGTestPage__CmdNum"
           style={{ pointerEvents: 'none' }}
         >
-          {formatNumber(point.x, digits)},{formatNumber(point.y, digits)}
+          {coordText}
         </text>
       );
     });
