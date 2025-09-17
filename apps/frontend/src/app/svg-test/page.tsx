@@ -14,7 +14,7 @@ import ExampleSelector from './components/ExampleSelector';
 import PathCommandBreakdown from './components/PathCommandBreakdown';
 import PathEditorControls from './components/PathEditorControls';
 import SvgVisualizer from './components/SvgVisualizer';
-import { PATH_EXAMPLES as examplesList } from './constants/path-examples';
+import { DEFAULT_EXAMPLE_ID, PATH_EXAMPLES as examplesList } from './constants/path-examples';
 import { CONTAINER_CLASSES } from './constants/styles';
 import type { PathExample, Point } from './types';
 import { getCommandValue } from './utils/svgCommandHelpers';
@@ -35,9 +35,9 @@ const SVGTestPage: React.FC = () => {
   // State for client-side rendering guard
   const [isClient, setIsClient] = useState(false);
   // State for the currently selected path example from the dropdown
-  const [selectedExample, setSelectedExample] = useState<string>('quadratic-1');
+  const [selectedExample, setSelectedExample] = useState<string>(DEFAULT_EXAMPLE_ID);
   // State for the validated, active SVG path string that is rendered
-  const [pathString, setPathString] = useState<string>(examples['quadratic-1']?.pathData ?? '');
+  const [pathString, setPathString] = useState<string>(examples[DEFAULT_EXAMPLE_ID]?.pathData ?? '');
   // State for the path string in the textarea, which may be invalid until validated
   const [pendingPathString, setPendingPathString] = useState<string>(pathString);
 

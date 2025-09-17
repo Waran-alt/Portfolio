@@ -78,7 +78,7 @@ const PathCommandBreakdownComponent = ({ path }: { path: string; }): React.JSX.E
                   const value = getCommandValue(cmd, param);
                   if (value !== undefined) {
                     return (
-                      <span key={param} className="inline-block bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded text-xs font-mono border border-violet-200">
+                      <span key={param} data-testid="path-parameter" className="inline-block bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded text-xs font-mono border border-violet-200">
                         {param}: {typeof value === 'number' ? formatNumber(value, digits) : String(value)}
                       </span>
                     );

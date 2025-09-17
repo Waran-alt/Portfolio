@@ -1,24 +1,40 @@
 import { expect, test } from '@playwright/test';
-import { PATH_EXAMPLES } from './constants/path-examples';
+import { DEFAULT_VIEWBOX, SVG_HEIGHT, SVG_WIDTH } from './components/SvgVisualizer';
+import { DEFAULT_EXAMPLE_ID, PATH_EXAMPLES } from './constants/path-examples';
+import { SVG_COMMAND_INFO } from './constants/svgPath';
 
 /**
- * @file E2E tests for SVG Path Visualizer using Playwright
- * Uses dynamic app data for maintainable and comprehensive testing
+ * Helper function to extract the main drawing command from a path string
+ * @param pathData - The SVG path string
+ * @returns The main drawing command (e.g., 'Q', 'C', 'L') or null if not found
  */
+function getMainDrawingCommand(pathData: string): string | null {
+  const commands = pathData?.match(/[A-Z]/g) || [];
+  return commands.find(cmd => cmd !== 'M') || commands[0] || null;
+}
+
+/**
+ * Helper function to get the display name for a command
+ * @param command - The SVG command code (e.g., 'Q', 'C')
+ * @returns The display name (e.g., 'Quadratic Bézier', 'Cubic Bézier')
+ */
+function getCommandDisplayName(command: string): string {
+  return SVG_COMMAND_INFO[command]?.name || 'Unknown';
+}
 
 test.describe('SVG Path Visualizer E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the SVG test page with robust waiting
+    // Navigate to the SVG test page
     await page.goto('/svg-test', { waitUntil: 'networkidle' });
     
     // Wait for the page to be fully loaded and interactive
     await page.waitForLoadState('domcontentloaded');
     
-    // Wait for critical elements to exist first, then check visibility
+    // Wait for critical elements to exist
     await page.waitForSelector('[data-testid="svg-canvas"]', { state: 'attached', timeout: 30000 });
     await page.waitForSelector('h1:has-text("SVG Path Visualizer")', { state: 'attached', timeout: 30000 });
     
-    // Now wait for them to be visible
+    // Wait for them to be visible
     await page.waitForSelector('[data-testid="svg-canvas"]', { state: 'visible', timeout: 10000 });
     await page.waitForSelector('h1:has-text("SVG Path Visualizer")', { state: 'visible', timeout: 10000 });
     
@@ -33,23 +49,21 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       
       // Test: Initial path is loaded in textarea (using app data)
       const textarea = page.getByTestId('path-data-textarea');
-      const defaultExample = PATH_EXAMPLES.find(ex => ex.id === 'quadratic-1');
+      const defaultExample = PATH_EXAMPLES.find(ex => ex.id === DEFAULT_EXAMPLE_ID);
       expect(defaultExample).toBeDefined();
       
-      // Test: Textarea contains a valid SVG path (not exact value)
+      // Test: Textarea contains the default example path
       const pathValue = await textarea.inputValue();
-      expect(pathValue).toBeTruthy();
-      expect(pathValue).toMatch(/^M\s+\d+,\d+/); // Starts with Move command
-      expect(pathValue).toContain('Q'); // Contains Quadratic command
+      expect(pathValue).toBe(defaultExample!.pathData);
       
       // Test: SVG canvas is rendered
       const svg = page.getByTestId('svg-canvas');
       await expect(svg).toBeVisible();
       
       // Test: SVG has correct dimensions
-      await expect(svg).toHaveAttribute('width', '800');
-      await expect(svg).toHaveAttribute('height', '400');
-      await expect(svg).toHaveAttribute('viewBox', '-60 -60 800 400');
+      await expect(svg).toHaveAttribute('width', SVG_WIDTH.toString());
+      await expect(svg).toHaveAttribute('height', SVG_HEIGHT.toString());
+      await expect(svg).toHaveAttribute('viewBox', DEFAULT_VIEWBOX);
       
       // Test: SVG path element is rendered with correct data
       const pathElement = svg.locator('path');
@@ -62,29 +76,22 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
     });
 
     test('should display path breakdown information', async ({ page }) => {
-      // Get current example from the page
-      const select = page.getByTestId('example-selector');
-      const currentExampleId = await select.inputValue();
+      // Get the default example data
+      const defaultExample = PATH_EXAMPLES.find(ex => ex.id === DEFAULT_EXAMPLE_ID);
+      expect(defaultExample).toBeDefined();
       
-      // Find corresponding app data
-      const exampleData = PATH_EXAMPLES.find(ex => ex.id === currentExampleId);
-      expect(exampleData).toBeDefined();
+      // Test: Command types are displayed (dynamic based on default example)
+      const mainCommand = getMainDrawingCommand(defaultExample?.pathData || '');
+      const expectedMethodText = mainCommand ? getCommandDisplayName(mainCommand) : 'Unknown';
       
-      // Test: Command types are displayed (dynamic based on current example)
-      if (exampleData?.method === 'quadratic') {
-        // Look specifically for the path breakdown text, not dropdown options
-        await expect(page.getByText('Quadratic Bézier', { exact: true })).toBeVisible();
-        await expect(page.getByText('Move To', { exact: true })).toBeVisible();
-      } else if (exampleData?.method === 'cubic') {
-        // Look specifically for the path breakdown text, not dropdown options
-        await expect(page.getByText('Cubic Bézier', { exact: true })).toBeVisible();
-        await expect(page.getByText('Move To', { exact: true })).toBeVisible();
-      }
+      // Look specifically for the path breakdown text, not dropdown options
+      await expect(page.getByText(expectedMethodText, { exact: true })).toBeVisible();
+      await expect(page.getByText('Move To', { exact: true })).toBeVisible();
       
-      // Test: Coordinates are displayed (without checking exact values)
+      // Test: Coordinates are displayed (dynamic based on default example)
       // Look for parameter values like "x: 100", "y: 200" in the path breakdown
-      const parameterElements = page.locator('span[class*="bg-violet-100"]');
-      const expectedCount = exampleData?.points ? exampleData.points.length * 2 : 0;
+      const parameterElements = page.getByTestId('path-parameter');
+      const expectedCount = defaultExample?.points ? defaultExample.points.length * 2 : 0;
       await expect(parameterElements).toHaveCount(expectedCount); // Each point has x and y
       
       // Test: Path breakdown section exists
@@ -100,27 +107,36 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       // Get initial path for comparison
       const initialPath = await textarea.inputValue();
       
-      // Test: Select cubic Bézier example
-      await select.selectOption('cubic-1');
+      // Test: Select the next example in the list (after the default)
+      const defaultIndex = PATH_EXAMPLES.findIndex(ex => ex.id === DEFAULT_EXAMPLE_ID);
+      const nextExample = PATH_EXAMPLES[defaultIndex + 1];
+      expect(nextExample).toBeDefined();
+      await select.selectOption(nextExample!.id);
       
       // Test: Path changed (without checking exact new value)
       const newPath = await textarea.inputValue();
       expect(newPath).not.toBe(initialPath);
       
-      // Test: New path is valid SVG and contains cubic command
+      // Test: New path is valid SVG
       expect(newPath).toMatch(/^M\s+\d+,\d+/);
-      expect(newPath).toContain('C'); // Should contain cubic command
       
-      // Test: SVG updates with new path
-      const svg = page.getByTestId('svg-canvas');
-      await expect(svg).toBeVisible();
+      if (nextExample) {
+        const mainCommand = getMainDrawingCommand(nextExample.pathData);
+
+        // Test: New path contains the expected command from the selected example
+        if (mainCommand) {
+          expect(newPath).toContain(mainCommand);
+        }
       
-      // Test: Path breakdown updates (dynamic based on app data)
-      const cubicExample = PATH_EXAMPLES.find(ex => ex.id === 'cubic-1');
-      expect(cubicExample).toBeDefined();
-      if (cubicExample) {
+        // Test: SVG updates with new path
+        const svg = page.getByTestId('svg-canvas');
+        await expect(svg).toBeVisible();
+        
+        // Test: Path breakdown updates (dynamic based on app data)
+        const expectedText = mainCommand ? getCommandDisplayName(mainCommand) : 'Unknown';
+        
         // Look specifically for the path breakdown text, not dropdown options
-        await expect(page.getByText('Cubic Bézier', { exact: true })).toBeVisible();
+        await expect(page.getByText(expectedText, { exact: true })).toBeVisible();
       }
     });
 
@@ -129,7 +145,8 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       const svg = page.getByTestId('svg-canvas');
       
       // Test: Switch through multiple examples using app data
-      const testExamples = ['quadratic-1', 'cubic-1', 'arc-1'];
+      // Get the first 3 examples from the list (including default)
+      const testExamples = PATH_EXAMPLES.slice(0, 3).map(ex => ex.id);
       
       for (const exampleId of testExamples) {
         await select.selectOption(exampleId);
@@ -142,8 +159,8 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
         
         // Verify SVG remains visible and functional
         await expect(svg).toBeVisible();
-        await expect(svg).toHaveAttribute('width', '800');
-        await expect(svg).toHaveAttribute('height', '400');
+        await expect(svg).toHaveAttribute('width', SVG_WIDTH.toString());
+        await expect(svg).toHaveAttribute('height', SVG_HEIGHT.toString());
         
         // Verify the correct example is selected
         const selectedValue = await select.inputValue();
@@ -153,9 +170,8 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
         const exampleData = PATH_EXAMPLES.find(ex => ex.id === exampleId);
         if (exampleData) {
           // Wait for path breakdown to update with specific text
-          const expectedText = exampleData.method === 'quadratic' ? 'Quadratic Bézier' : 
-                              exampleData.method === 'cubic' ? 'Cubic Bézier' : 
-                              exampleData.method === 'arc' ? 'Arc' : exampleData.method;
+          const mainCommand = getMainDrawingCommand(exampleData.pathData);
+          const expectedText = mainCommand ? getCommandDisplayName(mainCommand) : 'Unknown';
           
           // Wait for the specific text to appear in the breakdown section
           await expect(async () => {
@@ -214,31 +230,15 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       // Test: Error message is displayed
       await expect(page.getByText(/invalid path data/i)).toBeVisible();
       
-      // Test: Check actual component behavior - it might clear the input or keep the invalid text
-      // Let's check what actually happens instead of assuming reversion
+      // Test: Component handles invalid input appropriately
       const currentValue = await textarea.inputValue();
       
-      // The component should handle invalid input in some way
-      // We'll test all possible behaviors to make the test robust
-      if (currentValue === '') {
-        // Component clears invalid input
-        await expect(textarea).toHaveValue('');
-        console.log('Component behavior: Clears invalid input');
-      } else if (currentValue === 'invalid path') {
-        // Component keeps invalid input but shows error
-        await expect(textarea).toHaveValue('invalid path');
-        console.log('Component behavior: Keeps invalid input');
-      } else if (currentValue === initialPath) {
-        // Component reverts to last valid value
-        await expect(textarea).toHaveValue(initialPath);
-        console.log('Component behavior: Reverts to last valid value');
-      } else {
-        // Unexpected behavior - log for debugging but don't fail the test
-        console.log(`Unexpected textarea value after invalid input: "${currentValue}"`);
-        // Test that we have some value (the component didn't crash)
-        expect(currentValue).toBeTruthy();
-        console.log('Component behavior: Unknown (but didn\'t crash)');
-      }
+      // The component should either clear the input, keep the invalid text, or revert to the last valid value
+      const isValidBehavior = currentValue === '' || 
+                              currentValue === 'invalid path' || 
+                              currentValue === initialPath;
+      
+      expect(isValidBehavior).toBe(true);
       
       // Test: The component should still be functional after invalid input
       await expect(textarea).toBeVisible();
@@ -262,7 +262,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Visual Controls and Toggles', () => {
-    test('should toggle grid visibility', async ({ page }) => {
+    test('', async ({ page }) => {
       const gridToggle = page.getByTitle(/hide grid/i);
       
       // Test: Grid toggle button is visible and functional
@@ -279,8 +279,14 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/show grid/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-gray-200/);
+        // Test that the button title changed
+        await expect(toggleButton).toHaveAttribute('title', /show grid/i);
       }).toPass({ timeout: 5000 });
+      
+      // Test: Grid group should be hidden (check for DOM presence)
+      const svg = page.getByTestId('svg-canvas');
+      const gridGroup = svg.locator('g.grid');
+      await expect(gridGroup).toHaveCount(0);
       
       // Test: Click to show grid again
       await page.getByTitle(/show grid/i).click();
@@ -289,12 +295,28 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/hide grid/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-violet-600/);
+        // Test that the button title changed back
+        await expect(toggleButton).toHaveAttribute('title', /hide grid/i);
       }).toPass({ timeout: 5000 });
+      
+      // Test: Grid group should be visible again
+      await expect(gridGroup).toHaveCount(1);
     });
 
     test('should toggle labels visibility', async ({ page }) => {
       const labelsToggle = page.getByTitle(/hide labels/i);
+      const svg = page.getByTestId('svg-canvas');
+      
+      // Ensure we have a path with labels (use default quadratic path)
+      const select = page.getByTestId('example-selector');
+      await select.selectOption(DEFAULT_EXAMPLE_ID);
+      
+      // Wait for command labels to be rendered
+      await expect(async () => {
+        const commandLabels = svg.locator('text.SVGTestPage__CmdLetter');
+        const labelCount = await commandLabels.count();
+        expect(labelCount).toBeGreaterThan(0);
+      }).toPass({ timeout: 5000 });
       
       // Test: Labels toggle button is visible and functional
       await expect(labelsToggle).toBeVisible();
@@ -310,8 +332,12 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/show labels/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-gray-200/);
+        await expect(toggleButton).toHaveAttribute('title', /show labels/i);
       }).toPass({ timeout: 5000 });
+      
+      // Test: Command overlay labels should be hidden
+      const commandLabels = svg.locator('text.SVGTestPage__CmdLetter'); // Command overlay labels
+      await expect(commandLabels).toHaveCount(0);
       
       // Test: Click to show labels again
       await page.getByTitle(/show labels/i).click();
@@ -320,12 +346,30 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/hide labels/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-violet-600/);
+        await expect(toggleButton).toHaveAttribute('title', /hide labels/i);
+      }).toPass({ timeout: 5000 });
+      
+      // Test: Command overlay labels should be visible again
+      await expect(async () => {
+        const commandLabelCount = await commandLabels.count();
+        expect(commandLabelCount).toBeGreaterThan(0);
       }).toPass({ timeout: 5000 });
     });
 
     test('should toggle points visibility', async ({ page }) => {
       const pointsToggle = page.getByTitle(/hide points/i);
+      const svg = page.getByTestId('svg-canvas');
+      
+      // Ensure we have a path with points (use default quadratic path)
+      const select = page.getByTestId('example-selector');
+      await select.selectOption(DEFAULT_EXAMPLE_ID);
+      
+      // Wait for draggable points to be rendered
+      await expect(async () => {
+        const points = svg.locator('circle[data-point-id]');
+        const pointCount = await points.count();
+        expect(pointCount).toBeGreaterThan(0);
+      }).toPass({ timeout: 5000 });
       
       // Test: Points toggle button is visible and functional
       await expect(pointsToggle).toBeVisible();
@@ -341,8 +385,12 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/show points/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-gray-200/);
+        await expect(toggleButton).toHaveAttribute('title', /show points/i);
       }).toPass({ timeout: 5000 });
+      
+      // Test: Points should be hidden
+      const points = svg.locator('circle[data-point-id]');
+      await expect(points).toHaveCount(0);
       
       // Test: Click to show points again
       await page.getByTitle(/show points/i).click();
@@ -351,7 +399,13 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/hide points/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-violet-600/);
+        await expect(toggleButton).toHaveAttribute('title', /hide points/i);
+      }).toPass({ timeout: 5000 });
+      
+      // Test: Points should be visible again
+      await expect(async () => {
+        const pointCount = await points.count();
+        expect(pointCount).toBeGreaterThan(0);
       }).toPass({ timeout: 5000 });
     });
 
@@ -372,8 +426,13 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/hide fill/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-violet-600/);
+        await expect(toggleButton).toHaveAttribute('title', /hide fill/i);
       }).toPass({ timeout: 5000 });
+      
+      // Test: Path should have fill
+      const svg = page.getByTestId('svg-canvas');
+      const pathElement = svg.locator('path');
+      await expect(pathElement).toHaveAttribute('fill', /^(?!none$).*/); // Fill should not be 'none'
       
       // Test: Click to hide fill again
       await page.getByTitle(/hide fill/i).click();
@@ -382,16 +441,19 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(async () => {
         const toggleButton = page.getByTitle(/show fill/i);
         await expect(toggleButton).toBeVisible();
-        await expect(toggleButton).toHaveClass(/bg-gray-200/);
+        await expect(toggleButton).toHaveAttribute('title', /show fill/i);
       }).toPass({ timeout: 5000 });
+      
+      // Test: Path should not have fill
+      await expect(pathElement).toHaveAttribute('fill', 'none');
     });
   });
 
   test.describe('Path Manipulation', () => {
     test('should append new path segments', async ({ page }) => {
       const textarea = page.getByTestId('path-data-textarea');
-      const appendButton = page.getByRole('button', { name: 'Append' });
-      const segmentTypeSelect = page.locator('select[class*="border-violet-200"]').first();
+      const appendButton = page.getByTestId('append-button');
+      const segmentTypeSelect = page.getByTestId('segment-type-select');
       
       // Test: Initial path
       const initialPath = await textarea.inputValue();
@@ -424,11 +486,11 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
 
     test('should round path values', async ({ page }) => {
       const textarea = page.getByTestId('path-data-textarea');
-      const roundButton = page.getByRole('button', { name: 'Round All Values' });
+      const roundButton = page.getByTestId('round-values-button');
       
-      // Test: Initial path
-      const initialPath = await textarea.inputValue();
-      expect(initialPath).toBeTruthy();
+      // Test: Set a custom path with decimal values to test rounding
+      const pathWithDecimals = 'M 100.123,200.456 Q 250.789,100.234 300.567,200.891';
+      await textarea.fill(pathWithDecimals);
       
       // Test: Click round button
       await roundButton.click();
@@ -441,14 +503,20 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
         expect(roundedPath).toBeTruthy();
         expect(roundedPath).toMatch(/^M\s+\d+[,\s]\d+/);
         
-        // Check that decimal values are rounded (no more than 2 decimal places)
-        const decimalMatches = roundedPath.match(/\d+\.\d+/g);
-        if (decimalMatches && decimalMatches.length > 0) {
-          decimalMatches.forEach(match => {
-            const decimalPlaces = match.split('.')[1]?.length || 0;
-            expect(decimalPlaces).toBeLessThanOrEqual(2);
-          });
-        }
+        // Check that decimal values were actually rounded
+        // Original: 100.123,200.456,250.789,100.234,300.567,200.891
+        // Expected: 100,200,251,100,301,201 (rounded to nearest integer)
+        expect(roundedPath).toContain('100,200'); // Move command rounded
+        expect(roundedPath).toContain('251,100'); // Control point 1 rounded
+        expect(roundedPath).toContain('301,201'); // End point rounded
+        
+        // Verify no original decimal values remain
+        expect(roundedPath).not.toContain('100.123');
+        expect(roundedPath).not.toContain('200.456');
+        expect(roundedPath).not.toContain('250.789');
+        expect(roundedPath).not.toContain('100.234');
+        expect(roundedPath).not.toContain('300.567');
+        expect(roundedPath).not.toContain('200.891');
       }).toPass({ timeout: 5000 });
       
       // Test: Path is still valid SVG format
@@ -457,7 +525,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
     });
 
     test('should change segment type for appending', async ({ page }) => {
-      const segmentTypeSelect = page.locator('select[class*="border-violet-200"]').first();
+      const segmentTypeSelect = page.getByTestId('segment-type-select');
       
       // Test: Initial segment type
       const initialType = await segmentTypeSelect.inputValue();
@@ -492,137 +560,107 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
     test('should display grid lines and rulers', async ({ page }) => {
       const svg = page.getByTestId('svg-canvas');
       
-      // First ensure grid is visible
+      // Verify grid is visible and contains lines
       const gridToggle = page.getByTitle(/hide grid/i);
       await expect(gridToggle).toBeVisible();
+      await expect(gridToggle).toHaveAttribute('title', /hide grid/i);
       
-      // Test: Grid lines are visible (check for line elements with proper class selection)
-      // The grid lines use stroke-gray-200/80 and stroke-gray-400 classes
-      const gridLines = svg.locator('line[class*="stroke-gray"]');
+      const gridGroup = svg.locator('g.grid');
+      await expect(gridGroup).toHaveCount(1);
       
-      // Grid lines should already be rendered since grid is visible
-      // Just check if they exist without waiting
+      const gridLines = gridGroup.locator('line');
+      const gridLineCount = await gridLines.count();
+      expect(gridLineCount).toBeGreaterThan(0);
       
-      // Check if grid lines exist and are visible
-      const lineCount = await gridLines.count();
-      expect(lineCount).toBeGreaterThan(0);
+      // Verify rulers are visible and contain coordinate text
+      const rulerGroup = svg.locator('g.rulers');
+      await expect(rulerGroup).toHaveCount(1);
       
-      // Test: Grid lines exist in DOM (they might be very faint due to low opacity)
-      // Use toBeAttached since the lines exist but might not be visually prominent
-      const firstGridLine = gridLines.first();
-      await expect(firstGridLine).toBeAttached();
+      const rulerTexts = rulerGroup.locator('text');
+      const rulerTextCount = await rulerTexts.count();
+      expect(rulerTextCount).toBeGreaterThan(0);
       
-      // Test: Ruler marks are visible (check for text elements with coordinates)
-      const rulerMarks = svg.locator('text').filter({ hasText: /^-?\d+$/ });
-      
-      // Ruler marks should also already be rendered
-      const rulerCount = await rulerMarks.count();
-      expect(rulerCount).toBeGreaterThan(0);
-      
-      // Test: Ruler marks are visible
-      await expect(rulerMarks.first()).toBeVisible();
+      // Verify ruler texts contain numeric coordinates
+      const firstRulerText = rulerTexts.first();
+      await expect(firstRulerText).toBeVisible();
+      const textContent = await firstRulerText.textContent();
+      expect(textContent).toMatch(/^-?\d+$/);
     });
 
     test('should handle grid panning', async ({ page }) => {
       const svg = page.getByTestId('svg-canvas');
       
-      // Test: Initial viewBox
-      const initialViewBox = '-60 -60 800 400';
-      await expect(svg).toHaveAttribute('viewBox', initialViewBox);
+      // Verify initial state
+      await expect(svg).toHaveAttribute('viewBox', DEFAULT_VIEWBOX);
       
-      // Test: Pan grid by dragging - use dynamic coordinates for resilience
+      // Get initial ruler text to compare after panning
+      const rulerGroup = svg.locator('g.rulers');
+      const initialRulerTexts = await rulerGroup.locator('text').allTextContents();
+      
+      // Perform panning action
       const box = await svg.boundingBox();
       expect(box).toBeTruthy();
       
       const centerX = box!.x + box!.width / 2;
       const centerY = box!.y + box!.height / 2;
-      const dragOffsetX = -100; // Drag left
-      const dragOffsetY = -50;  // Drag up
-      
-      // Debug: Log the initial state
-      console.log('Initial viewBox:', await svg.getAttribute('viewBox'));
-      console.log('Mouse coordinates:', { centerX, centerY, dragOffsetX, dragOffsetY });
       
       await page.mouse.move(centerX, centerY);
       await page.mouse.down();
-      await page.mouse.move(centerX + dragOffsetX, centerY + dragOffsetY);
+      await page.mouse.move(centerX - 100, centerY - 50);
       await page.mouse.up();
       
-      // Wait for the viewBox to change after panning
+      // Verify panning worked (viewBox changed)
       await expect(async () => {
         const currentViewBox = await svg.getAttribute('viewBox');
-        expect(currentViewBox).not.toBe(initialViewBox);
+        expect(currentViewBox).not.toBe(DEFAULT_VIEWBOX);
         expect(currentViewBox).toBeTruthy();
-      }).toPass({ timeout: 10000 });
+      }).toPass({ timeout: 5000 });
       
-      // Debug: Log the final state
-      const finalViewBox = await svg.getAttribute('viewBox');
-      console.log('Final viewBox:', finalViewBox);
+      // Verify grid and rulers are still visible after panning
+      const gridGroup = svg.locator('g.grid');
+      await expect(gridGroup).toHaveCount(1);
       
-      // Test: ViewBox should change (panning should work)
-      expect(finalViewBox).not.toBe(initialViewBox);
+      await expect(rulerGroup).toHaveCount(1);
+      const rulerTexts = rulerGroup.locator('text');
+      const rulerTextCount = await rulerTexts.count();
+      expect(rulerTextCount).toBeGreaterThan(0);
       
-      // Parse the viewBox to check the actual values
-      const viewBoxValues = finalViewBox?.split(' ').map(Number);
-      expect(viewBoxValues).toBeDefined();
-      if (viewBoxValues && viewBoxValues.length >= 4) {
-        const [x, y] = viewBoxValues;
-        
-        // The panning moved the viewBox right and down (opposite of mouse movement)
-        // Initial: -60 -60, Final: 40 -10
-        // This means dragging left (-100) moved viewBox right by 100
-        // and dragging up (-50) moved viewBox down by 50
-        
-        // Check that the viewBox moved in the expected direction
-        expect(x).toBeGreaterThan(-60); // Moved right (x increased)
-        expect(y).toBeGreaterThan(-60); // Moved down (y increased)
-        
-        // The movement should be roughly proportional to the drag distance
-        // We dragged -100 left and -50 up, so viewBox should move +100 right and +50 down
-        expect(x).toBeCloseTo(40, -1); // Should be around 40 (allowing some tolerance)
-        expect(y).toBeCloseTo(-10, -1); // Should be around -10 (allowing some tolerance)
-      }
+      // Verify ruler coordinates have changed (indicating panning worked)
+      const finalRulerTexts = await rulerTexts.allTextContents();
+      expect(finalRulerTexts).not.toEqual(initialRulerTexts);
     });
 
     test('should reset pan position', async ({ page }) => {
       const svg = page.getByTestId('svg-canvas');
       const resetButton = page.getByTitle(/reset pan/i);
       
-      // Test: Initial viewBox
-      const initialViewBox = await svg.getAttribute('viewBox');
-      expect(initialViewBox).toBeTruthy(); // Ensure we have a valid viewBox
+      // Get initial ruler coordinates to compare after reset
+      const rulerGroup = svg.locator('g.rulers');
+      const initialRulerTexts = await rulerGroup.locator('text').allTextContents();
       
-      // Test: Pan the grid - use dynamic coordinates for resilience
+      // Pan the view to change position
       const box = await svg.boundingBox();
       expect(box).toBeTruthy();
       
-      const centerX = box!.x + box!.width / 2;
-      const centerY = box!.y + box!.height / 2;
-      const dragOffsetX = -100; // Drag left
-      const dragOffsetY = -50;  // Drag up
-      
-      // Debug: Log the initial state
-      console.log('Reset test - Initial viewBox:', initialViewBox);
-      console.log('Reset test - Mouse coordinates:', { centerX, centerY, dragOffsetX, dragOffsetY });
-      
-      await page.mouse.move(centerX, centerY);
+      await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
       await page.mouse.down();
-      await page.mouse.move(centerX + dragOffsetX, centerY + dragOffsetY);
+      await page.mouse.move(box!.x + box!.width / 2 - 100, box!.y + box!.height / 2 - 50);
       await page.mouse.up();
       
-      // Wait for the viewBox to change
+      // Wait for panning to complete
       await expect(async () => {
-        const pannedViewBox = await svg.getAttribute('viewBox');
-        console.log('Reset test - Panned viewBox:', pannedViewBox);
-        expect(pannedViewBox).not.toBe(initialViewBox);
-        expect(pannedViewBox).toBeTruthy();
-      }).toPass({ timeout: 10000 });
+        const currentViewBox = await svg.getAttribute('viewBox');
+        expect(currentViewBox).not.toBe(DEFAULT_VIEWBOX);
+      }).toPass({ timeout: 5000 });
       
-      // Test: Reset button works
+      // Click reset button
       await resetButton.click();
       
-      // Test: ViewBox returns to initial position
-      await expect(svg).toHaveAttribute('viewBox', initialViewBox!);
+      // Verify reset worked (viewBox and rulers return to original state)
+      await expect(svg).toHaveAttribute('viewBox', DEFAULT_VIEWBOX);
+      
+      const finalRulerTexts = await rulerGroup.locator('text').allTextContents();
+      expect(finalRulerTexts).toEqual(initialRulerTexts);
     });
   });
 
@@ -648,8 +686,8 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(page.getByLabel(/select method/i)).toBeVisible();
       
       // Test: Buttons have accessible names
-      await expect(page.getByRole('button', { name: /validate path/i })).toBeVisible();
-      await expect(page.getByRole('button', { name: /append/i })).toBeVisible();
+      await expect(page.getByTestId('validate-button')).toBeVisible();
+      await expect(page.getByTestId('append-button')).toBeVisible();
       
       // Test: SVG has accessible name
       await expect(page.getByTestId('svg-canvas')).toHaveAttribute('aria-label', 'SVG Canvas');
@@ -686,41 +724,172 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Performance and Stability', () => {
-    test('should handle rapid user interactions', async ({ page }) => {
+    test('should handle rapid user interactions within performance limits', async ({ page }) => {
       const select = page.getByTestId('example-selector');
       const svg = page.getByTestId('svg-canvas');
       
-      // Test: Rapid example switching
-      for (let i = 0; i < 5; i++) {
-        await select.selectOption('cubic-1');
-        await select.selectOption('quadratic-1');
+      // Test: Rapid example switching with performance measurement
+      const defaultIndex = PATH_EXAMPLES.findIndex(ex => ex.id === DEFAULT_EXAMPLE_ID);
+      const nextExample = PATH_EXAMPLES[defaultIndex + 1];
+      expect(nextExample).toBeDefined();
+      
+      const startTime = Date.now();
+      
+      // Perform rapid interactions
+      for (let i = 0; i < 10; i++) {
+        await select.selectOption(nextExample!.id);
+        await select.selectOption(DEFAULT_EXAMPLE_ID);
       }
       
-      // Test: Final state is correct
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      // Performance assertion: Should complete within 5 seconds
+      expect(duration).toBeLessThan(5000);
+      
+      // Verify final state is correct
       await expect(svg).toBeVisible();
-      await expect(svg).toHaveAttribute('width', '800');
-      await expect(svg).toHaveAttribute('height', '400');
+      await expect(svg).toHaveAttribute('width', SVG_WIDTH.toString());
+      await expect(svg).toHaveAttribute('height', SVG_HEIGHT.toString());
     });
 
-    test('should handle large SVG paths', async ({ page }) => {
+    test('should handle large SVG paths without performance degradation', async ({ page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const validateButton = page.getByTestId('validate-button');
+      const svg = page.getByTestId('svg-canvas');
       
-      // Create a complex path with many commands
-      const complexPath = 'M 0,0 ' + Array.from({ length: 30 }, (_, i) => 
-        `L ${i * 10},${i * 5}`
+      // Create a large path with many line segments (each L command creates draggable end points)
+      const largePath = 'M 0,0 ' + Array.from({ length: 200 }, (_, i) => 
+        `L ${i * 2},${i * 1}`
       ).join(' ');
       
-      // Test: Input complex path
-      await textarea.fill(complexPath);
+      // Measure path processing performance
+      const startTime = Date.now();
+      await textarea.fill(largePath);
       await validateButton.click();
+      const endTime = Date.now();
       
-      // Test: Path is accepted and rendered
-      await expect(textarea).toHaveValue(complexPath);
-      await expect(page.getByTestId('svg-canvas')).toBeVisible();
+      // Performance assertion: Should process within 3 seconds
+      expect(endTime - startTime).toBeLessThan(3000);
       
-              // Test: No error messages
-        await expect(page.getByText(/invalid path data/i)).not.toBeVisible();
+      // Verify it still works
+      await expect(textarea).toHaveValue(largePath);
+      await expect(svg).toBeVisible();
+      
+      // Verify no error messages
+      await expect(page.getByText(/invalid path data/i)).not.toBeVisible();
+      
+      // Test panning performance with large path
+      const panStartTime = Date.now();
+      const box = await svg.boundingBox();
+      expect(box).toBeTruthy();
+      
+      await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box!.x + box!.width / 2 - 200, box!.y + box!.height / 2 - 100);
+      await page.mouse.up();
+      
+      // Wait for panning to complete
+      await expect(async () => {
+        const currentViewBox = await svg.getAttribute('viewBox');
+        expect(currentViewBox).not.toBe(DEFAULT_VIEWBOX);
+      }).toPass({ timeout: 5000 });
+      
+      const panEndTime = Date.now();
+      const panDuration = panEndTime - panStartTime;
+      
+      // Panning should be responsive even with large paths
+      expect(panDuration).toBeLessThan(2000);
+      
+      // Test point dragging performance - wait for points to be rendered (they might take time with large paths)
+      const points = svg.locator('circle[data-point-id]');
+      
+      await expect(async () => {
+        const pointCount = await points.count();
+        expect(pointCount).toBeGreaterThan(0);
+      }).toPass({ timeout: 10000 }); // Give more time for large path processing
+      
+      const dragStartTime = Date.now();
+      const firstPoint = points.first();
+      
+      // Get point position and drag it
+      const pointBox = await firstPoint.boundingBox();
+      expect(pointBox).toBeTruthy();
+      
+      await page.mouse.move(pointBox!.x + pointBox!.width / 2, pointBox!.y + pointBox!.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(pointBox!.x + pointBox!.width / 2 + 50, pointBox!.y + pointBox!.height / 2 + 50);
+      await page.mouse.up();
+      
+      const dragEndTime = Date.now();
+      const dragDuration = dragEndTime - dragStartTime;
+      
+      // Point dragging should be responsive even with large paths
+      expect(dragDuration).toBeLessThan(1500);
+      
+      // Verify the path was updated after dragging (with more flexible timing for large paths)
+      await expect(async () => {
+        const updatedPath = await textarea.inputValue();
+        expect(updatedPath).toBeTruthy();
+        expect(updatedPath).not.toBe(largePath); // Should have changed after drag
+      }).toPass({ timeout: 10000 });
+      
+      // Verify SVG remains stable after all operations
+      await expect(svg).toBeVisible();
+      await expect(svg).toHaveAttribute('width', SVG_WIDTH.toString());
+      await expect(svg).toHaveAttribute('height', SVG_HEIGHT.toString());
+    });
+
+    test('should maintain stable state during extended use', async ({ page }) => {
+      const select = page.getByTestId('example-selector');
+      const svg = page.getByTestId('svg-canvas');
+      
+      // Extended interaction session
+      for (let i = 0; i < 20; i++) {
+        const randomExample = PATH_EXAMPLES[i % PATH_EXAMPLES.length];
+        expect(randomExample).toBeDefined();
+        await select.selectOption(randomExample!.id);
+        
+        // Verify SVG remains stable
+        await expect(svg).toBeVisible();
+        await expect(svg).toHaveAttribute('width', SVG_WIDTH.toString());
+        await expect(svg).toHaveAttribute('height', SVG_HEIGHT.toString());
+      }
+      
+      // Verify final state is consistent
+      await expect(select).toBeVisible();
+      await expect(svg).toBeVisible();
+    });
+
+    test('should recover gracefully from invalid inputs', async ({ page }) => {
+      const textarea = page.getByTestId('path-data-textarea');
+      const validateButton = page.getByTestId('validate-button');
+      const svg = page.getByTestId('svg-canvas');
+      
+      // Test various invalid inputs
+      const invalidInputs = [
+        'invalid path',
+        'M 100,200 Q',
+        'M 100,200 Q 200,100',
+        'M 100,200 Q 200,100 300,200 Z Z', // Duplicate close
+        'M 100,200 Q 200,100 300,200 L', // Incomplete command
+      ];
+      
+      for (const invalidInput of invalidInputs) {
+        await textarea.fill(invalidInput);
+        await validateButton.click();
+        
+        // Should not crash or break the UI
+        await expect(svg).toBeVisible();
+        await expect(page.getByTestId('example-selector')).toBeVisible();
+        await expect(page.getByTestId('validate-button')).toBeVisible();
+        
+        // Should be able to recover by entering valid path
+        const validPath = 'M 100,200 L 300,400';
+        await textarea.fill(validPath);
+        await validateButton.click();
+        await expect(textarea).toHaveValue(validPath);
+      }
     });
   });
 });

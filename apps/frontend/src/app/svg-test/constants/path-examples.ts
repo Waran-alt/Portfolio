@@ -6,6 +6,11 @@
 import type { PathExample } from '../types';
 
 /**
+ * The default example ID used when the application starts.
+ */
+export const DEFAULT_EXAMPLE_ID = 'quadratic-1';
+
+/**
  * A collection of predefined SVG path examples used in the visualizer.
  * Each example includes a title, description, and the raw path data.
  */

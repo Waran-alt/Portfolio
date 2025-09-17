@@ -104,6 +104,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
             onChange={(e) => setSegmentTypeToAppend(e.target.value)}
             className="relative flex-1 block w-full rounded-none rounded-l-md border-violet-200 bg-violet-50 px-3 py-2 text-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-500 sm:text-sm disabled:opacity-50"
             disabled={!isValid}
+            data-testid="segment-type-select"
           >
             {APPENDABLE_COMMANDS.map(cmd => (
               <option key={cmd} value={cmd}>
@@ -115,6 +116,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
             onClick={handleAppendSegment}
             className={`-ml-px relative inline-flex items-center justify-center rounded-r-md border border-violet-200 bg-white px-4 py-2 text-sm font-medium text-violet-700 hover:bg-violet-50 focus:z-10 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed`}
             disabled={!isValid}
+            data-testid="append-button"
           >
             Append
           </button>
@@ -150,6 +152,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
           onClick={handleRoundValues}
           className={`col-span-1 w-full max-w-[400px] min-w-[150px] ${BASE_BUTTON_CLASSES} ${SECONDARY_BUTTON_CLASSES}`}
           disabled={!isValid}
+          data-testid="round-values-button"
         >
           Round All Values
         </button>

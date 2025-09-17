@@ -11,8 +11,8 @@ import { getCommandCoords } from '../utils/svgCommandHelpers';
 import PathCommandsOverlay from './PathCommandsOverlay';
 
 // --- CONSTANTS ---
-const SVG_WIDTH = 800;
-const SVG_HEIGHT = 400;
+export const SVG_WIDTH = 800;
+export const SVG_HEIGHT = 400;
 
 const GRID_SPACING = 50;
 const POINT_RADIUS = 7;
@@ -36,8 +36,11 @@ const RULER_BUFFER = 200; // Extra buffer beyond viewBox for ruler calculations
 const THROTTLE_INTERVAL = 1000 / 60; // ms intervals
 
 // Default pan offset constants
-const DEFAULT_PAN_OFFSET_X = -60;
-const DEFAULT_PAN_OFFSET_Y = -60;
+export const DEFAULT_PAN_OFFSET_X = -60;
+export const DEFAULT_PAN_OFFSET_Y = -60;
+
+// Default viewBox constructed from the constants above
+export const DEFAULT_VIEWBOX = `${DEFAULT_PAN_OFFSET_X} ${DEFAULT_PAN_OFFSET_Y} ${SVG_WIDTH} ${SVG_HEIGHT}`;
 
 /**
  * Props for the SvgVisualizer component.
