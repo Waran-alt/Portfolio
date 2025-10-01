@@ -1,0 +1,71 @@
+{
+  "title": "SVG Path Visualizer",
+  "subtitle": "Explore and understand SVG path commands visually.",
+  "description": "Drag points, edit the path, and see live breakdowns below.",
+  "controls": {
+    "selectExample": "Select an example",
+    "pathInputLabel": "SVG Path Data",
+    "validate": "Validate Path",
+    "appendSegment": "Add Segment",
+    "segmentType": "Segment Type",
+    "relativeToggle": "Relative",
+    "closePathToggle": "Close Path (Z)",
+    "showGrid": "Show Grid",
+    "hideGrid": "Hide Grid",
+    "showLabels": "Show Labels",
+    "hideLabels": "Hide Labels",
+    "showPoints": "Show Points",
+    "hidePoints": "Hide Points",
+    "showFill": "Show Fill",
+    "hideFill": "Hide Fill",
+    "roundValues": "Round All Values",
+    "resetView": "Reset Pan",
+    "decimalsLabel": "Decimals"
+  },
+  "errors": {
+    "invalidPath": "Invalid path data. Please check the syntax.",
+    "emptyPath": "Path cannot be empty. Please enter a valid SVG path."
+  },
+  "breakdown": {
+    "title": "SVG Path Breakdown",
+    "dragPointInstruction": "Drag points to modify the path."
+  },
+  "accessibility": {
+    "canvasLabel": "SVG area for path visualization",
+    "pointLabel": "Draggable path point"
+  },
+  "notices": {
+    "responsive": "This tool works on desktop, tablet, and mobile.",
+    "performance": "Handles large paths and rapid changes without issues."
+  },
+  "commands": {
+    "moveTo": "Move To",
+    "lineTo": "Line To",
+    "horizontalLineTo": "Horizontal Line To",
+    "verticalLineTo": "Vertical Line To",
+    "quadraticBezier": "Quadratic Bezier Curve",
+    "cubicBezier": "Cubic Bezier Curve",
+    "smoothCubicBezier": "Smooth Cubic Bezier Curve",
+    "smoothQuadraticBezier": "Smooth Quadratic Bezier Curve",
+    "arc": "Arc",
+    "closePath": "Close Path"
+  },
+  "points": {
+    "start": "Start",
+    "end": "End",
+    "control": "Control",
+    "control1": "Control 1",
+    "control2": "Control 2",
+    "center": "Center",
+    "p0": "P0",
+    "p1": "P1",
+    "p2": "P2",
+    "p3": "P3",
+    "p4": "P4",
+    "mid": "Mid",
+    "c1": "C1",
+    "c2": "C2",
+    "c3": "C3",
+    "c4": "C4"
+  }
+}

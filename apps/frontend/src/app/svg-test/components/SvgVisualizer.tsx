@@ -70,6 +70,8 @@ interface SvgVisualizerProps {
   setShowFill: (show: boolean) => void;
   /** Mouse down event handler to initiate dragging a point. */
   handleMouseDown: (point: Point) => (e: React.MouseEvent) => void;
+  /** Translation function for internationalization. */
+  t: (key: string, fallback?: string) => string;
 }
 
 // Future-proofing Note: For very complex paths with thousands of points or commands,
@@ -97,6 +99,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
   showFill,
   setShowFill,
   handleMouseDown,
+  t,
 }) => {
   // Pan state for dragging the canvas - start at -60, -60 for better initial view
   const [isPanning, setIsPanning] = React.useState(false);
@@ -416,7 +419,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
         width={SVG_WIDTH}
         height={SVG_HEIGHT}
         className={`w-full h-auto rounded-lg border-2 border-violet-200 bg-gray-50 overflow-hidden ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
-        aria-label="SVG Canvas"
+        aria-label={t('accessibility.canvasLabel')}
         role="graphics-document"
         onMouseDown={handlePanStart}
         style={{ userSelect: 'none' }}
@@ -483,7 +486,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
           onClick={() => setShowGrid(!showGrid)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowGrid(!showGrid); }}
           className={`p-1.5 rounded-full cursor-pointer transition-colors ${showGrid ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-          title={showGrid ? 'Hide Grid' : 'Show Grid'}
+          title={showGrid ? t('controls.hideGrid') : t('controls.showGrid')}
         >
           <Grid size={18} />
         </div>
@@ -493,7 +496,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
           onClick={() => setShowLabels(!showLabels)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowLabels(!showLabels); }}
           className={`p-1.5 rounded-full cursor-pointer transition-colors ${showLabels ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-          title={showLabels ? 'Hide Labels' : 'Show Labels'}
+          title={showLabels ? t('controls.hideLabels') : t('controls.showLabels')}
         >
           <Tags size={18} />
         </div>
@@ -503,7 +506,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
           onClick={() => setShowPoints(!showPoints)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowPoints(!showPoints); }}
           className={`p-1.5 rounded-full cursor-pointer transition-colors ${showPoints ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-          title={showPoints ? 'Hide Points' : 'Show Points'}
+          title={showPoints ? t('controls.hidePoints') : t('controls.showPoints')}
         >
           <CircleDot size={18} />
         </div>
@@ -513,7 +516,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
           onClick={() => setShowFill(!showFill)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowFill(!showFill); }}
           className={`p-1.5 rounded-full cursor-pointer transition-colors ${showFill ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-600'}`}
-          title={showFill ? 'Hide Fill' : 'Show Fill'}
+          title={showFill ? t('controls.hideFill') : t('controls.showFill')}
         >
           <Paintbrush size={18} />
         </div>
@@ -533,7 +536,7 @@ const SvgVisualizer: React.FC<SvgVisualizerProps> = ({
             }
           }}
           className="p-1.5 rounded-full cursor-pointer transition-colors bg-gray-200 text-gray-600 hover:bg-violet-600 hover:text-white"
-          title="Reset Pan"
+          title={t('controls.resetView')}
         >
           <Move size={18} />
         </div>

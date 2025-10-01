@@ -6,11 +6,14 @@
  * data and passes down state and event handlers to the specialized child components
  * that are responsible for rendering the UI.
  */
+import { useTranslation } from '@/hooks/useTranslation';
+import { I18N_CONFIG, type SupportedLocale } from '@/i18n';
+import '@/shared/styles/noselect.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as parser from 'svg-path-parser';
-import '../../shared/styles/noselect.css';
 import ExampleSelector from './components/ExampleSelector';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import PathCommandBreakdown from './components/PathCommandBreakdown';
 import PathEditorControls from './components/PathEditorControls';
 import SvgVisualizer from './components/SvgVisualizer';
@@ -32,6 +35,13 @@ const examples: Record<string, PathExample> = examplesList.reduce((acc, ex) => {
  * and renders the visual representation and detailed breakdown of the path data.
  */
 const SVGTestPage: React.FC = () => {
+  // State for current locale
+  const [currentLocale, setCurrentLocale] = useState<SupportedLocale>(I18N_CONFIG.defaultLocale);
+  
+  // Translation hooks
+  const { t } = useTranslation('svgTest', currentLocale);
+  const { t: tCommon } = useTranslation('common', currentLocale);
+  
   // State for client-side rendering guard
   const [isClient, setIsClient] = useState(false);
   // State for the currently selected path example from the dropdown
@@ -349,9 +359,11 @@ const SVGTestPage: React.FC = () => {
     } else if (!isPathClosed && hasZ) {
       newPath = newPath.slice(0, -1).trim();
     }
-    setPendingPathString(newPath);
-    setPathString(newPath);
-  }, [isPathClosed]);
+    if (newPath !== pendingPathString) {
+      setPendingPathString(newPath);
+      setPathString(newPath);
+    }
+  }, [isPathClosed, pendingPathString]);
 
   // Effect to guard against SSR issues by only rendering full component on the client
   useEffect(() => {
@@ -382,14 +394,23 @@ const SVGTestPage: React.FC = () => {
         >
           {/* Header */}
           <div className="mb-10">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-violet-700 mb-3 tracking-tight drop-shadow-sm">
-              SVG Path Visualizer
-            </h1>
-            <p className="text-lg text-violet-900/80 mb-1">
-              Explore and understand SVG path commands visually.
-              <br />
-              <span className="text-indigo-500">Drag points, edit the path, and see live breakdowns below.</span>
-            </p>
+            <div className="flex justify-between items-start mb-3">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-violet-700 mb-3 tracking-tight drop-shadow-sm">
+                  {t('title')}
+                </h1>
+                <p className="text-lg text-violet-900/80 mb-1">
+                  {t('subtitle')}
+                  <br />
+                  <span className="text-indigo-500">{t('description')}</span>
+                </p>
+              </div>
+              <LanguageSwitcher
+                currentLocale={currentLocale}
+                onLocaleChange={setCurrentLocale}
+                t={tCommon}
+              />
+            </div>
           </div>
 
           {/* Controls */}
@@ -399,6 +420,7 @@ const SVGTestPage: React.FC = () => {
                 examples={examples}
                 selectedExample={selectedExample}
                 handleExampleChange={handleExampleChange}
+                t={t}
               />
             </div>
           </div>
@@ -419,6 +441,7 @@ const SVGTestPage: React.FC = () => {
                 showFill={showFill}
                 setShowFill={setShowFill}
                 handleMouseDown={handleMouseDown}
+                t={t}
               />
               <PathEditorControls
                 pendingPathString={pendingPathString}
@@ -434,13 +457,14 @@ const SVGTestPage: React.FC = () => {
                 handleValidate={handleValidate}
                 handleAppendSegment={handleAppendSegment}
                 handleRoundValues={handleRoundValues}
+                t={t}
               />
             </div>
           </div>
 
           {/* Breakdown Component */}
           <div className={CONTAINER_CLASSES}>
-            <PathCommandBreakdown path={pathString} />
+            <PathCommandBreakdown path={pathString} t={t} />
           </div>
         </motion.div>
       </AnimatePresence>

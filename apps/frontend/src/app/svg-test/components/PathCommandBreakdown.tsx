@@ -24,7 +24,7 @@ import { DECIMAL_DIGITS, formatNumber } from '../utils/svgPath';
 // If this tool were to be used for such scenarios, consider implementing a
 // virtualized list (e.g., using react-window or react-virtualized)
 // to render only the visible items.
-const PathCommandBreakdownComponent = ({ path }: { path: string; }): React.JSX.Element | null => {
+const PathCommandBreakdownComponent = ({ path, t }: { path: string; t: (key: string, fallback?: string) => string; }): React.JSX.Element | null => {
   // State to control the number of decimal places for displaying numeric values.
   const [digits, setDigits] = useState<number>(DECIMAL_DIGITS);
   
@@ -33,7 +33,7 @@ const PathCommandBreakdownComponent = ({ path }: { path: string; }): React.JSX.E
     commands = parser.parseSVG(path);
   } catch {
     // If parsing fails, render a user-friendly error message.
-    return <div className="text-red-600 text-xs mt-2" aria-live="polite">Invalid SVG path</div>;
+    return <div className="text-red-600 text-xs mt-2" aria-live="polite">{t('errors.invalidPath')}</div>;
   }
   // Do not render anything if the path is empty or contains no commands.
   if (!commands.length) return null;
@@ -41,11 +41,11 @@ const PathCommandBreakdownComponent = ({ path }: { path: string; }): React.JSX.E
     <div className={CONTAINER_CLASSES}>
       <div className="mb-2 flex items-center gap-4">
         <div className="text-violet-700 font-semibold flex items-center gap-2">
-          <span>SVG Path Breakdown</span>
+          <span>{t('breakdown.title')}</span>
         </div>
         {/* UI to control the precision of displayed numbers */}
         <label className="ml-auto flex items-center gap-1 text-xs text-violet-700">
-          Decimals:
+          {t('controls.decimalsLabel')}:
           <select
             value={digits}
             onChange={e => setDigits(Number(e.target.value))}
@@ -62,6 +62,7 @@ const PathCommandBreakdownComponent = ({ path }: { path: string; }): React.JSX.E
         {commands.map((cmd, i) => {
           // Look up command information (name, params) from our constants.
           const info = SVG_COMMAND_INFO[cmd.code.toUpperCase()] || { name: 'Unknown', params: [], desc: '' };
+          const commandKey = cmd.code.toLowerCase();
           return (
             <div
               key={`${i}-${JSON.stringify(cmd)}`}
@@ -69,7 +70,7 @@ const PathCommandBreakdownComponent = ({ path }: { path: string; }): React.JSX.E
             >
               <div className="flex items-center gap-1 mb-1">
                 <span className="text-violet-600 font-bold text-lg">{cmd.code}</span>
-                <span className="text-xs text-gray-500">{info.name}</span>
+                <span className="text-xs text-gray-500">{t(`commands.${commandKey}`) || info.name}</span>
               </div>
               <div className="text-xs text-gray-700 mb-1">{info.desc}</div>
               <div className="flex flex-wrap gap-1">

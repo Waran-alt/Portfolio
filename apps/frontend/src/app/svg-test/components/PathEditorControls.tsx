@@ -36,6 +36,8 @@ interface PathEditorControlsProps {
   handleAppendSegment: () => void;
   /** Callback to round all numerical values in the path string. */
   handleRoundValues: () => void;
+  /** Translation function for internationalization. */
+  t: (key: string, fallback?: string) => string;
 }
 
 const BASE_BUTTON_CLASSES = "px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -62,12 +64,13 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
   handleValidate,
   handleAppendSegment,
   handleRoundValues,
+  t,
 }) => {
   return (
     <div className="flex flex-col h-full">
       <div>
         <label htmlFor="path-data-textarea" className="block text-sm font-medium text-violet-700 mb-2">
-          SVG Path Data (d)
+          {t('controls.pathInputLabel')}
         </label>
         <textarea
           id="path-data-textarea"
@@ -83,7 +86,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
         />
         {!isValid && (
           <p className="mt-2 text-sm text-red-600" id="path-error">
-            {pendingPathString.trim() ? 'Invalid path data. Please check syntax.' : 'Path cannot be empty. Please enter a valid SVG path.'}
+            {pendingPathString.trim() ? t('errors.invalidPath') : t('errors.emptyPath')}
           </p>
         )}
       </div>
@@ -94,7 +97,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
           onClick={handleValidate}
           className={`col-span-1 sm:col-span-2 w-full max-w-[400px] min-w-[150px] ${BASE_BUTTON_CLASSES} ${PRIMARY_BUTTON_CLASSES}`}
         >
-          Validate Path
+          {t('controls.validate')}
         </button>
 
         {/* Append Segment Controls */}
@@ -108,7 +111,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
           >
             {APPENDABLE_COMMANDS.map(cmd => (
               <option key={cmd} value={cmd}>
-                {SVG_COMMAND_INFO[cmd]?.name || cmd} ({cmd})
+                {t(`commands.${cmd.toLowerCase()}`) || SVG_COMMAND_INFO[cmd]?.name || cmd} ({cmd})
               </option>
             ))}
           </select>
@@ -118,7 +121,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
             disabled={!isValid}
             data-testid="append-button"
           >
-            Append
+            {t('controls.appendSegment')}
           </button>
         </div>
         
@@ -133,7 +136,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
               className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 accent-violet-600"
               disabled={!isValid}
             />
-            Relative
+            {t('controls.relativeToggle')}
           </label>
           <label className={`flex items-center gap-2 text-sm ${!isValid ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
             <input
@@ -143,7 +146,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
               className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 accent-violet-600"
               disabled={!isValid}
             />
-            Close Path (Z)
+            {t('controls.closePathToggle')}
           </label>
         </fieldset>
 
@@ -154,7 +157,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
           disabled={!isValid}
           data-testid="round-values-button"
         >
-          Round All Values
+          {t('controls.roundValues')}
         </button>
       </div>
     </div>

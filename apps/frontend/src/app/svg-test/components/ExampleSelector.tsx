@@ -16,6 +16,8 @@ interface ExampleSelectorProps {
   selectedExample: string;
   /** Callback function to be invoked when a new example is selected. */
   handleExampleChange: (id: string) => void;
+  /** Translation function for internationalization. */
+  t: (key: string, fallback?: string) => string;
 }
 
 /**
@@ -28,11 +30,12 @@ const ExampleSelector: React.FC<ExampleSelectorProps> = ({
   examples,
   selectedExample,
   handleExampleChange,
+  t,
 }) => {
   return (
     <div>
       <label htmlFor="example-select" className="block text-sm font-medium text-gray-700 mb-2">
-        Select Method
+        {t('controls.selectExample')}
       </label>
       <select
         id="example-select"

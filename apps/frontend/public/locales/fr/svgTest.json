@@ -1,0 +1,69 @@
+{
+  "title": "Visualiseur de chemin SVG",
+  "controls": {
+    "selectExample": "Sélectionner un exemple",
+    "pathInputLabel": "Données du chemin SVG",
+    "validate": "Valider le chemin",
+    "appendSegment": "Ajouter un segment",
+    "segmentType": "Type de segment",
+    "relativeToggle": "Relatif",
+    "closePathToggle": "Fermer le chemin (Z)",
+    "showGrid": "Afficher la grille",
+    "hideGrid": "Masquer la grille",
+    "showLabels": "Afficher les étiquettes",
+    "hideLabels": "Masquer les étiquettes",
+    "showPoints": "Afficher les points",
+    "hidePoints": "Masquer les points",
+    "showFill": "Afficher le remplissage",
+    "hideFill": "Masquer le remplissage",
+    "roundValues": "Arrondir toutes les valeurs",
+    "resetView": "Réinitialiser le déplacement",
+    "decimalsLabel": "Décimales"
+  },
+  "errors": {
+    "invalidPath": "Données de chemin invalides. Veuillez vérifier la syntaxe.",
+    "emptyPath": "Le chemin ne peut pas être vide. Veuillez entrer un chemin SVG valide."
+  },
+  "breakdown": {
+    "title": "Décomposition du chemin SVG",
+    "dragPointInstruction": "Faites glisser les points pour modifier le chemin."
+  },
+  "accessibility": {
+    "canvasLabel": "Zone SVG pour la visualisation du chemin",
+    "pointLabel": "Point du chemin déplaçable"
+  },
+  "notices": {
+    "responsive": "Cet outil fonctionne sur ordinateur, tablette et mobile.",
+    "performance": "Gère de grands chemins et des modifications rapides sans problème."
+  },
+  "commands": {
+    "moveTo": "Aller à",
+    "lineTo": "Ligne vers",
+    "horizontalLineTo": "Ligne horizontale vers",
+    "verticalLineTo": "Ligne verticale vers",
+    "quadraticBezier": "Courbe de Bézier quadratique",
+    "cubicBezier": "Courbe de Bézier cubique",
+    "smoothCubicBezier": "Courbe de Bézier cubique lissée",
+    "smoothQuadraticBezier": "Courbe de Bézier quadratique lissée",
+    "arc": "Arc",
+    "closePath": "Fermer le chemin"
+  },
+  "points": {
+    "start": "Départ",
+    "end": "Fin",
+    "control": "Contrôle",
+    "control1": "Contrôle 1",
+    "control2": "Contrôle 2",
+    "center": "Centre",
+    "p0": "P0",
+    "p1": "P1",
+    "p2": "P2",
+    "p3": "P3",
+    "p4": "P4",
+    "mid": "Milieu",
+    "c1": "C1",
+    "c2": "C2",
+    "c3": "C3",
+    "c4": "C4"
+  }
+}
