@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 import { DEFAULT_VIEWBOX, SVG_HEIGHT, SVG_WIDTH } from './components/SvgVisualizer';
 import { DEFAULT_EXAMPLE_ID, PATH_EXAMPLES } from './constants/path-examples';
@@ -23,7 +24,7 @@ function getCommandDisplayName(command: string): string {
 }
 
 test.describe('SVG Path Visualizer E2E Tests', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }: { page: Page }) => {
     // Navigate to the SVG test page
     await page.goto('/svg-test', { waitUntil: 'networkidle' });
     
@@ -43,7 +44,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Page Load and Initial Rendering', () => {
-    test('should load the page and display initial SVG path', async ({ page }) => {
+    test('should load the page and display initial SVG path', async ({ page }: { page: Page }) => {
       // Test: Page title is displayed
       await expect(page.getByRole('heading', { name: /svg path visualizer/i })).toBeVisible();
       
@@ -75,7 +76,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       }
     });
 
-    test('should display path breakdown information', async ({ page }) => {
+    test('should display path breakdown information', async ({ page }: { page: Page }) => {
       // Get the default example data
       const defaultExample = PATH_EXAMPLES.find(ex => ex.id === DEFAULT_EXAMPLE_ID);
       expect(defaultExample).toBeDefined();
@@ -100,7 +101,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Example Selection and Path Changes', () => {
-    test('should allow selecting different example paths', async ({ page }) => {
+    test('should allow selecting different example paths', async ({ page }: { page: Page }) => {
       const select = page.getByTestId('example-selector');
       const textarea = page.getByTestId('path-data-textarea');
       
@@ -140,7 +141,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       }
     });
 
-    test('should maintain SVG rendering when switching examples', async ({ page }) => {
+    test('should maintain SVG rendering when switching examples', async ({ page }: { page: Page }) => {
       const select = page.getByTestId('example-selector');
       const svg = page.getByTestId('svg-canvas');
       
@@ -191,7 +192,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('User Input and Validation', () => {
-    test('should accept and validate custom SVG paths', async ({ page }) => {
+    test('should accept and validate custom SVG paths', async ({ page }: { page: Page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const validateButton = page.getByTestId('validate-button');
       
@@ -218,7 +219,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(svg).toBeVisible();
     });
 
-    test('should handle invalid SVG paths gracefully', async ({ page }) => {
+    test('should handle invalid SVG paths gracefully', async ({ page }: { page: Page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const validateButton = page.getByTestId('validate-button');
       const initialPath = await textarea.inputValue();
@@ -246,7 +247,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(validateButton).toBeEnabled();
     });
 
-    test('should prevent empty paths from being validated', async ({ page }) => {
+    test('should prevent empty paths from being validated', async ({ page }: { page: Page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const validateButton = page.getByTestId('validate-button');
       
@@ -262,7 +263,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Visual Controls and Toggles', () => {
-    test('', async ({ page }) => {
+    test('should toggle grid visibility', async ({ page }: { page: Page }) => {
       const gridToggle = page.getByTitle(/hide grid/i);
       
       // Test: Grid toggle button is visible and functional
@@ -303,7 +304,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(gridGroup).toHaveCount(1);
     });
 
-    test('should toggle labels visibility', async ({ page }) => {
+    test('should toggle labels visibility', async ({ page }: { page: Page }) => {
       const labelsToggle = page.getByTitle(/hide labels/i);
       const svg = page.getByTestId('svg-canvas');
       
@@ -356,7 +357,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       }).toPass({ timeout: 5000 });
     });
 
-    test('should toggle points visibility', async ({ page }) => {
+    test('should toggle points visibility', async ({ page }: { page: Page }) => {
       const pointsToggle = page.getByTitle(/hide points/i);
       const svg = page.getByTestId('svg-canvas');
       
@@ -409,7 +410,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       }).toPass({ timeout: 5000 });
     });
 
-    test('should toggle path fill', async ({ page }) => {
+    test('should toggle path fill', async ({ page }: { page: Page }) => {
       const fillToggle = page.getByTitle(/show fill/i);
       
       // Test: Fill toggle button is visible and functional
@@ -450,7 +451,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Path Manipulation', () => {
-    test('should append new path segments', async ({ page }) => {
+    test('should append new path segments', async ({ page }: { page: Page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const appendButton = page.getByTestId('append-button');
       const segmentTypeSelect = page.getByTestId('segment-type-select');
@@ -484,7 +485,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       expect(newPath).toContain(' L ');
     });
 
-    test('should round path values', async ({ page }) => {
+    test('should round path values', async ({ page }: { page: Page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const roundButton = page.getByTestId('round-values-button');
       
@@ -524,7 +525,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       expect(roundedPath).toMatch(/^M\s+\d+[,\s]\d+/);
     });
 
-    test('should change segment type for appending', async ({ page }) => {
+    test('should change segment type for appending', async ({ page }: { page: Page }) => {
       const segmentTypeSelect = page.getByTestId('segment-type-select');
       
       // Test: Initial segment type
@@ -557,7 +558,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('SVG Grid and Rulers', () => {
-    test('should display grid lines and rulers', async ({ page }) => {
+    test('should display grid lines and rulers', async ({ page }: { page: Page }) => {
       const svg = page.getByTestId('svg-canvas');
       
       // Verify grid is visible and contains lines
@@ -587,7 +588,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       expect(textContent).toMatch(/^-?\d+$/);
     });
 
-    test('should handle grid panning', async ({ page }) => {
+    test('should handle grid panning', async ({ page }: { page: Page }) => {
       const svg = page.getByTestId('svg-canvas');
       
       // Verify initial state
@@ -630,7 +631,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       expect(finalRulerTexts).not.toEqual(initialRulerTexts);
     });
 
-    test('should reset pan position', async ({ page }) => {
+    test('should reset pan position', async ({ page }: { page: Page }) => {
       const svg = page.getByTestId('svg-canvas');
       const resetButton = page.getByTitle(/reset pan/i);
       
@@ -665,7 +666,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Accessibility and Keyboard Navigation', () => {
-    test('should support keyboard navigation', async ({ page }) => {
+    test('should support keyboard navigation', async ({ page }: { page: Page }) => {
       // Test: Tab through interactive elements
       await page.keyboard.press('Tab');
       
@@ -680,7 +681,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(secondFocused).not.toBe(firstFocused);
     });
 
-    test('should have proper ARIA labels', async ({ page }) => {
+    test('should have proper ARIA labels', async ({ page }: { page: Page }) => {
       // Test: Form elements have labels
       await expect(page.getByLabel(/svg path data/i)).toBeVisible();
       await expect(page.getByLabel(/select method/i)).toBeVisible();
@@ -695,7 +696,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Responsive Design', () => {
-    test('should adapt to mobile viewport', async ({ page }) => {
+    test('should adapt to mobile viewport', async ({ page }: { page: Page }) => {
       // Test: Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 });
       
@@ -709,7 +710,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(page.getByText('Append')).toBeVisible();
     });
 
-    test('should maintain functionality on tablet viewport', async ({ page }) => {
+    test('should maintain functionality on tablet viewport', async ({ page }: { page: Page }) => {
       // Test: Set tablet viewport
       await page.setViewportSize({ width: 768, height: 1024 });
       
@@ -724,7 +725,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
   });
 
   test.describe('Performance and Stability', () => {
-    test('should handle rapid user interactions within performance limits', async ({ page }) => {
+    test('should handle rapid user interactions within performance limits', async ({ page }: { page: Page }) => {
       const select = page.getByTestId('example-selector');
       const svg = page.getByTestId('svg-canvas');
       
@@ -753,7 +754,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(svg).toHaveAttribute('height', SVG_HEIGHT.toString());
     });
 
-    test('should handle large SVG paths without performance degradation', async ({ page }) => {
+    test('should handle large SVG paths without performance degradation', async ({ page }: { page: Page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const validateButton = page.getByTestId('validate-button');
       const svg = page.getByTestId('svg-canvas');
@@ -840,7 +841,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(svg).toHaveAttribute('height', SVG_HEIGHT.toString());
     });
 
-    test('should maintain stable state during extended use', async ({ page }) => {
+    test('should maintain stable state during extended use', async ({ page }: { page: Page }) => {
       const select = page.getByTestId('example-selector');
       const svg = page.getByTestId('svg-canvas');
       
@@ -861,7 +862,7 @@ test.describe('SVG Path Visualizer E2E Tests', () => {
       await expect(svg).toBeVisible();
     });
 
-    test('should recover gracefully from invalid inputs', async ({ page }) => {
+    test('should recover gracefully from invalid inputs', async ({ page }: { page: Page }) => {
       const textarea = page.getByTestId('path-data-textarea');
       const validateButton = page.getByTestId('validate-button');
       const svg = page.getByTestId('svg-canvas');

@@ -30,10 +30,6 @@ jest.mock('../utils/svgCommandHelpers', () => ({
   getControlPoint2: jest.fn((cmd) => ({ x: cmd.x2 || 0, y: cmd.y2 || 0 }))
 }));
 
-/**
- * Unit tests for the SvgVisualizer component.
- * Tests isolated functions and mocked dependencies.
- */
 describe('SvgVisualizer Unit', () => {
   const defaultProps = {
     svgRef: React.createRef<SVGSVGElement>(),

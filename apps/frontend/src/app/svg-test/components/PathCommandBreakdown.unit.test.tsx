@@ -20,9 +20,6 @@ jest.mock('../constants/svgPath', () => ({
   },
 }));
 
-/**
- * Test suite for the PathCommandBreakdown component.
- */
 describe('PathCommandBreakdown', () => {
   describe('Rendering valid SVG paths', () => {
     /**

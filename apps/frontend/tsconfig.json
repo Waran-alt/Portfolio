@@ -6,7 +6,7 @@
     "noEmit": false,
     
     // Override rootDir for frontend
-    "rootDir": "./src",
+    "rootDir": ".",
     
     // Frontend-specific lib (includes DOM)
     "lib": ["ES2022", "DOM"],
@@ -24,7 +24,7 @@
       "@/utils/*": ["./src/utils/*"],
       "@/types/*": ["./src/types/*"],
       "@/hooks/*": ["./src/hooks/*"],
-      "@/lib/*": ["./src/lib/*"]
+      "@/lib/*": ["./src/lib/*"],
     },
     
     // Next.js plugin
@@ -32,7 +32,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "types": ["node", "@playwright/test"]
   },
   "include": [
     "next-env.d.ts",

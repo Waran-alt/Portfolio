@@ -1,8 +1,3 @@
-/**
- * @file Unit tests for SVG command helper functions.
- * Tests isolated functions and mocked dependencies.
- */
-
 import type { Command as SVGCommand } from 'svg-path-parser';
 import {
   getCommandCoords,

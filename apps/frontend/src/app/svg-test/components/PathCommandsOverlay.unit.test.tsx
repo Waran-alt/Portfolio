@@ -3,8 +3,7 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import PathCommandsOverlay from './PathCommandsOverlay';
 
-// Helper to render components inside an SVG context, which is required
-// by JSDOM to recognize SVG-specific elements like <text>.
+// Helper to render components inside an SVG context, which is required by JSDOM to recognize SVG-specific elements like <text>.
 const renderInSvg = (component: React.ReactElement) => {
   return render(<svg>{component}</svg>);
 };

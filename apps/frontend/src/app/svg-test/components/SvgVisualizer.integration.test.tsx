@@ -5,10 +5,6 @@ import React from 'react';
 import type { Point } from '../types';
 import SvgVisualizer from './SvgVisualizer';
 
-/**
- * Integration tests for SvgVisualizer component.
- * Tests real component interactions and user workflows.
- */
 describe('SvgVisualizer Integration', () => {
   const defaultProps = {
     svgRef: React.createRef<SVGSVGElement>(),

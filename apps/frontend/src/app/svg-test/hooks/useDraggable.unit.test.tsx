@@ -1,8 +1,3 @@
-/**
- * @file Unit tests for useDraggable hook.
- * Tests isolated hook behavior and mocked dependencies.
- */
-
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';

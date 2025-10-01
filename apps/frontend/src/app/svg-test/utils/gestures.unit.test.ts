@@ -1,8 +1,3 @@
-/**
- * @file Unit tests for gesture detection utilities.
- * Tests isolated functions and mocked dependencies.
- */
-
 import {
   analyzePanGesture,
   calculateAngle,
