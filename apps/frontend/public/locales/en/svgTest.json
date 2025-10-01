@@ -39,16 +39,72 @@
     "performance": "Handles large paths and rapid changes without issues."
   },
   "commands": {
-    "moveTo": "Move To",
-    "lineTo": "Line To",
-    "horizontalLineTo": "Horizontal Line To",
-    "verticalLineTo": "Vertical Line To",
-    "quadraticBezier": "Quadratic Bezier Curve",
-    "cubicBezier": "Cubic Bezier Curve",
-    "smoothCubicBezier": "Smooth Cubic Bezier Curve",
-    "smoothQuadraticBezier": "Smooth Quadratic Bezier Curve",
-    "arc": "Arc",
-    "closePath": "Close Path"
+    "m": {
+      "name": "Move To",
+      "desc": "Move the pen to (x, y) without drawing."
+    },
+    "l": {
+      "name": "Line To",
+      "desc": "Draw a straight line to (x, y)."
+    },
+    "h": {
+      "name": "Horizontal Line To",
+      "desc": "Draw a horizontal line to x."
+    },
+    "v": {
+      "name": "Vertical Line To",
+      "desc": "Draw a vertical line to y."
+    },
+    "q": {
+      "name": "Quadratic Bézier",
+      "desc": "Draw a quadratic Bézier curve using (x1, y1) as control point, ending at (x, y)."
+    },
+    "c": {
+      "name": "Cubic Bézier",
+      "desc": "Draw a cubic Bézier curve using (x1, y1) and (x2, y2) as control points, ending at (x, y)."
+    },
+    "s": {
+      "name": "Smooth Cubic Bézier",
+      "desc": "Draw a smooth cubic Bézier curve using (x2, y2) as control, ending at (x, y)."
+    },
+    "t": {
+      "name": "Smooth Quadratic Bézier",
+      "desc": "Draw a smooth quadratic Bézier curve ending at (x, y)."
+    },
+    "a": {
+      "name": "Arc",
+      "desc": "Draw an elliptical arc."
+    },
+    "z": {
+      "name": "Close Path",
+      "desc": "Close the path."
+    }
+  },
+  "examples": {
+    "quadratic1": {
+      "title": "Simple Quadratic Curve",
+      "description": "Q: Draws a quadratic Bézier curve from the current point to the end point, using one control point. Format: Q x1 y1 x y"
+    },
+    "cubic1": {
+      "title": "Cubic Bézier Curve",
+      "description": "C: Draws a cubic Bézier curve from the current point to the end point, using two control points. Format: C x1 y1 x2 y2 x y"
+    },
+    "arc1": {
+      "title": "SVG Arc",
+      "description": "A: Draws an elliptical arc curve. Format: A rx ry x-axis-rotation large-arc-flag sweep-flag x y"
+    },
+    "catmullRom1": {
+      "title": "Catmull-Rom Spline",
+      "description": "Catmull-Rom: Smooth curve through multiple points, approximated using cubic Bézier segments."
+    },
+    "bezierSpline1": {
+      "title": "Bézier Spline",
+      "description": "Multiple cubic Bézier (C) segments connected smoothly."
+    },
+    "smoothSpline1": {
+      "title": "Smooth Spline",
+      "description": "Smooth spline: Custom smooth curve with tension control, not a standard SVG path command."
+    }
   },
   "points": {
     "start": "Start",

@@ -3,6 +3,7 @@
  * It includes a textarea for direct manipulation of the path data, along with buttons
  * for validation, appending new segments, closing the path, and rounding numerical values.
  */
+import type { TranslationFunction } from '@/hooks/useTranslation';
 import React from 'react';
 import { APPENDABLE_COMMANDS, SVG_COMMAND_INFO } from '../constants/svgPath';
 
@@ -37,7 +38,7 @@ interface PathEditorControlsProps {
   /** Callback to round all numerical values in the path string. */
   handleRoundValues: () => void;
   /** Translation function for internationalization. */
-  t: (key: string, fallback?: string) => string;
+  t: TranslationFunction;
 }
 
 const BASE_BUTTON_CLASSES = "px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 disabled:opacity-50 disabled:cursor-not-allowed";
@@ -111,7 +112,7 @@ const PathEditorControls: React.FC<PathEditorControlsProps> = ({
           >
             {APPENDABLE_COMMANDS.map(cmd => (
               <option key={cmd} value={cmd}>
-                {t(`commands.${cmd.toLowerCase()}`) || SVG_COMMAND_INFO[cmd]?.name || cmd} ({cmd})
+                {t(`commands.${cmd.toLowerCase()}.name`, { fallback: SVG_COMMAND_INFO[cmd]?.name || cmd })} ({cmd})
               </option>
             ))}
           </select>

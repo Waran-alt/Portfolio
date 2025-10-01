@@ -3,6 +3,7 @@
  * This includes the grid, rulers, the path itself, draggable control points,
  * and overlays for commands and coordinates.
  */
+import type { TranslationFunction } from '@/hooks/useTranslation';
 import { CircleDot, Grid, Move, Paintbrush, Tags } from 'lucide-react';
 import React from 'react';
 import * as parser from 'svg-path-parser';
@@ -71,7 +72,7 @@ interface SvgVisualizerProps {
   /** Mouse down event handler to initiate dragging a point. */
   handleMouseDown: (point: Point) => (e: React.MouseEvent) => void;
   /** Translation function for internationalization. */
-  t: (key: string, fallback?: string) => string;
+  t: TranslationFunction;
 }
 
 // Future-proofing Note: For very complex paths with thousands of points or commands,

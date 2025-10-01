@@ -73,22 +73,44 @@ public/locales/
 
 ## 🛠️ **Usage Examples**
 
-### Language Switcher (Auto-updates)
+### Basic Translation
 ```typescript
-// Automatically shows all configured languages
-const languages = LANGUAGES; // No manual array needed!
+const { t } = useTranslation('common', 'en');
+
+// Simple translation
+t('title') // "Portfolio"
+
+// Nested keys
+t('navigation.home') // "Home"
+
+// With fallback
+t('missing.key', { fallback: 'Default text' })
 ```
 
-### Type Safety
+### Variable Interpolation
 ```typescript
-// Types are automatically generated
-type SupportedLocale = 'en' | 'fr' | 'de'; // Auto-updates when you add languages
-```
+// Define translations with placeholders
+{
+  "welcome": "Welcome, {{name}}!",
+  "itemCount": "You have {{count}} {{item}}",
+  "quest": "{{hero}} must destroy the {{object}} in {{location}}"
+}
 
-### Translation Hook
-```typescript
-// Automatically supports all configured languages
-const { t } = useTranslation('svgTest', 'de'); // Works immediately after adding German
+// Use with variables
+t('welcome', { vars: { name: 'Frodo' } })
+// → "Welcome, Frodo!"
+
+t('itemCount', { vars: { count: 42, item: 'rings' } })
+// → "You have 42 rings"
+
+t('quest', { 
+  vars: { 
+    hero: 'Harry',
+    object: 'Horcrux',
+    location: 'Hogwarts'
+  }
+})
+// → "Harry must destroy the Horcrux in Hogwarts"
 ```
 
 ## 🧪 **Validation & Testing**
@@ -155,7 +177,7 @@ export const LANGUAGES: LanguageConfig[] = [
 ### Code Practices
 8. **Import from `@/i18n`** - Use the main export, not individual files
 9. **Never hardcode strings** - Always use translation keys
-10. **Provide fallbacks** - Use `t('key', 'Fallback text')` for safety
+10. **Provide fallbacks** - Use `t('key', { fallback: 'Fallback text' })` for safety
 
 ## 🔍 **Troubleshooting**
 

@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
+import { mockTWithText } from '../test-utils/mockTranslation';
 import type { Point } from '../types';
 import SvgVisualizer from './SvgVisualizer';
 
@@ -23,7 +24,8 @@ describe('SvgVisualizer Integration', () => {
     setShowPoints: jest.fn(),
     showFill: false,
     setShowFill: jest.fn(),
-    handleMouseDown: jest.fn()
+    handleMouseDown: jest.fn(),
+    t: mockTWithText
   };
 
   beforeEach(() => {

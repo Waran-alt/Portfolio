@@ -3,6 +3,7 @@
  * It is a controlled component that receives the list of examples, the currently
  * selected value, and a handler to manage state changes from its parent.
  */
+import type { TranslationFunction } from '@/hooks/useTranslation';
 import React from 'react';
 import type { PathExample } from '../types';
 
@@ -17,7 +18,7 @@ interface ExampleSelectorProps {
   /** Callback function to be invoked when a new example is selected. */
   handleExampleChange: (id: string) => void;
   /** Translation function for internationalization. */
-  t: (key: string, fallback?: string) => string;
+  t: TranslationFunction;
 }
 
 /**

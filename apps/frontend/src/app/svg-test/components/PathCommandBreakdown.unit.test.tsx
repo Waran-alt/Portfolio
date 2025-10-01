@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { mockT } from '../test-utils/mockTranslation';
 import PathCommandBreakdown from './PathCommandBreakdown';
 
 // Mock the dependencies used by the component.
@@ -28,7 +29,7 @@ describe('PathCommandBreakdown', () => {
      */
     it('should render a breakdown of a simple SVG path', () => {
       const path = 'M 10 20 L 30 40';
-      render(<PathCommandBreakdown path={path} />);
+      render(<PathCommandBreakdown path={path} t={mockT} />);
 
       // Check for command codes (e.g., 'M', 'L')
       expect(screen.getByText('M')).toBeInTheDocument();
@@ -47,7 +48,7 @@ describe('PathCommandBreakdown', () => {
 
     it('should render a breakdown for a complex path with various command types', () => {
       const complexPat = 'M 0 0 C 10 20, 30 40, 50 50 Q 60 60, 70 70 H 80 V 90 Z';
-      render(<PathCommandBreakdown path={complexPat} />);
+      render(<PathCommandBreakdown path={complexPat} t={mockT} />);
 
       expect(screen.getByText('M')).toBeInTheDocument();
       expect(screen.getByText('Cubic Bezier')).toBeInTheDocument();
@@ -62,7 +63,7 @@ describe('PathCommandBreakdown', () => {
       // The parser throws an error for an invalid command like 'X',
       // which our component catches and displays an error message for.
       const pathWithUnknownCommand = 'M 10 20 X 50 50';
-      render(<PathCommandBreakdown path={pathWithUnknownCommand} />);
+      render(<PathCommandBreakdown path={pathWithUnknownCommand} t={mockT} />);
       expect(screen.getByText('Invalid SVG path')).toBeInTheDocument();
     });
   });
@@ -75,14 +76,14 @@ describe('PathCommandBreakdown', () => {
      */
     it('should display an error message for an invalid path', () => {
       const invalidPath = 'M 10 20 L 30'; // Incomplete L command
-      render(<PathCommandBreakdown path={invalidPath} />);
+      render(<PathCommandBreakdown path={invalidPath} t={mockT} />);
 
       expect(screen.getByText('Invalid SVG path')).toBeInTheDocument();
     });
 
     it('should have an aria-live="polite" attribute on the error message for accessibility', () => {
       const invalidPath = 'M 10 20 L 30';
-      render(<PathCommandBreakdown path={invalidPath} />);
+      render(<PathCommandBreakdown path={invalidPath} t={mockT} />);
       const errorDiv = screen.getByText('Invalid SVG path');
       expect(errorDiv).toHaveAttribute('aria-live', 'polite');
     });
@@ -92,12 +93,12 @@ describe('PathCommandBreakdown', () => {
      * preventing unnecessary empty divs from being added to the DOM.
      */
     it('should render nothing for an empty path string', () => {
-      const { container } = render(<PathCommandBreakdown path="" />);
+      const { container } = render(<PathCommandBreakdown path="" t={mockT} />);
       expect(container.firstChild).toBeNull();
     });
 
     it('should render nothing for a path with only whitespace', () => {
-      const { container } = render(<PathCommandBreakdown path="   " />);
+      const { container } = render(<PathCommandBreakdown path="   " t={mockT} />);
       expect(container.firstChild).toBeNull();
     });
   });
@@ -111,7 +112,7 @@ describe('PathCommandBreakdown', () => {
      */
     it('should allow changing the number of decimal places', async () => {
       const path = 'M 10.123 20.456';
-      render(<PathCommandBreakdown path={path} />);
+      render(<PathCommandBreakdown path={path} t={mockT} />);
 
       // The component defaults to 2 decimal places, so check initial state.
       expect(screen.getByText(/x: 10.12/)).toBeInTheDocument();
@@ -126,7 +127,7 @@ describe('PathCommandBreakdown', () => {
 
     it('should correctly round numbers up based on the selected precision', async () => {
       const path = 'M 10.456 20.987'; // These should round up
-      render(<PathCommandBreakdown path={path} />);
+      render(<PathCommandBreakdown path={path} t={mockT} />);
 
       // Defaults to 2 decimal places
       expect(screen.getByText(/x: 10.46/)).toBeInTheDocument();

@@ -37,16 +37,72 @@
     "performance": "Gère de grands chemins et des modifications rapides sans problème."
   },
   "commands": {
-    "moveTo": "Aller à",
-    "lineTo": "Ligne vers",
-    "horizontalLineTo": "Ligne horizontale vers",
-    "verticalLineTo": "Ligne verticale vers",
-    "quadraticBezier": "Courbe de Bézier quadratique",
-    "cubicBezier": "Courbe de Bézier cubique",
-    "smoothCubicBezier": "Courbe de Bézier cubique lissée",
-    "smoothQuadraticBezier": "Courbe de Bézier quadratique lissée",
-    "arc": "Arc",
-    "closePath": "Fermer le chemin"
+    "m": {
+      "name": "Aller à",
+      "desc": "Déplace le stylo vers (x, y) sans dessiner."
+    },
+    "l": {
+      "name": "Ligne vers",
+      "desc": "Dessine une ligne droite vers (x, y)."
+    },
+    "h": {
+      "name": "Ligne horizontale vers",
+      "desc": "Dessine une ligne horizontale vers x."
+    },
+    "v": {
+      "name": "Ligne verticale vers",
+      "desc": "Dessine une ligne verticale vers y."
+    },
+    "q": {
+      "name": "Courbe de Bézier quadratique",
+      "desc": "Dessine une courbe de Bézier quadratique utilisant (x1, y1) comme point de contrôle, se terminant en (x, y)."
+    },
+    "c": {
+      "name": "Courbe de Bézier cubique",
+      "desc": "Dessine une courbe de Bézier cubique utilisant (x1, y1) et (x2, y2) comme points de contrôle, se terminant en (x, y)."
+    },
+    "s": {
+      "name": "Courbe de Bézier cubique lissée",
+      "desc": "Dessine une courbe de Bézier cubique lissée utilisant (x2, y2) comme contrôle, se terminant en (x, y)."
+    },
+    "t": {
+      "name": "Courbe de Bézier quadratique lissée",
+      "desc": "Dessine une courbe de Bézier quadratique lissée se terminant en (x, y)."
+    },
+    "a": {
+      "name": "Arc",
+      "desc": "Dessine un arc elliptique."
+    },
+    "z": {
+      "name": "Fermer le chemin",
+      "desc": "Ferme le chemin."
+    }
+  },
+  "examples": {
+    "quadratic1": {
+      "title": "Courbe quadratique simple",
+      "description": "Q : Dessine une courbe de Bézier quadratique du point actuel au point final, en utilisant un point de contrôle. Format : Q x1 y1 x y"
+    },
+    "cubic1": {
+      "title": "Courbe de Bézier cubique",
+      "description": "C : Dessine une courbe de Bézier cubique du point actuel au point final, en utilisant deux points de contrôle. Format : C x1 y1 x2 y2 x y"
+    },
+    "arc1": {
+      "title": "Arc SVG",
+      "description": "A : Dessine une courbe d'arc elliptique. Format : A rx ry rotation-axe-x drapeau-grand-arc drapeau-balayage x y"
+    },
+    "catmullRom1": {
+      "title": "Spline Catmull-Rom",
+      "description": "Catmull-Rom : Courbe lisse à travers plusieurs points, approximée à l'aide de segments de Bézier cubiques."
+    },
+    "bezierSpline1": {
+      "title": "Spline de Bézier",
+      "description": "Plusieurs segments de Bézier cubiques (C) connectés en douceur."
+    },
+    "smoothSpline1": {
+      "title": "Spline lissée",
+      "description": "Spline lissée : Courbe lisse personnalisée avec contrôle de tension, pas une commande de chemin SVG standard."
+    }
   },
   "points": {
     "start": "Départ",

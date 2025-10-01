@@ -1,12 +1,13 @@
 'use client';
 
+import type { TranslationFunction } from '@/hooks/useTranslation';
 import { LANGUAGES, type SupportedLocale } from '@/i18n';
 import React from 'react';
 
 interface LanguageSwitcherProps {
   currentLocale: SupportedLocale;
   onLocaleChange: (locale: SupportedLocale) => void;
-  t: (key: string, fallback?: string) => string;
+  t: TranslationFunction;
 }
 
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
@@ -19,7 +20,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm text-violet-700 font-medium">
-        {t('common.language', 'Language')}:
+        {t('common.language', { fallback: 'Language' })}:
       </span>
       <select
         value={currentLocale}

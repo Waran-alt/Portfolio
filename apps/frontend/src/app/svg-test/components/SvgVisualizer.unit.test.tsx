@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import type { Command } from 'svg-path-parser';
+import { mockTWithText } from '../test-utils/mockTranslation';
 import type { Point } from '../types';
 import SvgVisualizer from './SvgVisualizer';
 
@@ -48,7 +49,8 @@ describe('SvgVisualizer Unit', () => {
     setShowPoints: jest.fn(),
     showFill: false,
     setShowFill: jest.fn(),
-    handleMouseDown: jest.fn()
+    handleMouseDown: jest.fn(),
+    t: mockTWithText
   };
 
   beforeEach(() => {
@@ -462,7 +464,8 @@ describe('SvgVisualizer Unit', () => {
         setShowPoints: jest.fn(),
         showFill: false,
         setShowFill: jest.fn(),
-        handleMouseDown: jest.fn()
+        handleMouseDown: jest.fn(),
+        t: mockTWithText
       };
       
       render(<SvgVisualizer {...minimalProps} />);
