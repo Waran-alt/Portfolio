@@ -16,7 +16,7 @@
     "packages/*",
     "tools/*"
   ],
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.10.3",
   "engines": {
     "node": ">=22.0.0",
     "yarn": ">=4.0.0"
