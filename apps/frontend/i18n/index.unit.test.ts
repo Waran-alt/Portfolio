@@ -12,6 +12,10 @@ describe('i18n Index (Main Export)', () => {
       expect(I18N_CONFIG.languages).toEqual(LANGUAGES);
     });
 
+    it('should be frozen', () => {
+      expect(Object.isFrozen(I18N_CONFIG)).toBe(true);
+    });
+
     it('should have immutable configuration', () => {
       expect(() => {
         (I18N_CONFIG as any).supportedLocales = ['invalid'];
@@ -19,4 +23,3 @@ describe('i18n Index (Main Export)', () => {
     });
   });
 });
-

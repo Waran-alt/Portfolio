@@ -1,4 +1,3 @@
-
 /**
  * Configuration for a single language.
  * All properties are required except 'rtl' which defaults to false.

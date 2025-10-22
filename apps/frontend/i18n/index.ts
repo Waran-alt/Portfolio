@@ -17,6 +17,27 @@ export * from './types';
 // Re-export everything from utils
 export * from './utils';
 
+// Re-export React components and hooks
+export { HtmlAttributes } from './HtmlAttributes';
+export { LocaleProvider, useLocale } from './LocaleContext';
+
+// Re-export storage utilities
+export {
+  clearLocaleFromCookie,
+  clearLocaleFromStorage,
+  getLocaleFromCookie,
+  getLocaleFromCookieHeader,
+  getLocaleFromStorage,
+  saveLocaleToCookie,
+  saveLocaleToStorage
+} from './storage';
+
+// Re-export middleware utilities
+export {
+  addLocalePrefix, determineTargetLocale, getLocaleFromHeaders, getLocaleFromPathname, hasLocalePrefix,
+  removeLocalePrefix
+} from './middleware';
+
 /**
  * Main i18n configuration object.
  * Combines all configuration in one place for easy access.
@@ -24,7 +45,7 @@ export * from './utils';
 import { DEFAULT_LOCALE, FALLBACK_LOCALE, LANGUAGES, NAMESPACES } from './constants';
 import { SUPPORTED_LOCALES } from './utils';
 
-export const I18N_CONFIG = {
+export const I18N_CONFIG = Object.freeze({
   /** All supported language codes */
   supportedLocales: SUPPORTED_LOCALES,
   /** Language to use when translations are missing */
@@ -35,7 +56,7 @@ export const I18N_CONFIG = {
   namespaces: NAMESPACES,
   /** All language configurations */
   languages: LANGUAGES,
-} as const;
+} as const);
 
 /** Union type of all namespace names (e.g., 'common' | 'specificPage') */
 export type SupportedNamespace = typeof NAMESPACES[number];

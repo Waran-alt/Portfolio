@@ -36,12 +36,14 @@ export const LANGUAGES: LanguageConfig[] = [
     name: 'English',
     nativeName: 'English',
     flag: '🇺🇸',
+    rtl: false,
   },
   {
     code: 'fr',
     name: 'French',
     nativeName: 'Français',
     flag: '🇫🇷',
+    rtl: false,
   },
   // Add new languages here:
   // {
@@ -49,11 +51,48 @@ export const LANGUAGES: LanguageConfig[] = [
   //   name: 'German',
   //   nativeName: 'Deutsch',
   //   flag: '🇩🇪',
+  //   rtl: false,
   // },
   // {
   //   code: 'es',
   //   name: 'Spanish',
   //   nativeName: 'Español',
   //   flag: '🇪🇸',
+  //   rtl: false,
+  // },
+  // {
+  //   code: 'ar',
+  //   name: 'Arabic',
+  //   nativeName: 'العربية',
+  //   flag: '🇸🇦',
+  //   rtl: true,
+  // },
+  // {
+  //   code: 'he',
+  //   name: 'Hebrew',
+  //   nativeName: 'עברית',
+  //   flag: '🇮🇱',
+  //   rtl: true,
   // },
 ];
+
+/**
+ * Storage key for persisting locale preference in localStorage.
+ */
+export const LOCALE_STORAGE_KEY = 'portfolio-locale' as const;
+
+/**
+ * Cookie name for locale persistence across SSR.
+ */
+export const LOCALE_COOKIE_NAME = 'portfolio-locale' as const;
+
+/**
+ * Cookie max-age in seconds (1 year).
+ */
+export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/**
+ * Default localized home path appended after the locale prefix when redirecting from "/".
+ * Example: "/" → "/en/"
+ */
+export const DEFAULT_LOCALIZED_HOME = '/' as const;
