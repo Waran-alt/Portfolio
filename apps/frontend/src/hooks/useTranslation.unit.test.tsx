@@ -1,13 +1,13 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useTranslation } from './useTranslation';
 
-jest.mock('@/i18n', () => ({
+jest.mock('i18n', () => ({
   getBestLocale: jest.fn((locale: string) => locale === 'en' || locale === 'fr' ? locale : 'en'),
   I18N_CONFIG: {
     defaultLocale: 'en',
     fallbackLocale: 'en',
   },
-}));
+}), { virtual: true });
 
 jest.mock('../../public/locales/en/common.json', () => ({
   welcome: 'Welcome, {{name}}!',
@@ -27,15 +27,19 @@ jest.mock('../../public/locales/fr/common.json', () => ({
 
 describe('useTranslation Hook', () => {
   describe('Basic translation', () => {
-    it('should return translated string', () => {
+    it('should return translated string', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.t('noVars')).toBe('Simple text without variables');
+      await waitFor(() => {
+        expect(result.current.t('noVars')).toBe('Simple text without variables');
+      });
     });
 
-    it('should handle nested keys', () => {
+    it('should handle nested keys', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      const translation = result.current.t('nested.message', { vars: { force: 'Force', name: 'Luke' } });
-      expect(translation).toBe('May the Force be with Luke');
+      await waitFor(() => {
+        const translation = result.current.t('nested.message', { vars: { force: 'Force', name: 'Luke' } });
+        expect(translation).toBe('May the Force be with Luke');
+      });
     });
 
     it('should return key when translation missing', () => {
@@ -50,60 +54,91 @@ describe('useTranslation Hook', () => {
       expect(result.current.t('missing.key', { fallback: 'Default text' })).toBe('Default text');
     });
 
+    it('should load fallback locale file when primary locale file is missing', async () => {
+      // Force normalization to keep the requested locale as-is so primary tries 'de'
+      const { getBestLocale } = jest.requireMock('i18n');
+      (getBestLocale as jest.Mock).mockImplementationOnce((locale: string) => locale);
+
+      const { result } = renderHook(() => useTranslation('common', 'de'));
+
+      await waitFor(() => {
+        // Should come from en/common.json fallback
+        expect(result.current.t('noVars')).toBe('Simple text without variables');
+      });
+    });
+
   });
 
   describe('Variable interpolation', () => {
-    it('should replace single variable', () => {
+    it('should replace single variable', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.t('welcome', { vars: { name: 'Frodo' } })).toBe('Welcome, Frodo!');
-    });
-
-    it('should replace multiple variables', () => {
-      const { result } = renderHook(() => useTranslation('common', 'en'));
-      const translation = result.current.t('itemCount', { 
-        vars: { count: 3, item: 'rings' } 
+      await waitFor(() => {
+        expect(result.current.t('welcome', { vars: { name: 'Frodo' } })).toBe('Welcome, Frodo!');
       });
-      expect(translation).toBe('You have 3 rings');
     });
 
-    it('should handle many variables', () => {
+    it('should replace multiple variables', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      const translation = result.current.t('multiVar', {
-        vars: { 
-          hero: 'Harry',
-          count: 7,
-          treasure: 'horcruxes',
-          location: 'Hogwarts'
-        }
+      await waitFor(() => {
+        const translation = result.current.t('itemCount', { 
+          vars: { count: 3, item: 'rings' } 
+        });
+        expect(translation).toBe('You have 3 rings');
       });
-      expect(translation).toBe('Harry found 7 horcruxes in Hogwarts');
     });
 
-    it('should convert numbers to strings', () => {
+    it('should handle many variables', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.t('itemCount', { vars: { count: 42, item: 'droids' } }))
-        .toBe('You have 42 droids');
+      await waitFor(() => {
+        const translation = result.current.t('multiVar', {
+          vars: { 
+            hero: 'Harry',
+            count: 7,
+            treasure: 'horcruxes',
+            location: 'Hogwarts'
+          }
+        });
+        expect(translation).toBe('Harry found 7 horcruxes in Hogwarts');
+      });
     });
 
-    it('should convert booleans to strings', () => {
+    it('should convert numbers to strings', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      const translation = result.current.t('greeting', { vars: { wizard: true } });
-      expect(translation).toBe('Hello, true. You shall pass!');
+      await waitFor(() => {
+        expect(result.current.t('itemCount', { vars: { count: 42, item: 'droids' } }))
+          .toBe('You have 42 droids');
+      });
     });
 
-    it('should handle missing variables gracefully', () => {
+    it('should convert booleans to strings', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      const translation = result.current.t('welcome', { vars: {} });
-      expect(translation).toBe('Welcome, {{name}}!');
+      await waitFor(() => {
+        const translation = result.current.t('greeting', { vars: { wizard: true } });
+        expect(translation).toBe('Hello, true. You shall pass!');
+      });
     });
 
-    it('should work without vars when not needed', () => {
+    it('should handle missing variables gracefully', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.t('noVars')).toBe('Simple text without variables');
+      await waitFor(() => {
+        const translation = result.current.t('welcome', { vars: {} });
+        expect(translation).toBe('Welcome, {{name}}!');
+      });
+    });
+
+    it('should work without vars when not needed', async () => {
+      const { result } = renderHook(() => useTranslation('common', 'en'));
+      await waitFor(() => {
+        expect(result.current.t('noVars')).toBe('Simple text without variables');
+      });
     });
   });
 
   describe('Combined features', () => {
+    it('should return key when missing and no fallback provided (explicit empty options)', () => {
+      const { result } = renderHook(() => useTranslation('common', 'en'));
+      expect(result.current.t('missing.key', {})).toBe('missing.key');
+    });
     it('should support fallback with variables', () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
       const translation = result.current.t('missing.key', {
@@ -128,10 +163,12 @@ describe('useTranslation Hook', () => {
       expect(result.current.locale).toBe('en');
     });
 
-    it('should use different locale translations', () => {
+    it('should use different locale translations', async () => {
       const { result } = renderHook(() => useTranslation('common', 'fr'));
-      expect(result.current.t('welcome', { vars: { name: 'Jean' } }))
-        .toBe('Bienvenue, Jean!');
+      await waitFor(() => {
+        expect(result.current.t('welcome', { vars: { name: 'Jean' } }))
+          .toBe('Bienvenue, Jean!');
+      });
     });
   });
 });

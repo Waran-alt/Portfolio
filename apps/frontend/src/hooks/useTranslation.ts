@@ -1,9 +1,7 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
-import { getBestLocale, I18N_CONFIG, type SupportedNamespace } from '@/i18n';
-import { useMemo } from 'react';
+import { getBestLocale, I18N_CONFIG, type SupportedNamespace } from 'i18n';
+import { useEffect, useState } from 'react';
 
 /**
  * Translation data structure.
@@ -78,28 +76,34 @@ export function useTranslation(
   // Normalize locale: 'en-US' → 'en', 'de' → 'en' (fallback), 'fr' → 'fr'
   const normalizedLocale = getBestLocale(locale);
   
+  // Translation data state, loaded asynchronously
+  const [translations, setTranslations] = useState<TranslationData>({});
+
   /**
-   * Load translations with memoization.
-   * Only re-loads when locale or namespace changes, preventing unnecessary re-renders.
+   * Load translations asynchronously with dynamic import and a safe fallback chain.
+   * Cancels state updates on unmount to avoid setting state on an unmounted component.
    */
-  const translations = useMemo(() => {
-    try {
-      // Attempt to load the requested locale's translations
-      const translationData = require(`../../public/locales/${normalizedLocale}/${namespace}.json`);
-      return translationData as TranslationData;
-    } catch (error) {
-      console.warn(`Failed to load translations for ${normalizedLocale}/${namespace}:`, error);
-      
-      // Fallback chain: requested locale → fallback locale → empty object
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
       try {
-        const fallbackData = require(`../../public/locales/${I18N_CONFIG.fallbackLocale}/${namespace}.json`);
-        console.info(`Using fallback translations from ${I18N_CONFIG.fallbackLocale}/${namespace}`);
-        return fallbackData as TranslationData;
-      } catch (fallbackError) {
-        console.error(`Failed to load fallback translations for ${I18N_CONFIG.fallbackLocale}/${namespace}:`, fallbackError);
-        return {};
+        const mod = await import(`../../public/locales/${normalizedLocale}/${namespace}.json`);
+        if (!cancelled) setTranslations((mod as unknown) as TranslationData);
+      } catch (error) {
+        console.warn(`Failed to load translations for ${normalizedLocale}/${namespace}:`, error);
+        try {
+          const fallbackMod = await import(`../../public/locales/${I18N_CONFIG.fallbackLocale}/${namespace}.json`);
+          console.info(`Using fallback translations from ${I18N_CONFIG.fallbackLocale}/${namespace}`);
+          if (!cancelled) setTranslations((fallbackMod as unknown) as TranslationData);
+        } catch (fallbackError) {
+          console.error(`Failed to load fallback translations for ${I18N_CONFIG.fallbackLocale}/${namespace}:`, fallbackError);
+          if (!cancelled) setTranslations({});
+        }
       }
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [normalizedLocale, namespace]);
 
   const t: TranslationFunction = (key, options?) => {
@@ -110,18 +114,18 @@ export function useTranslation(
     const keys = key.split('.');
     let value: string | TranslationData | undefined = translations;
     
-    // Traverse nested translation object
+    // Traverse nested translation object; if missing, use fallback/key but still allow interpolation
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
-        value = value[k];
+        value = (value as TranslationData)[k] as string | TranslationData | undefined;
       } else {
-        // Key not found - return fallback or key itself
-        return fallback || key;
+        value = (fallback ?? key) as string;
+        break;
       }
     }
-    
+
     // Ensure we have a string
-    let result = typeof value === 'string' ? value : fallback || key;
+    let result = typeof value === 'string' ? (value as string) : (fallback ?? key);
     
     // Apply variable interpolation if variables provided
     if (vars && typeof result === 'string') {
