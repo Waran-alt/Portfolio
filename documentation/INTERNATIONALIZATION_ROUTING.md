@@ -87,7 +87,6 @@ apps/frontend/
 - E2E tests validate localized routes and UI behavior under `/[locale]/...`.
 
 ## Notes
-- Avoid touching `.env` files in docs or code. Use the documented templates and scripts.
 - Prefer route-driven locale changes; do not couple global DOM edits to state in ways that fight React/Next transitions.
 
 For deeper details, see the i18n README at `apps/frontend/i18n/README.md` and the tests colocated with each module.
