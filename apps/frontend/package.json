@@ -26,6 +26,7 @@
     "test:watch": "jest --watch",
     "test:debug": "jest --detectOpenHandles --forceExit",
     "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test --project=chromium --grep 'HomePage E2E'",
     "playwright:install": "playwright install",
     "playwright:install-deps": "playwright install-deps",
     "playwright:report": "playwright show-report",
