@@ -2,7 +2,7 @@
 FROM node:22-alpine AS base
 
 # Install Yarn 4.x (the Alpine image comes with Yarn 1.x)
-RUN corepack enable && corepack prepare yarn@4.9.2 --activate
+RUN corepack enable && corepack prepare yarn@4.10.3 --activate
 
 # Shared context stage - copy monorepo files once
 FROM base AS workspace-setup
@@ -20,7 +20,7 @@ COPY packages/shared/package.json ./packages/shared/package.json
 
 # Install dependencies only when needed
 FROM workspace-setup AS deps
-RUN yarn --frozen-lockfile
+RUN yarn install --immutable
 
 # Build shared package first
 FROM deps AS shared-builder
@@ -128,7 +128,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 WORKDIR /app
 
 # Add debugging and ensure container stays running
-CMD ["sh", "-c", "set -x; echo 'Starting frontend development server...' && yarn workspace @portfolio/frontend dev 2>&1 || (echo 'yarn dev failed with exit code $?' && echo 'keeping container alive for debugging' && tail -f /dev/null)"]
+CMD ["sh", "-c", "set -x; echo 'Starting frontend development server...' && cd /app/apps/frontend && yarn dev 2>&1 || (echo 'yarn dev failed with exit code $?' && echo 'keeping container alive for debugging' && tail -f /dev/null)"]
 
 # Production target
 FROM runner AS production

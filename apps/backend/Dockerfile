@@ -7,7 +7,7 @@ FROM node:22-alpine AS base-build
 RUN apk add --no-cache libc6-compat python3 make g++ curl dumb-init
 
 # Install Yarn 4.x (the Alpine image comes with Yarn 1.x)
-RUN corepack enable && corepack prepare yarn@4.9.2 --activate
+RUN corepack enable && corepack prepare yarn@4.10.3 --activate
 
 # Shared context stage - copy monorepo files once
 FROM base-build AS workspace-setup
@@ -24,11 +24,11 @@ COPY packages/shared/package.json ./packages/shared/package.json
 
 # Install dependencies stage (production only)
 FROM workspace-setup AS deps
-RUN yarn --frozen-lockfile --production
+RUN yarn workspaces focus --all --production
 
 # Install all dependencies (including dev) for building
 FROM workspace-setup AS deps-all
-RUN yarn --frozen-lockfile
+RUN yarn install --immutable
 
 # Build shared package first
 FROM deps-all AS shared-builder
