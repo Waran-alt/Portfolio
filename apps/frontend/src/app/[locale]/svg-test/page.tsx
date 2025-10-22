@@ -7,9 +7,9 @@
  * that are responsible for rendering the UI.
  */
 import { useTranslation } from '@/hooks/useTranslation';
-import { I18N_CONFIG, type SupportedLocale } from '@/i18n';
 import '@/shared/styles/noselect.css';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLocale } from 'i18n';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as parser from 'svg-path-parser';
 import ExampleSelector from './components/ExampleSelector';
@@ -35,8 +35,8 @@ const examples: Record<string, PathExample> = examplesList.reduce((acc, ex) => {
  * and renders the visual representation and detailed breakdown of the path data.
  */
 const SVGTestPage: React.FC = () => {
-  // State for current locale
-  const [currentLocale, setCurrentLocale] = useState<SupportedLocale>(I18N_CONFIG.defaultLocale);
+  // Get locale from context
+  const { locale: currentLocale } = useLocale();
   
   // Translation hooks
   const { t } = useTranslation('svgTest', currentLocale);
@@ -405,11 +405,7 @@ const SVGTestPage: React.FC = () => {
                   <span className="text-indigo-500">{t('description')}</span>
                 </p>
               </div>
-              <LanguageSwitcher
-                currentLocale={currentLocale}
-                onLocaleChange={setCurrentLocale}
-                t={tCommon}
-              />
+              <LanguageSwitcher t={tCommon} />
             </div>
           </div>
 

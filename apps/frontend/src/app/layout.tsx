@@ -1,6 +1,7 @@
 // Import Next.js metadata type
 import type { Metadata } from 'next';
 // Import global CSS for the entire app
+import { DEFAULT_LOCALE } from 'i18n';
 import React from 'react';
 import './global.css';
 
@@ -19,11 +20,13 @@ interface RootLayoutProps {
 // Use this as the main layout for all pages
 export default function RootLayout({ children }: RootLayoutProps): React.ReactElement {
   // Render the HTML structure for the app
-  // Set language to English
+  // Set language to default (will be updated by locale-specific layouts)
   // Render all children inside the <body>
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang={DEFAULT_LOCALE}>
+      <body>
+        {children}
+      </body>
     </html>
   );
 } 

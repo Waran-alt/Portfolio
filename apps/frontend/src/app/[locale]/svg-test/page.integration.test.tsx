@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as parser from 'svg-path-parser';
+import { LocaleProvider } from '../../../../i18n/LocaleContext';
 import SvgTestPage from './page';
 
 // Mock CSS imports that are not available in test environment
@@ -70,7 +71,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
   // Debug test to see if component renders at all
   it('should render the SVG test page without crashing', () => {
     try {
-      const { container } = render(<SvgTestPage />);
+      const { container } = render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       console.log('Component rendered successfully');
       console.log('Container HTML:', container.innerHTML);
       expect(container).toBeInTheDocument();
@@ -82,7 +87,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - State Synchronization', () => {
     it('should synchronize state between ExampleSelector and PathEditorControls', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const select = getExampleSelector();
       const textarea = getPathTextarea();
@@ -101,7 +110,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should synchronize state between PathEditorControls and SvgVisualizer', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -126,7 +139,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - Event Handling', () => {
     it('should handle validation events across components', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -155,7 +172,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should handle example selection events across components', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const select = getExampleSelector();
       const textarea = getPathTextarea();
@@ -177,7 +198,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - Data Flow', () => {
     it('should maintain data consistency between parser and visualizer', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -200,7 +225,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should handle data transformation between components', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const select = getExampleSelector();
       
@@ -220,7 +249,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - Error Boundaries', () => {
     it('should handle parser errors without breaking component chain', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -246,7 +279,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should recover from errors and restore functionality', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -286,7 +323,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - Performance', () => {
     it('should handle rapid state changes without breaking integration', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const select = getExampleSelector();
       const textarea = getPathTextarea();
@@ -307,7 +348,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should maintain component responsiveness during updates', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const select = getExampleSelector();
       const validateButton = getValidateButton();
@@ -328,7 +373,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - Visual State Management', () => {
     it('should maintain visual state when toggling features', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const svg = getSvg();
       
@@ -348,7 +397,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should maintain coordinate display when toggling labels', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       // Test: Labels toggle functionality
       const labelsToggle = screen.getByTitle(/hide labels/i);
@@ -366,7 +419,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should maintain point visibility when toggling points', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       // Test: Points toggle functionality
       const pointsToggle = screen.getByTitle(/hide points/i);
@@ -386,7 +443,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - SVG Rendering', () => {
     it('should render SVG with correct dimensions and viewBox', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const svg = getSvg();
       
@@ -406,7 +467,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should maintain SVG content when switching examples', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const select = getExampleSelector();
       const svg = getSvg();
@@ -428,7 +493,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - User Input Validation', () => {
     it('should prevent empty paths from being validated', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -446,7 +515,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should handle malformed SVG commands gracefully', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -473,7 +546,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - Performance and Responsiveness', () => {
     it('should handle large SVG paths without performance issues', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       const textarea = getPathTextarea();
       const validateButton = getValidateButton();
@@ -501,7 +578,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
 
   describe('Component Integration - Accessibility', () => {
     it('should maintain keyboard navigation functionality', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       // Test: Keyboard accessibility
       await user.tab();
@@ -529,7 +610,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
     });
 
     it('should maintain ARIA labels and roles', async () => {
-      render(<SvgTestPage />);
+      render(
+        <LocaleProvider initialLocale="en">
+          <SvgTestPage />
+        </LocaleProvider>
+      );
       
       // Test: Form element accessibility
       expect(screen.getByTestId('path-data-textarea')).toBeInTheDocument();
