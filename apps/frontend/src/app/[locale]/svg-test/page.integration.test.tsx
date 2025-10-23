@@ -289,7 +289,11 @@ describe('SVG Test Page Integration - Component Interactions', () => {
       // Verify error handling maintains component integration (no text coupling)
       expect(getPathTextarea()).toHaveAttribute('aria-describedby', 'path-error');
       expect(document.getElementById('path-error')).toBeInTheDocument();
-      expect(textarea.value).toBe(formatPathString('M 100,200 Q 200,100 300,200')); // Should revert to initial path
+      // Textarea keeps invalid input to let user continue editing
+      expect(textarea.value).toBe('invalid');
+      // Visualizer remains on the last valid path
+      const d = getSvg().querySelector('path')!.getAttribute('d');
+      expect(d).toBe(formatPathString('M 100,200 Q 200,100 300,200'));
       expect(getSvg()).toBeInTheDocument();
       
       // Verify components remain interactive

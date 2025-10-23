@@ -13,18 +13,22 @@ describe('useSvgPathEditor', () => {
     expect(result.current.isValid).toBe(true);
   });
 
-  it('validates pending string and canonicalizes or reverts on failure', () => {
+  it('validates pending string; on failure keeps pending and marks invalid', () => {
     const { result } = renderHook(() => useSvgPathEditor(INITIAL));
+    // Use an invalid command letter so the parser rejects it
     act(() => {
-      result.current.setPendingPathString('invalid path');
+      result.current.setPendingPathString('X 10,10');
       result.current.handleValidate();
     });
-    // On error, pending reverts to last valid canonical string and isValid becomes false
-    expect(result.current.pendingPathString).toBe(result.current.pathString);
-    expect(result.current.isValid).toBe(false);
+    // On error, keep canonical path unchanged and preserve user's pending input
+    expect(result.current.pathString).toBe(INITIAL);
+    expect(result.current.pendingPathString).toBe('X 10,10');
 
+    // Update pending first, then validate in a separate act to avoid stale closure
     act(() => {
       result.current.setPendingPathString('M 0,0 L 10,10');
+    });
+    act(() => {
       result.current.handleValidate();
     });
     expect(result.current.isValid).toBe(true);
@@ -98,13 +102,22 @@ describe('useSvgPathEditor', () => {
     });
     const pts = result.current.points;
     expect(pts.length).toBeGreaterThan(0);
-    // Move first available point by setting points and rebuilding
+    // Moving a point
+    const target = pts[0]!;
+    const newX = target.x + 5;
+
+    // First commit point change, then rebuild in a separate act so the callback captures the updated points state
     act(() => {
-      result.current.setPoints((prev) => prev.map((p, i) => (i === 0 ? { ...p, x: p.x + 5 } : p)));
+      result.current.setPoints((prev) => prev.map((p) => (p.id === target.id ? { ...p, x: newX } : p)));
+    });
+    act(() => {
       result.current.updatePathFromPoints();
     });
     const after = result.current.pathString;
+
     expect(after).not.toBe(before);
+    // The updated x should be present in the rebuilt path string
+    expect(after).toContain(`${newX},`);
   });
 });
 

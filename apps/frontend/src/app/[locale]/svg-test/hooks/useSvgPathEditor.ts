@@ -157,7 +157,7 @@ export function useSvgPathEditor(initialPath: string): UseSvgPathEditorApi {
       regeneratePointsFromPath(formatted);
       setIsValid(true);
     } catch {
-      setPendingPathString(pathString);
+      // Keep the user's pending input so they can continue editing; do not revert
       setIsValid(false);
     }
   };

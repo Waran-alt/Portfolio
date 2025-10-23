@@ -42,16 +42,20 @@ describe('useTranslation Hook', () => {
       });
     });
 
-    it('should return key when translation missing', () => {
+    it('should return key when translation missing', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.t('missing.key')).toBe('missing.key');
+      await waitFor(() => {
+        expect(result.current.t('missing.key')).toBe('missing.key');
+      });
     });
   });
 
   describe('Fallback support', () => {
-    it('should use fallback string when key missing', () => {
+    it('should use fallback string when key missing', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.t('missing.key', { fallback: 'Default text' })).toBe('Default text');
+      await waitFor(() => {
+        expect(result.current.t('missing.key', { fallback: 'Default text' })).toBe('Default text');
+      });
     });
 
     it('should load fallback locale file when primary locale file is missing', async () => {
@@ -135,17 +139,21 @@ describe('useTranslation Hook', () => {
   });
 
   describe('Combined features', () => {
-    it('should return key when missing and no fallback provided (explicit empty options)', () => {
+    it('should return key when missing and no fallback provided (explicit empty options)', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.t('missing.key', {})).toBe('missing.key');
-    });
-    it('should support fallback with variables', () => {
-      const { result } = renderHook(() => useTranslation('common', 'en'));
-      const translation = result.current.t('missing.key', {
-        fallback: 'Welcome to {{place}}!',
-        vars: { place: 'Middle-earth' }
+      await waitFor(() => {
+        expect(result.current.t('missing.key', {})).toBe('missing.key');
       });
-      expect(translation).toBe('Welcome to Middle-earth!');
+    });
+    it('should support fallback with variables', async () => {
+      const { result } = renderHook(() => useTranslation('common', 'en'));
+      await waitFor(() => {
+        const translation = result.current.t('missing.key', {
+          fallback: 'Welcome to {{place}}!',
+          vars: { place: 'Middle-earth' }
+        });
+        expect(translation).toBe('Welcome to Middle-earth!');
+      });
     });
 
     it('should interpolate variables in nested keys', async () => {
@@ -160,9 +168,11 @@ describe('useTranslation Hook', () => {
   });
 
   describe('Locale handling', () => {
-    it('should return normalized locale', () => {
+    it('should return normalized locale', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      expect(result.current.locale).toBe('en');
+      await waitFor(() => {
+        expect(result.current.locale).toBe('en');
+      });
     });
 
     it('should use different locale translations', async () => {
