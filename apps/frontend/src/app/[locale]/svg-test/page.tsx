@@ -1,17 +1,16 @@
 'use client';
 /**
- * @file This file acts as the "controller" for the SVG Path Visualizer page.
- * Its primary responsibility is to manage the application's state, including the
- * current path data, UI visibility, and user selections. It fetches the necessary
- * data and passes down state and event handlers to the specialized child components
- * that are responsible for rendering the UI.
+ * @file Container/controller for the SVG Path Visualizer page.
+ *
+ * UI composition lives here; path editing state and logic are encapsulated in
+ * the useSvgPathEditor hook. This separation improves testability and keeps
+ * this component focused on layout/wiring and non-path UI state (e.g., grid/labels).
  */
 import { useTranslation } from '@/hooks/useTranslation';
 import '@/shared/styles/noselect.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocale } from 'i18n';
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import * as parser from 'svg-path-parser';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ExampleSelector from './components/ExampleSelector';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import PathCommandBreakdown from './components/PathCommandBreakdown';
@@ -19,9 +18,8 @@ import PathEditorControls from './components/PathEditorControls';
 import SvgVisualizer from './components/SvgVisualizer';
 import { DEFAULT_EXAMPLE_ID, PATH_EXAMPLES as examplesList } from './constants/path-examples';
 import { CONTAINER_CLASSES } from './constants/styles';
+import { useSvgPathEditor } from './hooks/useSvgPathEditor';
 import type { PathExample, Point } from './types';
-import { getCommandValue } from './utils/svgCommandHelpers';
-import { extractPointsFromCommands, formatPathString } from './utils/svgPath';
 
 // Convert the examples array into a Record for efficient O(1) lookups by ID.
 const examples: Record<string, PathExample> = examplesList.reduce((acc, ex) => {
@@ -42,31 +40,25 @@ const SVGTestPage: React.FC = () => {
   const { t } = useTranslation('svgTest', currentLocale);
   const { t: tCommon } = useTranslation('common', currentLocale);
   
-  // State for client-side rendering guard
+  // Client-only rendering guard to avoid hydration mismatches
   const [isClient, setIsClient] = useState(false);
   // State for the currently selected path example from the dropdown
   const [selectedExample, setSelectedExample] = useState<string>(DEFAULT_EXAMPLE_ID);
-  // State for the validated, active SVG path string that is rendered
-  const [pathString, setPathString] = useState<string>(examples[DEFAULT_EXAMPLE_ID]?.pathData ?? '');
-  // State for the path string in the textarea, which may be invalid until validated
-  const [pendingPathString, setPendingPathString] = useState<string>(pathString);
+  const editor = useSvgPathEditor(examples[DEFAULT_EXAMPLE_ID]?.pathData ?? '');
+  const {
+    pathString: editorPathString,
+    pendingPathString: editorPendingPathString,
+    points: editorPoints,
+    regeneratePointsFromPath,
+    updatePathFromPoints,
+  } = editor;
 
   // UI visibility toggles
   const [showGrid, setShowGrid] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [showPoints, setShowPoints] = useState(true);
-  // State for the array of draggable points extracted from the pathString
-  const [points, setPoints] = useState<Point[]>([]);
-  // State to track which point is currently being dragged
+  // State to track which point is currently being dragged (local to page)
   const [draggingPoint, setDraggingPoint] = useState<Point | null>(null);
-  // State for the type of segment to add
-  const [segmentTypeToAppend, setSegmentTypeToAppend] = useState<string>('Q');
-  // State for toggling relative/absolute commands
-  const [isRelative, setIsRelative] = useState(false);
-  // State for the 'Z' (close path) command
-  const [isPathClosed, setIsPathClosed] = useState(false);
-  // State to track if the path in the textarea is valid
-  const [isValid, setIsValid] = useState(true);
   // State for toggling the path fill
   const [showFill, setShowFill] = useState(false);
   
@@ -75,93 +67,15 @@ const SVGTestPage: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /**
-   * Parses an SVG path string and updates the `points` state with the
-   * extracted draggable points. Memoized with useCallback.
-   */
-  const regeneratePointsFromPath = useCallback((currentPath: string) => {
-    try {
-      const parsedCommands = parser.parseSVG(currentPath);
-      const extractedPoints = extractPointsFromCommands(parsedCommands);
-      setPoints(extractedPoints);
-      setIsValid(true);
-    } catch (error) {
-      console.error('Failed to parse SVG path on load:', error);
-      setPoints([]);
-      setIsValid(false);
-    }
-  }, []);
-
-  /**
    * Handles changing the selected example from the dropdown, updating the path states.
    */
   const handleExampleChange = (exampleId: string) => {
     setSelectedExample(exampleId);
     const example = examples[exampleId];
     if (example) {
-      const newPath = example.pathData;
-      setPathString(newPath);
-      setPendingPathString(newPath);
-      setIsPathClosed(newPath.trim().endsWith('Z'));
+      editor.setPathFromExample(example.pathData);
     }
   };
-
-  /**
-   * Reconstructs the SVG path string from the current state of draggable points.
-   * This is called after a drag operation to update the path.
-   */
-  const updatePathFromPoints = useCallback(() => {
-    let newPath = '';
-    const commands = parser.parseSVG(pathString);
-
-    newPath = commands.map((cmd, i) => {
-        let cmdStr = cmd.code;
-        const relevantPoints = points.filter(p => p.id.startsWith(`pt-${i}-`));
-
-        switch (cmd.code) {
-            case 'M':
-            case 'L':
-            case 'H':
-            case 'V':
-            case 'T':
-                if (relevantPoints[0]) {
-                    cmdStr += ` ${relevantPoints[0].x},${relevantPoints[0].y}`;
-                }
-                break;
-            case 'Q':
-                if (relevantPoints[0] && relevantPoints[1]) {
-                    cmdStr += ` ${relevantPoints[0].x},${relevantPoints[0].y} ${relevantPoints[1].x},${relevantPoints[1].y}`;
-                }
-                break;
-            case 'C':
-                if (relevantPoints[0] && relevantPoints[1] && relevantPoints[2]) {
-                    cmdStr += ` ${relevantPoints[0].x},${relevantPoints[0].y} ${relevantPoints[1].x},${relevantPoints[1].y} ${relevantPoints[2].x},${relevantPoints[2].y}`;
-                }
-                break;
-            case 'S':
-                 if (relevantPoints[0] && relevantPoints[1]) {
-                    cmdStr += ` ${relevantPoints[0].x},${relevantPoints[0].y} ${relevantPoints[1].x},${relevantPoints[1].y}`;
-                }
-                break;
-            case 'A':
-                if (relevantPoints[0]) {
-                    // Convert boolean flags back to 0 or 1 for the path string
-                    cmdStr += ` ${cmd.rx},${cmd.ry} ${cmd.xAxisRotation} ${+cmd.largeArc} ${+cmd.sweep} ${relevantPoints[0].x},${relevantPoints[0].y}`;
-                }
-                break;
-            case 'Z':
-                break; // No points
-        }
-        return cmdStr;
-    }).join(' ');
-
-    // Canonical formatting (spaces + comma-separated coordinate pairs)
-    newPath = formatPathString(newPath);
-
-    if(isPathClosed) newPath += ' Z';
-
-    setPathString(newPath);
-    setPendingPathString(newPath);
-  }, [points, pathString, isPathClosed]);
 
   /**
    * Handles the mouse down event on a draggable point to initiate a drag operation.
@@ -185,13 +99,16 @@ const SVGTestPage: React.FC = () => {
       const newX = parseFloat(transformedPoint.x.toFixed(2));
       const newY = parseFloat(transformedPoint.y.toFixed(2));
 
-      setPoints(prevPoints =>
-        prevPoints.map(p =>
-          p.id === point.id
-            ? { ...p, x: newX, y: newY }
-            : p
-        )
-      );
+      editor.setPoints(prevPoints => {
+        const idx = prevPoints.findIndex(p => p.id === point.id);
+        if (idx === -1) return prevPoints;
+        const target = prevPoints[idx]!;
+        // Avoid redundant state updates if position didn't change
+        if (target.x === newX && target.y === newY) return prevPoints;
+        const next = prevPoints.slice();
+        next[idx] = { ...target, x: newX, y: newY };
+        return next;
+      });
     };
 
     const handleMouseUp = () => {
@@ -204,166 +121,23 @@ const SVGTestPage: React.FC = () => {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  /**
-   * Validates the path string from the textarea and applies it if valid.
-   */
-  const handleValidate = () => {
-    // Check for empty path first
-    if (!pendingPathString.trim()) {
-      setIsValid(false);
-      return;
-    }
-    
-    try {
-      // Test parsing to see if it's valid
-      parser.parseSVG(pendingPathString);
-      // If valid, format and update the main path string
-      const formatted = formatPathString(pendingPathString);
-      setPathString(formatted);
-      regeneratePointsFromPath(formatted);
-      setIsValid(true);
-    } catch (error) {
-      console.error("Invalid path string:", error);
-      // Optionally, revert pending string to the last valid one
-      setPendingPathString(pathString);
-      setIsValid(false);
-    }
-  };
-
-  /**
-   * Appends a new path segment to the current path string.
-   */
-  const handleAppendSegment = () => {
-    const commands = parser.parseSVG(pendingPathString);
-    const lastCommand = commands.length > 0 ? commands[commands.length - 1] : undefined;
-    
-    let lastPoint = { x: 100, y: 100 };
-    let relativeZero = { x: 0, y: 0 };
-    if (lastCommand) {
-      const absolute = parser.makeAbsolute([lastCommand]);
-      const firstAbsolute = absolute[0];
-      if (firstAbsolute && 'x' in firstAbsolute && 'y' in firstAbsolute) {
-        lastPoint = { x: firstAbsolute.x, y: firstAbsolute.y };
-        relativeZero = isRelative ? { x: -lastPoint.x, y: -lastPoint.y } : { x: 0, y: 0 };
-      }
-    }
-
-    const command = isRelative ? segmentTypeToAppend.toLowerCase() : segmentTypeToAppend.toUpperCase();
-
-    let newSegment = '';
-    switch (segmentTypeToAppend) {
-      case 'M':
-        newSegment = ` ${command} ${lastPoint.x + 50 + relativeZero.x},${lastPoint.y + relativeZero.y}`;
-        break;
-      case 'L':
-        newSegment = ` ${command} ${lastPoint.x + 50 + relativeZero.x},${lastPoint.y + relativeZero.y}`;
-        break;
-      case 'H':
-        newSegment = ` ${command} ${lastPoint.x + 50 + relativeZero.x}`;
-        break;
-      case 'V':
-        newSegment = ` ${command} ${lastPoint.y + 50 + relativeZero.y}`;
-        break;
-      case 'C':
-        newSegment = ` ${command} ${lastPoint.x + 20 + relativeZero.x} ${lastPoint.y - 50 + relativeZero.y}, ${lastPoint.x + 40 + relativeZero.x} ${lastPoint.y - 50 + relativeZero.y}, ${lastPoint.x + 50 + relativeZero.x} ${lastPoint.y + relativeZero.y}`;
-        break;
-      case 'S':
-         newSegment = ` ${command} ${lastPoint.x + 20 + relativeZero.x} ${lastPoint.y - 50 + relativeZero.y}, ${lastPoint.x + 50 + relativeZero.x} ${lastPoint.y + relativeZero.y}`;
-        break;
-              case 'T':
-         newSegment = ` ${command} ${lastPoint.x + 20 + relativeZero.x},${lastPoint.y - 50 + relativeZero.y}`;
-         break;
-              case 'A':
-         newSegment = ` ${command} 50,50 0 0 1 ${lastPoint.x + 50 + relativeZero.x},${lastPoint.y + relativeZero.y}`;
-         break;
-      case 'Q':
-      default:
-        newSegment = ` ${command} ${lastPoint.x + 25 + relativeZero.x} ${lastPoint.y - 50 + relativeZero.y}, ${lastPoint.x + 50 + relativeZero.x} ${lastPoint.y + relativeZero.y}`;
-        break;
-    }
-    const newPath = formatPathString(pendingPathString + newSegment);
-    setPendingPathString(newPath);
-    // Automatically validate and update points
-    try {
-      parser.parseSVG(newPath);
-      setPathString(newPath);
-      regeneratePointsFromPath(newPath);
-    } catch (e) {
-      setIsValid(false);
-    }
-  };
-
-  /**
-   * Toggles the closepath 'Z' at the end of the current path.
-   *
-   * Source of truth: `pathString` (the rendered SVG path). The checkbox reflects
-   * whether `pathString` currently ends with a closepath (Z/z). When toggled,
-   * we append/remove the trailing Z from `pathString`, then reformat via
-   * `formatPathString` and sync both `pendingPathString` and `pathString`.
-   */
-  const handleClosePath = (isClosed: boolean) => {
-    let newPath = pathString.trim();
-    const hasZ = /z\s*$/i.test(newPath);
-    if (isClosed && !hasZ) {
-      newPath = `${newPath} Z`;
-    } else if (!isClosed && hasZ) {
-      newPath = newPath.replace(/z\s*$/i, '').trim();
-    }
-    const formatted = formatPathString(newPath);
-    setPendingPathString(formatted);
-    setPathString(formatted);
-  };
-
-  /**
-   * Rounds all numerical values in the path string to the nearest integer.
-   */
-  const handleRoundValues = () => {
-    try {
-      const commands = parser.parseSVG(pendingPathString);
-    const roundedPath = commands.map(cmd => {
-        let newCmd = cmd.code;
-        // The type system knows the keys for each command type
-        Object.keys(cmd).forEach(key => {
-          if (key !== 'code' && key !== 'command' && key !== 'relative') {
-            const val = getCommandValue(cmd, key);
-            if (typeof val === 'number') {
-              newCmd += ` ${Math.round(val)}`;
-            }
-          }
-        });
-        return newCmd;
-      }).join(' ');
-
-      const formatted = formatPathString(roundedPath);
-  
-      setPendingPathString(formatted);
-      setPathString(formatted);
-      regeneratePointsFromPath(formatted);
-    } catch (error) {
-      console.error("Could not round values:", error);
-    }
-  };
-
   // Effect to set initial points when the component mounts or example changes
   useEffect(() => {
     // Do not regenerate points from the path string while a drag is in progress.
-    // During a drag, the `points` array is the source of truth.
+    // During a drag, the editor.points array is the source of truth.
     if (!draggingPoint) {
-      regeneratePointsFromPath(pathString);
+      regeneratePointsFromPath(editorPathString);
     }
-  }, [pathString, regeneratePointsFromPath, draggingPoint]);
+  }, [editorPathString, regeneratePointsFromPath, draggingPoint]);
   
   // Update path string when points are dragged
   useEffect(() => {
     if (draggingPoint) {
       updatePathFromPoints();
     }
-  }, [points, draggingPoint, updatePathFromPoints]);
+  }, [editorPoints, draggingPoint, updatePathFromPoints]);
 
-  // Derive closed-path checkbox state from the actual rendered path string (SVG d)
-  useEffect(() => {
-    setIsPathClosed(/z\s*$/i.test(pathString.trim()));
-  }, [pathString]);
+  // Note: editor keeps isPathClosed in sync internally; no page-level effect needed
 
   // Effect to guard against SSR issues by only rendering full component on the client
   useEffect(() => {
@@ -374,11 +148,11 @@ const SVGTestPage: React.FC = () => {
   useLayoutEffect(() => {
     if (textareaRef.current) {
       const { selectionStart, selectionEnd } = textareaRef.current;
-      textareaRef.current.value = pendingPathString;
+      textareaRef.current.value = editorPendingPathString;
       textareaRef.current.selectionStart = selectionStart;
       textareaRef.current.selectionEnd = selectionEnd;
     }
-  }, [pendingPathString]);
+  }, [editorPendingPathString]);
 
   // Prevent rendering on the server to avoid hydration mismatches
   if (!isClient) return null;
@@ -426,8 +200,8 @@ const SVGTestPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SvgVisualizer
                 svgRef={svgRef}
-                pathString={pathString}
-                points={points}
+                pathString={editor.pathString}
+                points={editor.points}
                 showGrid={showGrid}
                 setShowGrid={setShowGrid}
                 showLabels={showLabels}
@@ -440,19 +214,19 @@ const SVGTestPage: React.FC = () => {
                 t={t}
               />
               <PathEditorControls
-                pendingPathString={pendingPathString}
+                pendingPathString={editor.pendingPathString}
                 textareaRef={textareaRef}
-                segmentTypeToAppend={segmentTypeToAppend}
-                setSegmentTypeToAppend={setSegmentTypeToAppend}
-                isRelative={isRelative}
-                setIsRelative={setIsRelative}
-                isPathClosed={isPathClosed}
-                setIsPathClosed={handleClosePath}
-                isValid={isValid}
-                setPendingPathString={setPendingPathString}
-                handleValidate={handleValidate}
-                handleAppendSegment={handleAppendSegment}
-                handleRoundValues={handleRoundValues}
+                segmentTypeToAppend={editor.segmentTypeToAppend}
+                setSegmentTypeToAppend={editor.setSegmentTypeToAppend}
+                isRelative={editor.isRelative}
+                setIsRelative={editor.setIsRelative}
+                isPathClosed={editor.isPathClosed}
+                setIsPathClosed={editor.handleClosePath}
+                isValid={editor.isValid}
+                setPendingPathString={editor.setPendingPathString}
+                handleValidate={editor.handleValidate}
+                handleAppendSegment={editor.handleAppendSegment}
+                handleRoundValues={editor.handleRoundValues}
                 t={t}
               />
             </div>
@@ -460,7 +234,7 @@ const SVGTestPage: React.FC = () => {
 
           {/* Breakdown Component */}
           <div className={CONTAINER_CLASSES}>
-            <PathCommandBreakdown path={pathString} t={t} />
+            <PathCommandBreakdown path={editor.pathString} t={t} />
           </div>
         </motion.div>
       </AnimatePresence>
