@@ -1,17 +1,26 @@
 import { fireEvent, render } from '@testing-library/react';
+import { LocaleProvider } from '../../../../../i18n/LocaleContext';
 
 // Mutable current locale used by the mocked useLocale
 let currentLocale: any = 'aa';
 const setLocaleMock = jest.fn();
 
-jest.mock('i18n', () => ({
+jest.mock('../../../../../i18n/constants', () => ({
+  ...jest.requireActual('../../../../../i18n/constants'),
   LANGUAGES: [
     { code: 'aa', name: 'AA', nativeName: 'AA', flag: '🏳️', rtl: false },
     { code: 'bb', name: 'BB', nativeName: 'BB', flag: '🏳️', rtl: false },
     { code: 'xx', name: 'XX', nativeName: 'XX', flag: '🏳️', rtl: true },
   ],
-  useLocale: () => ({ locale: currentLocale, setLocale: setLocaleMock }),
 }));
+
+jest.mock('../../../../../i18n/LocaleContext', () => {
+  const actual = jest.requireActual('../../../../../i18n/LocaleContext');
+  return {
+    ...actual,
+    useLocale: () => ({ locale: currentLocale, setLocale: setLocaleMock }),
+  };
+});
 
 const replaceMock = jest.fn();
 const usePathnameMock = jest.fn();
@@ -37,10 +46,14 @@ describe('LanguageSwitcher', () => {
     const originalLocation = window.location.href;
     window.history.replaceState({}, '', '/aa/about?q=1#section');
 
-    const { getByDisplayValue } = render(<LanguageSwitcher t={t as any} />);
+    const { getByRole } = render(
+      <LocaleProvider initialLocale={currentLocale}>
+        <LanguageSwitcher t={t as any} />
+      </LocaleProvider>
+    );
 
     // Change to bb
-    const select = getByDisplayValue('aa') as HTMLSelectElement;
+    const select = getByRole('combobox') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'bb' } });
 
     expect(replaceMock).toHaveBeenCalledWith('/bb/about?q=1#section');
@@ -54,8 +67,12 @@ describe('LanguageSwitcher', () => {
     currentLocale = 'aa';
     usePathnameMock.mockReturnValue('/aa/about');
 
-    const { getByDisplayValue } = render(<LanguageSwitcher t={t as any} />);
-    const select = getByDisplayValue('aa') as HTMLSelectElement;
+    const { getByRole } = render(
+      <LocaleProvider initialLocale={currentLocale}>
+        <LanguageSwitcher t={t as any} />
+      </LocaleProvider>
+    );
+    const select = getByRole('combobox') as HTMLSelectElement;
 
     fireEvent.change(select, { target: { value: 'aa' } });
 
@@ -68,8 +85,12 @@ describe('LanguageSwitcher', () => {
     currentLocale = 'aa';
     usePathnameMock.mockReturnValue('/bb/about');
 
-    const { getByDisplayValue } = render(<LanguageSwitcher t={t as any} />);
-    const select = getByDisplayValue('aa') as HTMLSelectElement;
+    const { getByRole } = render(
+      <LocaleProvider initialLocale={currentLocale}>
+        <LanguageSwitcher t={t as any} />
+      </LocaleProvider>
+    );
+    const select = getByRole('combobox') as HTMLSelectElement;
 
     fireEvent.change(select, { target: { value: 'xx' } });
 
@@ -80,8 +101,12 @@ describe('LanguageSwitcher', () => {
     usePathnameMock.mockReturnValue('/bb/about');
     currentLocale = 'aa';
 
-    const { getByDisplayValue } = render(<LanguageSwitcher t={t as any} />);
-    const select = getByDisplayValue('aa') as HTMLSelectElement;
+    const { getByRole } = render(
+      <LocaleProvider initialLocale={currentLocale}>
+        <LanguageSwitcher t={t as any} />
+      </LocaleProvider>
+    );
+    const select = getByRole('combobox') as HTMLSelectElement;
 
     fireEvent.change(select, { target: { value: 'bb' } });
 
@@ -91,8 +116,12 @@ describe('LanguageSwitcher', () => {
   it('normalizes "/locale" root without trailing slash when switching', () => {
     usePathnameMock.mockReturnValue('/aa');
 
-    const { getByDisplayValue } = render(<LanguageSwitcher t={t as any} />);
-    const select = getByDisplayValue('aa') as HTMLSelectElement;
+    const { getByRole } = render(
+      <LocaleProvider initialLocale={currentLocale}>
+        <LanguageSwitcher t={t as any} />
+      </LocaleProvider>
+    );
+    const select = getByRole('combobox') as HTMLSelectElement;
 
     fireEvent.change(select, { target: { value: 'bb' } });
 

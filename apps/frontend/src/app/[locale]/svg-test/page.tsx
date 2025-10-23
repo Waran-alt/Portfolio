@@ -21,7 +21,7 @@ import { DEFAULT_EXAMPLE_ID, PATH_EXAMPLES as examplesList } from './constants/p
 import { CONTAINER_CLASSES } from './constants/styles';
 import type { PathExample, Point } from './types';
 import { getCommandValue } from './utils/svgCommandHelpers';
-import { extractPointsFromCommands } from './utils/svgPath';
+import { extractPointsFromCommands, formatPathString } from './utils/svgPath';
 
 // Convert the examples array into a Record for efficient O(1) lookups by ID.
 const examples: Record<string, PathExample> = examplesList.reduce((acc, ex) => {
@@ -152,7 +152,10 @@ const SVGTestPage: React.FC = () => {
                 break; // No points
         }
         return cmdStr;
-    }).join(' ').replace(/(\d+)\s+(\d+)/g, '$1,$2');
+    }).join(' ');
+
+    // Canonical formatting (spaces + comma-separated coordinate pairs)
+    newPath = formatPathString(newPath);
 
     if(isPathClosed) newPath += ' Z';
 
@@ -214,9 +217,10 @@ const SVGTestPage: React.FC = () => {
     try {
       // Test parsing to see if it's valid
       parser.parseSVG(pendingPathString);
-      // If valid, update the main path string
-      setPathString(pendingPathString);
-      regeneratePointsFromPath(pendingPathString);
+      // If valid, format and update the main path string
+      const formatted = formatPathString(pendingPathString);
+      setPathString(formatted);
+      regeneratePointsFromPath(formatted);
       setIsValid(true);
     } catch (error) {
       console.error("Invalid path string:", error);
@@ -277,7 +281,7 @@ const SVGTestPage: React.FC = () => {
         newSegment = ` ${command} ${lastPoint.x + 25 + relativeZero.x} ${lastPoint.y - 50 + relativeZero.y}, ${lastPoint.x + 50 + relativeZero.x} ${lastPoint.y + relativeZero.y}`;
         break;
     }
-    const newPath = pendingPathString + newSegment;
+    const newPath = formatPathString(pendingPathString + newSegment);
     setPendingPathString(newPath);
     // Automatically validate and update points
     try {
@@ -290,20 +294,24 @@ const SVGTestPage: React.FC = () => {
   };
 
   /**
-   * Appends a 'Z' command to close the current path.
+   * Toggles the closepath 'Z' at the end of the current path.
+   *
+   * Source of truth: `pathString` (the rendered SVG path). The checkbox reflects
+   * whether `pathString` currently ends with a closepath (Z/z). When toggled,
+   * we append/remove the trailing Z from `pathString`, then reformat via
+   * `formatPathString` and sync both `pendingPathString` and `pathString`.
    */
   const handleClosePath = (isClosed: boolean) => {
-    setIsPathClosed(isClosed);
-    let newPath = pendingPathString.trim();
-    // Remove existing Z if present
-    if (newPath.endsWith('Z')) {
-        newPath = newPath.slice(0, -1).trim();
+    let newPath = pathString.trim();
+    const hasZ = /z\s*$/i.test(newPath);
+    if (isClosed && !hasZ) {
+      newPath = `${newPath} Z`;
+    } else if (!isClosed && hasZ) {
+      newPath = newPath.replace(/z\s*$/i, '').trim();
     }
-    if (isClosed) {
-        newPath += ' Z';
-    }
-    setPendingPathString(newPath);
-    setPathString(newPath);
+    const formatted = formatPathString(newPath);
+    setPendingPathString(formatted);
+    setPathString(formatted);
   };
 
   /**
@@ -312,7 +320,7 @@ const SVGTestPage: React.FC = () => {
   const handleRoundValues = () => {
     try {
       const commands = parser.parseSVG(pendingPathString);
-      const roundedPath = commands.map(cmd => {
+    const roundedPath = commands.map(cmd => {
         let newCmd = cmd.code;
         // The type system knows the keys for each command type
         Object.keys(cmd).forEach(key => {
@@ -324,11 +332,13 @@ const SVGTestPage: React.FC = () => {
           }
         });
         return newCmd;
-      }).join(' ').replace(/(\d+)\s+(\d+)/g, '$1,$2');
+      }).join(' ');
+
+      const formatted = formatPathString(roundedPath);
   
-      setPendingPathString(roundedPath);
-      setPathString(roundedPath);
-      regeneratePointsFromPath(roundedPath);
+      setPendingPathString(formatted);
+      setPathString(formatted);
+      regeneratePointsFromPath(formatted);
     } catch (error) {
       console.error("Could not round values:", error);
     }
@@ -350,20 +360,10 @@ const SVGTestPage: React.FC = () => {
     }
   }, [points, draggingPoint, updatePathFromPoints]);
 
-  // Effect to handle path closing toggle
+  // Derive closed-path checkbox state from the actual rendered path string (SVG d)
   useEffect(() => {
-    let newPath = pendingPathString.trim();
-    const hasZ = newPath.endsWith('Z') || newPath.endsWith('z');
-    if (isPathClosed && !hasZ) {
-      newPath += ' Z';
-    } else if (!isPathClosed && hasZ) {
-      newPath = newPath.slice(0, -1).trim();
-    }
-    if (newPath !== pendingPathString) {
-      setPendingPathString(newPath);
-      setPathString(newPath);
-    }
-  }, [isPathClosed, pendingPathString]);
+    setIsPathClosed(/z\s*$/i.test(pathString.trim()));
+  }, [pathString]);
 
   // Effect to guard against SSR issues by only rendering full component on the client
   useEffect(() => {
