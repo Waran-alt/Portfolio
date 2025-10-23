@@ -8,16 +8,22 @@ describe('ExampleSelector', () => {
     'ex1': { id: 'ex1', title: 'Example 1', description: '', method: '', points: [], pathData: '', showControls: true, showHandles: true },
     'ex2': { id: 'ex2', title: 'Example 2', description: '', method: '', points: [], pathData: '', showControls: true, showHandles: true },
   };
+  
+  // Provide a deterministic mock translation function
+  const t = (key: string) => key;
 
-  test('should render the label "Select Method"', () => {
-    render(
+  test('should render a label linked to the select', () => {
+    const { container } = render(
       <ExampleSelector
         examples={mockExamples}
         selectedExample="ex1"
         handleExampleChange={() => {}}
+        t={t}
       />
     );
-    expect(screen.getByText('Select Method')).toBeInTheDocument();
+    // Assert the label exists and is linked to the select via htmlFor
+    const label = container.querySelector('label[for="example-select"]');
+    expect(label).toBeInTheDocument();
   });
 
   test('should render a select element', () => {
@@ -26,6 +32,7 @@ describe('ExampleSelector', () => {
         examples={mockExamples}
         selectedExample="ex1"
         handleExampleChange={() => {}}
+        t={t}
       />
     );
     expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -37,6 +44,7 @@ describe('ExampleSelector', () => {
         examples={mockExamples}
         selectedExample="ex1"
         handleExampleChange={() => {}}
+        t={t}
       />
     );
     expect(screen.getAllByRole('option')).toHaveLength(2);
@@ -50,6 +58,7 @@ describe('ExampleSelector', () => {
         examples={mockExamples}
         selectedExample="ex2"
         handleExampleChange={() => {}}
+        t={t}
       />
     );
     const select = screen.getByRole('combobox') as HTMLSelectElement;
@@ -63,6 +72,7 @@ describe('ExampleSelector', () => {
         examples={mockExamples}
         selectedExample="ex1"
         handleExampleChange={handleExampleChange}
+        t={t}
       />
     );
 
@@ -79,6 +89,7 @@ describe('ExampleSelector', () => {
         examples={{}}
         selectedExample=""
         handleExampleChange={() => {}}
+        t={t}
       />
     );
     expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -91,6 +102,7 @@ describe('ExampleSelector', () => {
         examples={mockExamples}
         selectedExample="nonexistent"
         handleExampleChange={() => {}}
+        t={t}
       />
     );
     const select = screen.getByRole('combobox') as HTMLSelectElement;

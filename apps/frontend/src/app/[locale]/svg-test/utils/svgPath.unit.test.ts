@@ -1,6 +1,6 @@
 import type { Command as SVGCommand } from 'svg-path-parser';
 import * as parser from 'svg-path-parser';
-import { cubicBezierMidpoint, extractPointsFromCommands, formatNumber, midpoint } from './svgPath';
+import { cubicBezierMidpoint, extractPointsFromCommands, formatCommandsToPath, formatNumber, formatPathString, midpoint } from './svgPath';
 
 // Mock the makeAbsolute function to isolate our tests
 jest.mock('svg-path-parser', () => ({
@@ -87,6 +87,45 @@ describe('svgPath utilities', () => {
 
     it('should return an empty array for empty input', () => {
       expect(extractPointsFromCommands([])).toEqual([]);
+    });
+  });
+
+  describe('formatPathString / formatCommandsToPath', () => {
+    it('should canonicalize simple move/line with commas and single spaces', () => {
+      expect(formatPathString('M 0 0 L 100 100')).toBe('M 0,0 L 100,100');
+      expect(formatPathString('M0,0   L   100 100')).toBe('M 0,0 L 100,100');
+    });
+
+    it('should format horizontal and vertical commands as scalars', () => {
+      expect(formatPathString('M 10 10 H 20 V 30')).toBe('M 10,10 H 20 V 30');
+    });
+
+    it('should format quadratic and cubic curves with comma-separated pairs', () => {
+      expect(formatPathString('M 0 0 Q 10 20 30 40')).toBe('M 0,0 Q 10,20 30,40');
+      expect(formatPathString('M 0 0 C 10 20 30 40 50 60')).toBe('M 0,0 C 10,20 30,40 50,60');
+    });
+
+    it('should format smooth curves and close path', () => {
+      expect(formatPathString('M 0 0 S 10 20 30 40 Z')).toBe('M 0,0 S 10,20 30,40 Z');
+    });
+
+    it('should format arc command with flags and end point', () => {
+      // A rx ry xAxisRotation largeArcFlag sweepFlag x y
+      expect(formatPathString('M 0 0 A 50 25 45 1 0 100 100')).toBe('M 0,0 A 50,25 45 1 0 100,100');
+    });
+
+    it('should preserve command casing as produced by parser', () => {
+      // svg-path-parser normalizes some commands; verify our formatter mirrors its casing
+      expect(formatPathString('m 0 0 l 10 10 z')).toBe('M 0,0 l 10,10 Z');
+    });
+
+    it('should trim and return original on parse failure', () => {
+      expect(formatPathString('  invalid ')).toBe('invalid');
+    });
+
+    it('formatCommandsToPath should produce canonical output from parsed commands', () => {
+      const cmds = parser.parseSVG('M 1 2 L 3 4');
+      expect(formatCommandsToPath(cmds)).toBe('M 1,2 L 3,4');
     });
   });
 }); 

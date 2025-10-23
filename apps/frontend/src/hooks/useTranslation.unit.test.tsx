@@ -148,12 +148,14 @@ describe('useTranslation Hook', () => {
       expect(translation).toBe('Welcome to Middle-earth!');
     });
 
-    it('should interpolate variables in nested keys', () => {
+    it('should interpolate variables in nested keys', async () => {
       const { result } = renderHook(() => useTranslation('common', 'en'));
-      const translation = result.current.t('nested.message', {
-        vars: { force: 'Force', name: 'Yoda' }
+      await waitFor(() => {
+        const translation = result.current.t('nested.message', {
+          vars: { force: 'Force', name: 'Yoda' }
+        });
+        expect(translation).toBe('May the Force be with Yoda');
       });
-      expect(translation).toBe('May the Force be with Yoda');
     });
   });
 

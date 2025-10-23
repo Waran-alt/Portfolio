@@ -91,3 +91,116 @@ export const extractPointsFromCommands = (commands: SVGCommand[]): Point[] => {
   });
   return newPoints;
 }; 
+
+/**
+ * Formats an SVG path string into a canonical "space-and-comma" style used by the UI:
+ * - Commands are separated by a single space
+ * - Each coordinate pair is formatted as x,y (with a comma)
+ * - Scalar parameters (e.g., H, V, rotation/flags in A) are space-separated
+ * - Command letters are preserved as-is from input (case kept), parameters normalized
+ *
+ * This avoids ad-hoc regex replacements and ensures consistent display.
+ */
+export function formatPathString(path: string): string {
+  try {
+    const commands = parser.parseSVG(path);
+    return formatCommandsToPath(commands);
+  } catch {
+    // If parsing fails, return a trimmed version so callers can decide next steps
+    return path.trim();
+  }
+}
+
+/**
+ * Converts parsed SVG commands to a canonical path string.
+ * Consumers that already have parsed commands can use this directly.
+ */
+export function formatCommandsToPath(commands: SVGCommand[]): string {
+  const pieces: string[] = [];
+
+  for (const cmd of commands) {
+    const code = cmd.code; // Preserve original case as provided
+    // The svg-path-parser Command type is a discriminated union where available properties vary per command (M/L have x,y; H has x; V has y; etc.). Using exhaustive type guards here would add a lot of boilerplate and obscure the core formatting logic. We keep this localized `any` cast with an eslint disable to keep the function simple and readable while remaining safe in practice because each branch only accesses properties valid for that command.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c = cmd as any; // Simple union escape hatch for TS
+    const out: string[] = [code];
+
+    switch (code.toUpperCase()) {
+      case 'M':
+      case 'L':
+      case 'T': {
+        out.push(pair(c.x, c.y));
+        break;
+      }
+      case 'H': {
+        out.push(num(c.x));
+        break;
+      }
+      case 'V': {
+        out.push(num(c.y));
+        break;
+      }
+      case 'Q': {
+        out.push(pair(c.x1, c.y1));
+        out.push(pair(c.x, c.y));
+        break;
+      }
+      case 'C': {
+        out.push(pair(c.x1, c.y1));
+        out.push(pair(c.x2, c.y2));
+        out.push(pair(c.x, c.y));
+        break;
+      }
+      case 'S': {
+        out.push(pair(c.x2, c.y2));
+        out.push(pair(c.x, c.y));
+        break;
+      }
+      case 'A': {
+        // rx,ry xAxisRotation largeArc sweep x,y
+        out.push(pair(c.rx, c.ry));
+        out.push(num(c.xAxisRotation));
+        out.push(String(+c.largeArc));
+        out.push(String(+c.sweep));
+        out.push(pair(c.x, c.y));
+        break;
+      }
+      case 'Z':
+        // No params
+        break;
+      default: {
+        // Unknown commands: best-effort include any known numeric props in a stable order
+        const extras: Array<string> = [];
+        const keys = ['x1','y1','x2','y2','rx','ry','xAxisRotation','largeArc','sweep','x','y'];
+        for (const k of keys) {
+          const v = c[k];
+          if (typeof v === 'number') {
+            if (k === 'x' || k === 'y') continue; // handled by pair below if both exist
+            extras.push(num(v));
+          } else if (typeof v === 'boolean') {
+            extras.push(String(+v));
+          }
+        }
+        if (typeof c.x === 'number' && typeof c.y === 'number') {
+          extras.push(pair(c.x, c.y));
+        }
+        out.push(...extras);
+      }
+    }
+
+    pieces.push(out.join(' '));
+  }
+
+  return pieces.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function num(n: number | undefined): string {
+  if (typeof n !== 'number' || Number.isNaN(n)) return '0';
+  // Keep up to 6 decimals, trim trailing zeros/decimal point
+  const s = n.toFixed(6);
+  return s.includes('.') ? s.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1') : s;
+}
+
+function pair(a: number | undefined, b: number | undefined): string {
+  return `${num(a)},${num(b)}`;
+}

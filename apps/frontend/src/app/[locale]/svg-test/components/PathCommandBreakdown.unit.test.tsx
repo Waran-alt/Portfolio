@@ -59,12 +59,14 @@ describe('PathCommandBreakdown', () => {
       expect(screen.getByText(/y: 90/)).toBeInTheDocument();
     });
 
-    it('should display "Invalid SVG path" for unrecognized command codes', () => {
+    it('should display an error for unrecognized command codes', () => {
       // The parser throws an error for an invalid command like 'X',
       // which our component catches and displays an error message for.
       const pathWithUnknownCommand = 'M 10 20 X 50 50';
       render(<PathCommandBreakdown path={pathWithUnknownCommand} t={mockT} />);
-      expect(screen.getByText('Invalid SVG path')).toBeInTheDocument();
+      const error = screen.getByText('errors.invalidPath');
+      expect(error).toBeInTheDocument();
+      expect(error).toHaveAttribute('aria-live', 'polite');
     });
   });
 
@@ -77,14 +79,15 @@ describe('PathCommandBreakdown', () => {
     it('should display an error message for an invalid path', () => {
       const invalidPath = 'M 10 20 L 30'; // Incomplete L command
       render(<PathCommandBreakdown path={invalidPath} t={mockT} />);
-
-      expect(screen.getByText('Invalid SVG path')).toBeInTheDocument();
+      const error = screen.getByText('errors.invalidPath');
+      expect(error).toBeInTheDocument();
+      expect(error).toHaveAttribute('aria-live', 'polite');
     });
 
     it('should have an aria-live="polite" attribute on the error message for accessibility', () => {
       const invalidPath = 'M 10 20 L 30';
       render(<PathCommandBreakdown path={invalidPath} t={mockT} />);
-      const errorDiv = screen.getByText('Invalid SVG path');
+      const errorDiv = screen.getByText('errors.invalidPath');
       expect(errorDiv).toHaveAttribute('aria-live', 'polite');
     });
 
