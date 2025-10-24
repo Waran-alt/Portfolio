@@ -23,6 +23,18 @@ interface PathCommandsOverlayProps {
   digits?: number;
 }
 
+// Extract original command letters (with casing) from the raw path string.
+function extractCommandLetters(path: string): string[] {
+  const letters: string[] = [];
+  const re = /[MmLlHhVvCcSsQqTtAaZz]/g;
+  let m: RegExpExecArray | null;
+   
+  while ((m = re.exec(path)) !== null) {
+    letters.push(m[0]);
+  }
+  return letters;
+}
+
 /**
  * A React component that parses an SVG path string and renders command letters
  * and coordinate numbers on top of the visual path. It intelligently places
@@ -47,6 +59,7 @@ const PathCommandsOverlayComponent: React.FC<PathCommandsOverlayProps> = ({ path
   } catch {
     return null;
   }
+  const sourceCodes = extractCommandLetters(path);
 
   // 'prev' tracks the end point of the last command, which is crucial for
   // calculating midpoints or determining the start of the next command segment.
@@ -163,7 +176,7 @@ const PathCommandsOverlayComponent: React.FC<PathCommandsOverlayProps> = ({ path
     // Render the command letter (e.g., 'M', 'C') if a valid position was calculated.
     // This prevents rendering letters for commands like 'Z' (close path) and correctly handles commands at the origin (0,0).
     if (cmd.code && letterPos) {
-      // Add background rectangle for command letter
+      // Background for command letter
       overlays.push(
         <rect
           key={`cmd-bg-${i}-${JSON.stringify(cmd)}`}
@@ -180,7 +193,7 @@ const PathCommandsOverlayComponent: React.FC<PathCommandsOverlayProps> = ({ path
         />
       );
       
-      // Add command letter text
+      // Command letter text - preserve original casing from source path
       overlays.push(
         <text
           key={`cmd-${i}-${JSON.stringify(cmd)}`}
@@ -193,7 +206,7 @@ const PathCommandsOverlayComponent: React.FC<PathCommandsOverlayProps> = ({ path
           className="SVGTestPage__CmdLetter"
           style={{ pointerEvents: 'none' }}
         >
-          {cmd.code}
+          {sourceCodes[i] ?? cmd.code}
         </text>
       );
     }

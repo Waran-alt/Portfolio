@@ -55,6 +55,13 @@ describe('PathCommandsOverlay', () => {
         expect(screen.getByText('M')).toBeInTheDocument();
         expect(screen.getByText(/0\.00,0\.00/)).toBeInTheDocument();
     });
+
+    it('should preserve original casing for relative commands (e.g., q)', () => {
+      // Lowercase q in source should display as lowercase
+      const path = 'M 0 0 q 10 10 20 20';
+      renderInSvg(<PathCommandsOverlay path={path} />);
+      expect(screen.getByText('q')).toBeInTheDocument();
+    });
   });
 
   describe('Error handling', () => {

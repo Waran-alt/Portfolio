@@ -211,6 +211,13 @@ describe('SvgVisualizer Unit', () => {
       expect(screen.getByRole('graphics-document')).toBeInTheDocument();
     });
 
+    it('should preserve relative command casing (e.g., q) in overlays', () => {
+      // Even though parseSVG is mocked to return uppercase codes, the overlay derives
+      // letter casing from the raw path string, so lowercase q should be displayed.
+      render(<SvgVisualizer {...defaultProps} showLabels={true} pathString="M 0 0 q 10 10 20 20" />);
+      expect(screen.getByText('q')).toBeInTheDocument();
+    });
+
     it('should handle invalid path strings gracefully', () => {
       render(<SvgVisualizer {...defaultProps} pathString="invalid" />);
       
