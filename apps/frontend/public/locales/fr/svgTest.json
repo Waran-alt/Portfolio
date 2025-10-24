@@ -1,5 +1,7 @@
 {
   "title": "Visualiseur de chemin SVG",
+  "subtitle": "Explorez et comprenez visuellement les commandes de chemin SVG.",
+  "description": "Faites glisser les points, modifiez le chemin et voyez l'analyse en direct ci-dessous.",
   "controls": {
     "selectExample": "Sélectionner un exemple",
     "pathInputLabel": "Données du chemin SVG",

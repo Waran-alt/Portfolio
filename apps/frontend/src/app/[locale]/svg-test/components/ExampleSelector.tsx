@@ -47,7 +47,7 @@ const ExampleSelector: React.FC<ExampleSelectorProps> = ({
       >
         {Object.entries(examples).map(([id, example]) => (
           <option key={id} value={id}>
-            {example.title}
+            {t(example.title)}
           </option>
         ))}
       </select>
