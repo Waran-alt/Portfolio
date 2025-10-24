@@ -133,9 +133,11 @@ const SVGTestPage: React.FC = () => {
   // Update path string when points are dragged
   useEffect(() => {
     if (draggingPoint) {
-      updatePathFromPoints();
+      // Optimized update: rebuild only the affected command using the dragged point id
+      const changedId = draggingPoint.id;
+      editor.updatePathFromPointsForPoint(changedId);
     }
-  }, [editorPoints, draggingPoint, updatePathFromPoints]);
+  }, [editorPoints, draggingPoint, updatePathFromPoints, editor]);
 
   // Note: editor keeps isPathClosed in sync internally; no page-level effect needed
 

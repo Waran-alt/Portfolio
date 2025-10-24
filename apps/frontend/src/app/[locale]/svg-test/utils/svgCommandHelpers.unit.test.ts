@@ -12,7 +12,7 @@ import {
 describe('SVG Command Helpers Unit', () => {
   describe('hasCoordinates', () => {
     it('should return true for command with coordinates', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100, y: 200 };
+      const cmd = { code: 'M', x: 100, y: 200 } as unknown as SVGCommand;
       
       const result = hasCoordinates(cmd);
       
@@ -20,7 +20,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return false for command without coordinates', () => {
-      const cmd: SVGCommand = { code: 'Z' };
+      const cmd = { code: 'Z' } as unknown as SVGCommand;
       
       const result = hasCoordinates(cmd);
       
@@ -28,7 +28,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return false for command with partial coordinates', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100 };
+      const cmd = { code: 'M', x: 100 } as unknown as SVGCommand;
       
       const result = hasCoordinates(cmd);
       
@@ -38,7 +38,7 @@ describe('SVG Command Helpers Unit', () => {
 
   describe('getCommandCoords', () => {
     it('should extract coordinates from command', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100, y: 200 };
+      const cmd = { code: 'M', x: 100, y: 200 } as unknown as SVGCommand;
       
       const coords = getCommandCoords(cmd);
       
@@ -47,7 +47,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return zero coordinates for command without coordinates', () => {
-      const cmd: SVGCommand = { code: 'Z' };
+      const cmd = { code: 'Z' } as unknown as SVGCommand;
       
       const coords = getCommandCoords(cmd);
       
@@ -56,7 +56,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should handle command with partial coordinates', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100 };
+      const cmd = { code: 'M', x: 100 } as unknown as SVGCommand;
       
       const coords = getCommandCoords(cmd);
       
@@ -67,7 +67,7 @@ describe('SVG Command Helpers Unit', () => {
 
   describe('hasControlPoint1', () => {
     it('should return true for command with control point 1', () => {
-      const cmd: SVGCommand = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 };
+      const cmd = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 } as unknown as SVGCommand;
       
       const result = hasControlPoint1(cmd);
       
@@ -75,7 +75,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return false for command without control point 1', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100, y: 200 };
+      const cmd = { code: 'M', x: 100, y: 200 } as unknown as SVGCommand;
       
       const result = hasControlPoint1(cmd);
       
@@ -83,7 +83,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return false for command with partial control point 1', () => {
-      const cmd: SVGCommand = { code: 'Q', x: 100, y: 200, x1: 50 };
+      const cmd = { code: 'Q', x: 100, y: 200, x1: 50 } as unknown as SVGCommand;
       
       const result = hasControlPoint1(cmd);
       
@@ -93,7 +93,7 @@ describe('SVG Command Helpers Unit', () => {
 
   describe('hasControlPoint2', () => {
     it('should return true for command with control point 2', () => {
-      const cmd: SVGCommand = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75, y2: 175 };
+      const cmd = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75, y2: 175 } as unknown as SVGCommand;
       
       const result = hasControlPoint2(cmd);
       
@@ -101,7 +101,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return false for command without control point 2', () => {
-      const cmd: SVGCommand = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 };
+      const cmd = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 } as unknown as SVGCommand;
       
       const result = hasControlPoint2(cmd);
       
@@ -109,7 +109,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return false for command with partial control point 2', () => {
-      const cmd: SVGCommand = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75 };
+      const cmd = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75 } as unknown as SVGCommand;
       
       const result = hasControlPoint2(cmd);
       
@@ -119,7 +119,7 @@ describe('SVG Command Helpers Unit', () => {
 
   describe('getControlPoint1', () => {
     it('should extract control point 1 coordinates', () => {
-      const cmd: SVGCommand = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 };
+      const cmd = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 } as unknown as SVGCommand;
       
       const coords = getControlPoint1(cmd);
       
@@ -128,7 +128,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return zero coordinates for command without control point 1', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100, y: 200 };
+      const cmd = { code: 'M', x: 100, y: 200 } as unknown as SVGCommand;
       
       const coords = getControlPoint1(cmd);
       
@@ -137,7 +137,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should handle command with partial control point 1', () => {
-      const cmd: SVGCommand = { code: 'Q', x: 100, y: 200, x1: 50 };
+      const cmd = { code: 'Q', x: 100, y: 200, x1: 50 } as unknown as SVGCommand;
       
       const coords = getControlPoint1(cmd);
       
@@ -148,7 +148,7 @@ describe('SVG Command Helpers Unit', () => {
 
   describe('getControlPoint2', () => {
     it('should extract control point 2 coordinates', () => {
-      const cmd: SVGCommand = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75, y2: 175 };
+      const cmd = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75, y2: 175 } as unknown as SVGCommand;
       
       const coords = getControlPoint2(cmd);
       
@@ -157,7 +157,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return zero coordinates for command without control point 2', () => {
-      const cmd: SVGCommand = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 };
+      const cmd = { code: 'Q', x: 100, y: 200, x1: 50, y1: 150 } as unknown as SVGCommand;
       
       const coords = getControlPoint2(cmd);
       
@@ -166,7 +166,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should handle command with partial control point 2', () => {
-      const cmd: SVGCommand = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75 };
+      const cmd = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75 } as unknown as SVGCommand;
       
       const coords = getControlPoint2(cmd);
       
@@ -177,7 +177,7 @@ describe('SVG Command Helpers Unit', () => {
 
   describe('getCommandValue', () => {
     it('should extract existing property value', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100, y: 200 };
+      const cmd = { code: 'M', x: 100, y: 200 } as unknown as SVGCommand;
       
       const xValue = getCommandValue(cmd, 'x');
       const yValue = getCommandValue(cmd, 'y');
@@ -189,7 +189,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should return undefined for non-existent property', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100, y: 200 };
+      const cmd = { code: 'M', x: 100, y: 200 } as unknown as SVGCommand;
       
       const value = getCommandValue(cmd, 'nonexistent');
       
@@ -197,7 +197,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should handle commands with different properties', () => {
-      const cmd: SVGCommand = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75, y2: 175 };
+      const cmd = { code: 'C', x: 100, y: 200, x1: 50, y1: 150, x2: 75, y2: 175 } as unknown as SVGCommand;
       
       const x1Value = getCommandValue(cmd, 'x1');
       const y2Value = getCommandValue(cmd, 'y2');
@@ -209,7 +209,7 @@ describe('SVG Command Helpers Unit', () => {
 
   describe('Integration Tests', () => {
     it('should work with move command', () => {
-      const cmd: SVGCommand = { code: 'M', x: 100, y: 200 };
+      const cmd = { code: 'M', x: 100, y: 200 } as unknown as SVGCommand;
       
       expect(hasCoordinates(cmd)).toBe(true);
       expect(getCommandCoords(cmd)).toEqual({ x: 100, y: 200 });
@@ -218,7 +218,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should work with line command', () => {
-      const cmd: SVGCommand = { code: 'L', x: 150, y: 250 };
+      const cmd = { code: 'L', x: 150, y: 250 } as unknown as SVGCommand;
       
       expect(hasCoordinates(cmd)).toBe(true);
       expect(getCommandCoords(cmd)).toEqual({ x: 150, y: 250 });
@@ -227,7 +227,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should work with quadratic bezier command', () => {
-      const cmd: SVGCommand = { code: 'Q', x: 200, y: 300, x1: 150, y1: 250 };
+      const cmd = { code: 'Q', x: 200, y: 300, x1: 150, y1: 250 } as unknown as SVGCommand;
       
       expect(hasCoordinates(cmd)).toBe(true);
       expect(getCommandCoords(cmd)).toEqual({ x: 200, y: 300 });
@@ -237,7 +237,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should work with cubic bezier command', () => {
-      const cmd: SVGCommand = { code: 'C', x: 300, y: 400, x1: 200, y1: 300, x2: 250, y2: 350 };
+      const cmd = { code: 'C', x: 300, y: 400, x1: 200, y1: 300, x2: 250, y2: 350 } as unknown as SVGCommand;
       
       expect(hasCoordinates(cmd)).toBe(true);
       expect(getCommandCoords(cmd)).toEqual({ x: 300, y: 400 });
@@ -248,7 +248,7 @@ describe('SVG Command Helpers Unit', () => {
     });
 
     it('should work with close path command', () => {
-      const cmd: SVGCommand = { code: 'Z' };
+      const cmd = { code: 'Z' } as unknown as SVGCommand;
       
       expect(hasCoordinates(cmd)).toBe(false);
       expect(getCommandCoords(cmd)).toEqual({ x: 0, y: 0 });

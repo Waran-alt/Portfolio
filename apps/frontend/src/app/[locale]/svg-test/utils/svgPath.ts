@@ -120,9 +120,13 @@ export function formatCommandsToPath(commands: SVGCommand[]): string {
 
   for (const cmd of commands) {
     const code = cmd.code; // Preserve original case as provided
-    // The svg-path-parser Command type is a discriminated union where available properties vary per command (M/L have x,y; H has x; V has y; etc.). Using exhaustive type guards here would add a lot of boilerplate and obscure the core formatting logic. We keep this localized `any` cast with an eslint disable to keep the function simple and readable while remaining safe in practice because each branch only accesses properties valid for that command.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const c = cmd as any; // Simple union escape hatch for TS
+    // The svg-path-parser Command type is a discriminated union where available properties vary per command.
+    // To keep code clear without broad 'any', use a typed unknown cast and narrow per usage.
+    type CommandFields = {
+      x?: number; y?: number; x1?: number; y1?: number; x2?: number; y2?: number;
+      rx?: number; ry?: number; xAxisRotation?: number; largeArc?: boolean; sweep?: boolean;
+    };
+    const c = cmd as unknown as SVGCommand & CommandFields;
     const out: string[] = [code];
 
     switch (code.toUpperCase()) {
@@ -160,8 +164,8 @@ export function formatCommandsToPath(commands: SVGCommand[]): string {
         // rx,ry xAxisRotation largeArc sweep x,y
         out.push(pair(c.rx, c.ry));
         out.push(num(c.xAxisRotation));
-        out.push(String(+c.largeArc));
-        out.push(String(+c.sweep));
+        out.push(String(+(c.largeArc ?? false)));
+        out.push(String(+(c.sweep ?? false)));
         out.push(pair(c.x, c.y));
         break;
       }
@@ -171,9 +175,10 @@ export function formatCommandsToPath(commands: SVGCommand[]): string {
       default: {
         // Unknown commands: best-effort include any known numeric props in a stable order
         const extras: Array<string> = [];
-        const keys = ['x1','y1','x2','y2','rx','ry','xAxisRotation','largeArc','sweep','x','y'];
+        const keys = ['x1','y1','x2','y2','rx','ry','xAxisRotation','largeArc','sweep','x','y'] as const;
+        const rec = c as unknown as Record<string, unknown>;
         for (const k of keys) {
-          const v = c[k];
+          const v = rec[k as string];
           if (typeof v === 'number') {
             if (k === 'x' || k === 'y') continue; // handled by pair below if both exist
             extras.push(num(v));

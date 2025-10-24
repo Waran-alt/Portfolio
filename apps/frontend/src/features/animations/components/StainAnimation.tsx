@@ -15,7 +15,7 @@
 
 'use client';
 
-import { type StainConfig } from '@/constants';
+import { type BubblingConfig as StainConfig } from '@/constants';
 import { animationLogger, componentLogger } from '@/utils/logger';
 import { useEffect, useRef, useState } from 'react';
 
@@ -237,7 +237,7 @@ export default function StainAnimation({
       animation: `stainFloat ${duration}s ease-in-out ${delay}s infinite`,
       transform,
       zIndex: config.zIndex
-    };
+    } as React.CSSProperties;
   };
 
   // Don't render if not active
@@ -275,7 +275,7 @@ export default function StainAnimation({
                 cy={config.gradient.cy}
                 r={config.gradient.r}
               >
-                {config.gradient.stops.map((stop, index) => (
+                {config.gradient.stops.map((stop: { offset: string; color: string }, index: number) => (
                   <stop
                     key={index}
                     offset={stop.offset}

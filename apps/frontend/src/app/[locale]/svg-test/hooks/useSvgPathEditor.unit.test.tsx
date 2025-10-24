@@ -119,6 +119,74 @@ describe('useSvgPathEditor', () => {
     // The updated x should be present in the rebuilt path string
     expect(after).toContain(`${newX},`);
   });
+
+  it('keeps relative command casing and uses deltas when updating a said point', () => {
+    // Path with a relative quadratic segment at index 2
+    const relPath = 'M 100,200 Q 200,100 300,200 q 25,-50 50,0';
+    const { result } = renderHook(() => useSvgPathEditor(relPath));
+
+    // Extract points first
+    act(() => {
+      result.current.regeneratePointsFromPath(result.current.pathString);
+    });
+
+    // Move the control point of the relative q segment (index 2) from (325,150) to (330,150)
+    // This should change the delta from 25 to 30 while keeping lowercase 'q'
+    act(() => {
+      result.current.setPoints(prev => prev.map(p => p.id === 'pt-2-q1' ? { ...p, x: 330 } : p));
+    });
+    act(() => {
+      (result.current as any).updatePathFromPointsForPoint('pt-2-q1');
+    });
+
+    const out = result.current.pathString;
+    expect(out).toMatch(/ q /); // still relative
+    expect(out).toContain('q 30,-50 50,0'); // deltas relative to previous endpoint (300,200)
+  });
+  
+  it('keeps relative command intact when updating a different command', () => {
+    const relPath = 'M 100,200 Q 200,100 300,200 q 25,-50 50,0';
+    const { result } = renderHook(() => useSvgPathEditor(relPath));
+
+    act(() => {
+      result.current.regeneratePointsFromPath(result.current.pathString);
+    });
+
+    // Move a point from the absolute Q segment (index 1), not the relative q (index 2)
+    act(() => {
+      result.current.setPoints(prev => prev.map(p => p.id === 'pt-1-q1' ? { ...p, x: 210 } : p));
+    });
+    act(() => {
+      (result.current as any).updatePathFromPointsForPoint('pt-1-q1');
+    });
+
+    const out = result.current.pathString;
+    // Relative command remains lowercase and deltas unchanged
+    expect(out).toMatch(/ q /);
+    expect(out).toContain('q 25,-50 50,0');
+  });
+
+  it('keeps absolute command casing and uses absolute coords when updating a single point', () => {
+    // Absolute quadratic at index 1
+    const absPath = 'M 100,200 Q 200,100 300,200 q 25,-50 50,0';
+    const { result } = renderHook(() => useSvgPathEditor(absPath));
+
+    act(() => {
+      result.current.regeneratePointsFromPath(result.current.pathString);
+    });
+
+    // Move control point of absolute Q (index 1) from (200,100) to (210,100)
+    act(() => {
+      result.current.setPoints(prev => prev.map(p => p.id === 'pt-1-q1' ? { ...p, x: 210 } : p));
+    });
+    act(() => {
+      (result.current as any).updatePathFromPointsForPoint('pt-1-q1');
+    });
+
+    const out = result.current.pathString;
+    expect(out).toMatch(/ Q /); // still absolute
+    expect(out).toContain('Q 210,100 300,200'); // absolute updated, end unchanged
+  });
 });
 
 
