@@ -1,22 +1,13 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('HomePage E2E', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/en', { waitUntil: 'networkidle' });
+test.describe('LandingPage E2E', () => {
+  test('renders landing with rotating cube', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' });
     await page.waitForLoadState('domcontentloaded');
-  });
 
-  test('renders heading and content, overlay and animations present', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /portfolio/i })).toBeVisible();
-    await expect(page.getByText(/Multiple animations running in parallel/i)).toBeVisible();
-
-    // Overlay menu should be mounted (uses ClientOnly)
-    // Avoid brittle selectors; presence of settings/controls button indicates overlay
-    await expect(page.getByRole('button', { name: /settings|menu/i })).toBeVisible();
-
-    // Background and content classes present
-    await expect(page.locator('.HomePage-background')).toBeVisible();
-    await expect(page.locator('.HomePage-content')).toBeVisible();
+    await expect(page.getByTestId('landing-root')).toBeVisible();
+    await expect(page.getByTestId('cube-wrapper')).toBeVisible();
+    await expect(page.getByTestId('cube')).toBeVisible();
   });
 });
 
