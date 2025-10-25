@@ -5,6 +5,7 @@
   transform-style: preserve-3d;
   animation: cube-rotate 18s linear infinite;
   transition: transform 200ms ease-out;
+  animation-name: cube-rotate;
 }
 
 .followWrapper {

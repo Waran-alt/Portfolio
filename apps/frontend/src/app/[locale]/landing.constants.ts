@@ -9,3 +9,9 @@ export const NEAR_ZERO_EPS = 0.2;      // Threshold to consider angles/velocity 
 
 export const PERSPECTIVE_PX = 800;     // Perspective distance in px
 
+// Auto-rotation speed ramp (Web Animations API)
+export const WAAPI_BASE_RATE = 0.1;       // 1x base speed
+export const WAAPI_MAX_RATE = 1;        // up to 3x speed
+export const WAAPI_RAMP_MS = 2500;      // ramp duration in ms
+export const WAAPI_EASE = { x1: 0.22, y1: 1, x2: 0.36, y2: 1 }; // ease-out expo-like
+
