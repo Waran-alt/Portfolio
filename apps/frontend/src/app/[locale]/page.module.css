@@ -4,6 +4,12 @@
   height: 160px;
   transform-style: preserve-3d;
   animation: cube-rotate 18s linear infinite;
+  transition: transform 200ms ease-out;
+}
+
+.followWrapper {
+  transform-style: preserve-3d;
+  transition: transform 200ms ease-out;
 }
 
 .cubeFace {
@@ -43,4 +49,8 @@
   to {
     transform: rotateX(360deg) rotateY(360deg);
   }
+}
+
+.paused {
+  animation-play-state: paused;
 }
