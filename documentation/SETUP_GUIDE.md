@@ -16,7 +16,7 @@ docker-compose --version
 git clone <your-repo-url>
 cd Portfolio
 
-# Set up environment files from templates
+# Set up environment from template (single .env for now)
 # Option 1: Using Makefile (recommended)
 make setup-env
 
@@ -26,10 +26,9 @@ make setup-env
 # Option 3: Manually
 cp documentation/env-templates/env.example .env
 
-# Edit the environment files with your configuration
-# At minimum, set secure passwords for:
-# - POSTGRES_PASSWORD (in .env.postgres)
-# - JWT_SECRET (in .env.backend)
+# Edit the generated .env with your configuration
+# At minimum, set secure values for POSTGRES_PASSWORD and JWT_SECRET
+# Note: A single .env is used today. The project may adopt per-service .env files later.
 ```
 
 ### 3. Start Development Environment
@@ -38,8 +37,8 @@ make dev  # Start all services in development mode
 ```
 
 ### 4. Access Your Application
-- **Frontend**: ${NGINX_URL} (via Nginx with HTTPS)
-- **Backend API**: ${NGINX_URL}/api (via Nginx with HTTPS)
+- **Frontend (via proxy)**: ${NGINX_URL}
+- **Backend API (via proxy)**: ${NGINX_URL}/api
 - **Direct Frontend**: ${NGINX_URL}:${FRONTEND_PORT} (development only)
 - **Direct Backend**: ${NGINX_URL}:${BACKEND_PORT} (development only)
 - **Database**: ${NGINX_URL}:${POSTGRES_PORT}

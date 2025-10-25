@@ -39,10 +39,11 @@ The application consists of four main services:
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd portfolio
+cd Portfolio
 
-# Copy environment file and configure
-cp env.example .env
+# Copy environment file from documentation and configure
+cp documentation/env-templates/env.example .env
+# Or use the helper: make setup-env
 # Edit .env with your configuration
 ```
 
@@ -56,8 +57,10 @@ docker-compose up -d
 docker-compose logs -f
 
 # Access the application
-# Frontend: ${NGINX_URL}:${FRONTEND_PORT}
-# Backend API: ${NGINX_URL}:${BACKEND_PORT}
+# Frontend (via proxy): ${NGINX_URL}
+# Backend API (via proxy): ${NGINX_URL}/api
+# Direct Frontend (dev only): ${NGINX_URL}:${FRONTEND_PORT}
+# Direct Backend (dev only): ${NGINX_URL}:${BACKEND_PORT}
 # Nginx: ${NGINX_URL}
 ```
 
@@ -75,7 +78,7 @@ docker-compose -f docker-compose.prod.yml logs -f
 
 ### Required Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory with the following variables (example values shown):
 
 ```bash
 # Database
@@ -89,8 +92,9 @@ NODE_ENV=development
 BACKEND_PORT=4000
 
 # Frontend
+# Set NGINX_URL to your proxy origin once, then derive API URL from it
+NGINX_URL=https://localhost
 NEXT_PUBLIC_API_URL=${NGINX_URL}/api
-NGINX_URL=${NGINX_URL}
 ```
 
 See `env.example` for complete configuration options.
@@ -208,9 +212,12 @@ DEBUG=false
 LOG_LEVEL=error
 
 # Your domain configuration
-NEXT_PUBLIC_API_URL=https://focus-on-pixel.com/api
-NEXT_PUBLIC_FRONTEND_URL=https://focus-on-pixel.com
-FRONTEND_URL=https://focus-on-pixel.com
+NGINX_URL=https://focus-on-pixel.com
+NEXT_PUBLIC_API_URL=${NGINX_URL}/api
+# If you need an explicit public-only URL in the client, keep NEXT_PUBLIC_FRONTEND_URL aligned
+NEXT_PUBLIC_FRONTEND_URL=${NGINX_URL}
+# Server-side-only URL if needed in backend config
+FRONTEND_URL=${NGINX_URL}
 ```
 
 ## 📊 Monitoring and Logging

@@ -103,9 +103,9 @@ Portfolio/
 ## 🛠️ Technology Stack
 
 ### Frontend Stack
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 15.3.5 (App Router)
 - **Language**: TypeScript 5.8+
-- **Styling**: Tailwind CSS 4.1+
+- **Styling**: Tailwind CSS 4.1.11
 - **UI Components**: 
   - Framer Motion (animations)
   - Lucide React (icons)
@@ -119,16 +119,16 @@ Portfolio/
 - **Runtime**: Node.js 22+
 - **Framework**: Express 5.1+
 - **Language**: TypeScript 5.8+
-- **Database**: PostgreSQL 15 (Alpine)
+- **Database**: PostgreSQL 17 (Alpine)
 - **Authentication**: JWT
 - **Validation**: Zod
 - **Testing**: Mocha + Chai
 - **Development**: tsx (hot reload)
 
 ### DevOps & Tools
-- **Package Manager**: Yarn 4.9+ (PnP)
+- **Package Manager**: Yarn 4.9.2 (PnP)
 - **Containerization**: Docker + Docker Compose
-- **Reverse Proxy**: Nginx
+- **Reverse Proxy**: Nginx 1.29 (Alpine)
 - **Process Management**: PM2 (production)
 - **Code Quality**: 
   - ESLint 9.30+
@@ -149,8 +149,10 @@ make shell-database         # Database shell
 ```
 
 ### Service URLs
-- **Frontend**: ${NGINX_URL}:${FRONTEND_PORT}
-- **Backend API**: ${NGINX_URL}:${BACKEND_PORT}
+- **Frontend (via proxy)**: ${NGINX_URL}
+- **Backend API (via proxy)**: ${NGINX_URL}/api
+- **Direct Frontend (dev only)**: ${NGINX_URL}:${FRONTEND_PORT}
+- **Direct Backend (dev only)**: ${NGINX_URL}:${BACKEND_PORT}
 - **Nginx Proxy**: ${NGINX_URL}
 - **Database**: ${NGINX_URL}:${POSTGRES_PORT}
 

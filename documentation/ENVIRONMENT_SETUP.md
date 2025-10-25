@@ -2,13 +2,15 @@
 
 ## Overview
 
-This project uses a **single, comprehensive environment file** (`.env`) that contains all environment variables for the entire application stack. This approach simplifies configuration management and ensures consistency across all services.
+This project currently uses a **single, comprehensive environment file** (`.env`) that contains all environment variables for the entire application stack. This simplifies configuration management today and ensures consistency across all services.
+
+**Note on future evolution**: The project may adopt per-service environment files (e.g., `.env.frontend`, `.env.backend`, `.env.postgres`) later. When that change happens, templates will be added under `documentation/env-templates/` and the `scripts/setup-env.sh` flow will be updated accordingly. Until then, configure the single `.env` file generated from `documentation/env-templates/env.example`.
 
 **Important**: The frontend communicates with the backend through Nginx reverse proxy, not directly. API calls should go to `/api/*` endpoints which Nginx routes to the backend service.
 
 ## Quick Start
 
-1. **Generate environment file**:
+1. **Generate environment file** (from `documentation/env-templates/env.example`):
    ```bash
    ./scripts/setup-env.sh
    ```
@@ -31,10 +33,13 @@ Browser → Nginx (${NGINX_URL}:443/api/*) → Backend (${NGINX_URL}:${BACKEND_P
 - **Why**: Nginx handles routing `/api/*` requests to the backend service
 
 ### Environment Variables
-- `NEXT_PUBLIC_API_URL`: Points to Nginx proxy (e.g., `${NGINX_URL}/api/v1`)
-- `NGINX_URL`: Single URL for accessing both frontend and backend through Nginx
+- `NGINX_URL`: Single origin for accessing both frontend and backend through Nginx (e.g., `https://localhost` in dev)
+- `NEXT_PUBLIC_API_URL`: Should point to the proxyed API path (e.g., `${NGINX_URL}/api` or `${NGINX_URL}/api/v1`)
 - **Do NOT use**: Direct backend URLs with ports in frontend environment
 - **Use**: Nginx proxy URLs for all API communication
+
+### AI Assistant Access Policy
+- The `.env` file exists locally but is not accessible to AI assistants. Assistants will reference only the example templates under `documentation/env-templates/` and this guide.
 
 ## Setup Script Options
 
@@ -123,7 +128,7 @@ All environment variables are validated using Zod schemas in each service's `con
 - Never commit `.env` files to version control
 - Use `documentation/env-templates/env.example` for documentation
 - Validate all environment variables at startup
-- Use a single file to limit exposure and simplify management
+- Use a single file today to limit exposure and simplify management; if the project moves to multiple `.env.*` files later, ensure each service validates its own variables.
 
 ## Development Workflow
 
