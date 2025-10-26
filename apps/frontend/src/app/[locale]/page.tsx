@@ -3,10 +3,11 @@
 /**
  * @file Landing Page
  *
- * Interactive 3D cube that auto-rotates with mouse-follow behavior:
- * - Auto-rotation speed ramps up via cubic-bezier over time (WAAPI)
- * - Mouse movement pauses auto-rotation and cube follows cursor with inertia
- * - After 2s idle, resumes auto-rotation from current orientation at base speed
+ * Interactive 3D cube animation with pure JavaScript quaternion-based rotation:
+ * - Frame-rate independent animation using deltaTime calculations
+ * - Auto-rotates continuously when idle
+ * - Follows cursor on mouse movement using SLERP interpolation
+ * - Resumes auto-rotation after IDLE_TIMEOUT_MS of no cursor movement
  * - All parameters configurable in landing.constants.ts
  */
 
@@ -18,6 +19,7 @@ import {
   IDLE_TIMEOUT_MS,
   MIN_ROTATION_ANGLE_RAD,
   PERSPECTIVE_PX,
+  QUATERNION_TOLERANCE,
   SAFE_MAGNITUDE,
   SLERP_INTERPOLATION_FACTOR,
   TARGET_FPS
@@ -55,20 +57,25 @@ const quat_normalize = (q: quat): quat => {
 
   /**
  * Performs spherical linear interpolation between two quaternions.
- * @param q1 The starting quaternion.
- * @param q2 The ending quaternion.
- * @param t Interpolation factor (0 to 1).
+ * 
+ * @param q1 The starting quaternion [w, x, y, z]
+ * @param q2 The ending quaternion [w, x, y, z]
+ * @param t Interpolation factor (0 to 1), where 0 = q1 and 1 = q2
+ * @returns Interpolated quaternion smoothly transitioning from q1 to q2
  */
 const quat_slerp = (q1: quat, q2: quat, t: number): quat => {
+    // Calculate angle between quaternions using dot product
     let cosTheta = quat_dot(q1, q2);
 
+    // Handle negative dot product by flipping q2 for shortest path
     let q2_ = [...q2] as quat;
     if (cosTheta < 0) {
         cosTheta = -cosTheta;
         q2_ = [-q2[0], -q2[1], -q2[2], -q2[3]];
     }
 
-    if (cosTheta > 0.9995) { // QUATERNION_TOLERANCE
+    // If quaternions are very close (cosTheta > tolerance), use linear interpolation
+    if (cosTheta > QUATERNION_TOLERANCE) {
         return quat_normalize([
             q1[0] + t * (q2_[0] - q1[0]),
             q1[1] + t * (q2_[1] - q1[1]),
@@ -77,6 +84,7 @@ const quat_slerp = (q1: quat, q2: quat, t: number): quat => {
         ]);
     }
 
+    // Perform spherical interpolation for smooth rotation
     const theta = Math.acos(cosTheta);
     const sinTheta = Math.sin(theta);
     const scale1 = Math.sin((1 - t) * theta) / sinTheta;
@@ -137,8 +145,15 @@ export default function LandingPage() {
     let rafId: number | null = null;
     let lastTime = 0; // Track last frame timestamp for deltaTime calculation
 
+    /**
+     * Main animation loop: runs continuously using requestAnimationFrame.
+     * Implements frame-rate independent animation using deltaTime.
+     * 
+     * @param time Current timestamp from requestAnimationFrame (milliseconds)
+     */
     const step = (time: number) => {
       // Calculate deltaTime for frame-rate independent animation
+      // First frame: initialize lastTime
       if (lastTime === 0) {
         lastTime = time;
       }
@@ -146,13 +161,15 @@ export default function LandingPage() {
       lastTime = time;
 
       if (followingRef.current) {
-        // --- Follow Mode ---
-        // Interpolate towards the target quaternion (time-based for consistency across refresh rates)
+        // --- Follow Mode: Cursor-Following Animation ---
+        // Interpolate current quaternion towards target quaternion using SLERP
+        // Scale interpolation by deltaTime * TARGET_FPS for consistent speed across all refresh rates
         const interpolationFactor = Math.min(SLERP_INTERPOLATION_FACTOR * deltaTime * TARGET_FPS, 1);
         currentQuatRef.current = quat_slerp(currentQuatRef.current, targetQuatRef.current, interpolationFactor);
       } else {
-        // --- Auto-Rotation Mode ---
-        // Apply time-scaled rotation for consistent speed across all frame rates
+        // --- Auto-Rotation Mode: Continuous Rotation ---
+        // Apply small rotation each frame, scaled by deltaTime for frame-rate independence
+        // Rotates around both X and Y axes simultaneously for complex motion
         const rotationX = quat_fromAxisAngle([1, 0, 0], AUTO_ROTATION_SPEED * deltaTime);
         const rotationY = quat_fromAxisAngle([0, 1, 0], AUTO_ROTATION_SPEED * deltaTime);
         const autoRotationQuat = quat_multiply(rotationX, rotationY);
@@ -168,45 +185,64 @@ export default function LandingPage() {
 
     rafId = requestAnimationFrame(step);
 
+    /**
+     * Mouse move handler: Calculates target quaternion to align front face with cursor.
+     * 
+     * Algorithm:
+     * 1. Project cursor position into 3D space (relative to viewport center)
+     * 2. Normalize to create direction vector
+     * 3. Calculate rotation axis and angle to align front face (0,0,1) with cursor vector
+     * 4. Convert to quaternion for smooth interpolation
+     */
     const handleMove = (e: MouseEvent) => {
       setFollowing(true);
 
+      // Get viewport dimensions and center point
       const vw = window.innerWidth || 1;
       const vh = window.innerHeight || 1;
       const cx = vw / 2;
       const cy = vh / 2;
       
+      // Calculate cursor offset from center
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
 
+      // Project cursor into 3D space using perspective depth
       const zDepth = PERSPECTIVE_PX * CURSOR_Z_DEPTH_MULTIPLIER;
       const targetVec = { x: dx, y: dy, z: zDepth };
+      
+      // Normalize vector to get pure direction
       const mag = Math.sqrt(targetVec.x**2 + targetVec.y**2 + targetVec.z**2) || SAFE_MAGNITUDE;
       const normTargetVec = { x: targetVec.x / mag, y: targetVec.y / mag, z: targetVec.z / mag };
 
-      // The front face of the cube points along the positive Z-axis in its local space.
+      // Front face points along positive Z-axis in cube's local space
       const frontVec = { x: 0, y: 0, z: FRONT_FACE_Z };
 
-      // Calculate the rotation needed to align the front vector with the target vector.
+      // Calculate rotation angle using dot product (angle between vectors)
       const dot = frontVec.x * normTargetVec.x + frontVec.y * normTargetVec.y + frontVec.z * normTargetVec.z;
       const angle = Math.acos(dot);
 
+      // Skip if rotation angle is too small (already aligned)
       if (Math.abs(angle) < MIN_ROTATION_ANGLE_RAD) {
         targetQuatRef.current = currentQuatRef.current; // No rotation needed
         return;
       }
       
+      // Calculate rotation axis using cross product (perpendicular to both vectors)
       const axis = {
         x: frontVec.y * normTargetVec.z - frontVec.z * normTargetVec.y,
         y: frontVec.z * normTargetVec.x - frontVec.x * normTargetVec.z,
         z: frontVec.x * normTargetVec.y - frontVec.y * normTargetVec.x,
       };
       
+      // Normalize rotation axis
       const axisMag = Math.sqrt(axis.x**2 + axis.y**2 + axis.z**2) || SAFE_MAGNITUDE;
       const normAxis: [number, number, number] = [axis.x / axisMag, axis.y / axisMag, axis.z / axisMag];
       
+      // Convert axis-angle representation to quaternion
       targetQuatRef.current = quat_fromAxisAngle(normAxis, angle);
 
+      // Reset idle timer: resume auto-rotation after IDLE_TIMEOUT_MS of no movement
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
       timeoutRef.current = window.setTimeout(() => {
         setFollowing(false);
