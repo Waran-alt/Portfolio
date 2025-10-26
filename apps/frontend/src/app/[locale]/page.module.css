@@ -3,14 +3,11 @@
   width: 160px;
   height: 160px;
   transform-style: preserve-3d;
-  animation: cube-rotate 18s linear infinite;
-  transition: transform 200ms ease-out;
-  animation-name: cube-rotate;
 }
 
 .followWrapper {
   transform-style: preserve-3d;
-  transition: transform 200ms ease-out;
+  transition: transform 0.1s ease-out; /* Smooth transition for mouse follow */
 }
 
 .cubeFace {
@@ -25,7 +22,9 @@
 }
 
 .cubeFront {
-  transform: translateZ(80px);
+  transform: rotateY(0deg) translateZ(80px);
+  background: #374151; /* gray-700, slightly lighter for distinction */
+  border-color: #9ca3af; /* gray-400 */
 }
 .cubeBack {
   transform: rotateY(180deg) translateZ(80px);
@@ -41,15 +40,6 @@
 }
 .cubeBottom {
   transform: rotateX(-90deg) translateZ(80px);
-}
-
-@keyframes cube-rotate {
-  from {
-    transform: rotateX(0deg) rotateY(0deg);
-  }
-  to {
-    transform: rotateX(360deg) rotateY(360deg);
-  }
 }
 
 .paused {

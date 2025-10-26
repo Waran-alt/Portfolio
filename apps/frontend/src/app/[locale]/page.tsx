@@ -12,109 +12,192 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
+  AUTO_ROTATION_SPEED,
   IDLE_TIMEOUT_MS,
-  INERTIA_DAMPING,
-  INERTIA_STIFFNESS,
-  INERTIA_TICK_MS,
   PERSPECTIVE_PX,
-  ROTATION_MAX_DEG,
-  WAAPI_BASE_RATE,
-  WAAPI_EASE,
-  WAAPI_MAX_RATE,
-  WAAPI_RAMP_MS
+  SLERP_INTERPOLATION_FACTOR,
 } from './landing.constants';
 import styles from './page.module.css';
 
+// --- Quaternion Math ---
+// All quaternions are in [w, x, y, z] order as requested.
+
+type quat = [number, number, number, number];
+
+/** Creates an identity quaternion. */
+const quat_create = (): quat => [1, 0, 0, 0];
+
+/**
+ * Creates a quaternion from an axis and an angle.
+ * @param axis The axis of rotation.
+ * @param angle The angle in radians.
+ */
+const quat_fromAxisAngle = (axis: [number, number, number], angle: number): quat => {
+    const halfAngle = angle / 2;
+    const s = Math.sin(halfAngle);
+    return [Math.cos(halfAngle), axis[0] * s, axis[1] * s, axis[2] * s];
+};
+
+/** Calculates the dot product of two quaternions. */
+const quat_dot = (a: quat, b: quat): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+
+/** Normalizes a quaternion. */
+const quat_normalize = (q: quat): quat => {
+    const len = Math.sqrt(quat_dot(q, q));
+    if (len === 0) return [1, 0, 0, 0];
+    return [q[0] / len, q[1] / len, q[2] / len, q[3] / len];
+};
+
+/**
+ * Performs spherical linear interpolation between two quaternions.
+ * @param q1 The starting quaternion.
+ * @param q2 The ending quaternion.
+ * @param t Interpolation factor (0 to 1).
+ */
+const quat_slerp = (q1: quat, q2: quat, t: number): quat => {
+    let cosTheta = quat_dot(q1, q2);
+
+    let q2_ = [...q2] as quat;
+    if (cosTheta < 0) {
+        cosTheta = -cosTheta;
+        q2_ = [-q2[0], -q2[1], -q2[2], -q2[3]];
+    }
+
+    if (cosTheta > 0.9995) {
+        return quat_normalize([
+            q1[0] + t * (q2_[0] - q1[0]),
+            q1[1] + t * (q2_[1] - q1[1]),
+            q1[2] + t * (q2_[2] - q1[2]),
+            q1[3] + t * (q2_[3] - q1[3]),
+        ]);
+    }
+
+    const theta = Math.acos(cosTheta);
+    const sinTheta = Math.sin(theta);
+    const scale1 = Math.sin((1 - t) * theta) / sinTheta;
+    const scale2 = Math.sin(t * theta) / sinTheta;
+
+    return [
+        q1[0] * scale1 + q2_[0] * scale2,
+        q1[1] * scale1 + q2_[1] * scale2,
+        q1[2] * scale1 + q2_[2] * scale2,
+        q1[3] * scale1 + q2_[3] * scale2,
+    ];
+};
+
+/** Converts a quaternion to a CSS `matrix3d()` string. */
+const quat_toMatrix3d = (q: quat): string => {
+    const [w, x, y, z] = q;
+    const x2 = x * x, y2 = y * y, z2 = z * z;
+    const wx = w * x, wy = w * y, wz = w * z;
+    const xy = x * y, xz = x * z, yz = y * z;
+
+    const m = [
+        1 - 2 * (y2 + z2), 2 * (xy + wz), 2 * (xz - wy), 0,
+        2 * (xy - wz), 1 - 2 * (x2 + z2), 2 * (yz + wx), 0,
+        2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (x2 + y2), 0,
+        0, 0, 0, 1
+    ];
+    return `matrix3d(${m.join(',')})`;
+};
+
+/** Multiplies two quaternions. */
+const quat_multiply = (q1: quat, q2: quat): quat => {
+    const [w1, x1, y1, z1] = q1;
+    const [w2, x2, y2, z2] = q2;
+    return [
+        w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+        w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+        w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+        w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,
+    ];
+};
+
+
 export default function LandingPage() {
-  // Follow state: true when following mouse, false during auto-rotation
   const [following, setFollowing] = useState(false);
-  
-  // Refs for DOM elements and timers
   const timeoutRef = useRef<number | null>(null);
-  const wrapperRef = useRef<HTMLDivElement | null>(null); // perspective wrapper
-  const innerRef = useRef<HTMLDivElement | null>(null);   // element receiving transform
-  const cubeRef = useRef<HTMLDivElement | null>(null);    // element with CSS animation
-  
-  // WAAPI controller: manages auto-rotation speed ramp via playbackRate
-  const waapi = useRef<{ anim: Animation | null; start: number; raf: number | null; restart: (() => void) | null } | null>({ anim: null, start: 0, raf: null, restart: null });
+  const innerRef = useRef<HTMLDivElement | null>(null);
 
-  // Inertial follow system: smooth cursor tracking with spring physics
-  // Uses refs to avoid 60fps React re-renders during animation
-  const targetRef = useRef({ x: 0, y: 0 });     // Target angles from cursor position
-  const currentRef = useRef({ x: 0, y: 0 });    // Current angles (smoothed)
-  const velocityRef = useRef({ x: 0, y: 0 });   // Velocity for spring damping
-  const intervalIdRef = useRef<number | null>(null); // Stepped animation timer
+  // --- Quaternion-based Animation State ---
+  const targetQuatRef = useRef<quat>(quat_create());
+  const currentQuatRef = useRef<quat>(quat_create());
+  const followingRef = useRef(false); // Ref to use inside rAF loop
 
-  // Mouse follow effect: inertial tracking with spring physics
   useEffect(() => {
-    // Spring physics constants from config
-    const stiffness = INERTIA_STIFFNESS;
-    const damping = INERTIA_DAMPING;
-    const TICK_MS = INERTIA_TICK_MS;
+    followingRef.current = following;
+  }, [following]);
 
-    // Animation step: apply spring physics to smooth cursor following
+  useEffect(() => {
+    let rafId: number | null = null;
+    
+    // Create constant quaternions for auto-rotation
+    const rotationX = quat_fromAxisAngle([1, 0, 0], AUTO_ROTATION_SPEED);
+    const rotationY = quat_fromAxisAngle([0, 1, 0], AUTO_ROTATION_SPEED);
+    const autoRotationQuat = quat_multiply(rotationX, rotationY);
+
     const step = () => {
-      const current = currentRef.current;
-      const target = targetRef.current;
-      const velocity = velocityRef.current;
-
-      // Spring toward target with damping
-      const dx = target.x - current.x;
-      const dy = target.y - current.y;
-      velocity.x = velocity.x * damping + dx * stiffness;
-      velocity.y = velocity.y * damping + dy * stiffness;
-      current.x += velocity.x;
-      current.y += velocity.y;
-
-      // Apply transform to wrapper (preserves cube's CSS animation)
-      if (innerRef.current) {
-        innerRef.current.style.transform = `rotateX(${current.x}deg) rotateY(${current.y}deg)`;
+      if (followingRef.current) {
+        // --- Follow Mode ---
+        // Interpolate towards the target quaternion
+        currentQuatRef.current = quat_slerp(currentQuatRef.current, targetQuatRef.current, SLERP_INTERPOLATION_FACTOR);
+      } else {
+        // --- Auto-Rotation Mode ---
+        // Continuously apply a small rotation
+        currentQuatRef.current = quat_multiply(autoRotationQuat, currentQuatRef.current);
       }
+
+      if (innerRef.current) {
+        innerRef.current.style.transform = quat_toMatrix3d(currentQuatRef.current);
+      }
+
+      rafId = requestAnimationFrame(step);
     };
 
-    // Mouse move handler: convert cursor position to target rotation angles
+    rafId = requestAnimationFrame(step);
+
     const handleMove = (e: MouseEvent) => {
-      // Get viewport center as reference point
+      setFollowing(true);
+
       const vw = window.innerWidth || 1;
       const vh = window.innerHeight || 1;
       const cx = vw / 2;
       const cy = vh / 2;
       
-      // Calculate cursor offset from center
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
 
-      // Map cursor offset to rotation angles (clamped to max degrees)
-      const maxDeg = ROTATION_MAX_DEG;
-      const mappedY = Math.max(-maxDeg, Math.min(maxDeg, (dx / (vw / 2)) * maxDeg));
-      const mappedX = Math.max(-maxDeg, Math.min(maxDeg, (-dy / (vh / 2)) * maxDeg));
+      const zDepth = PERSPECTIVE_PX;
+      const targetVec = { x: dx, y: dy, z: zDepth };
+      const mag = Math.sqrt(targetVec.x**2 + targetVec.y**2 + targetVec.z**2) || 1;
+      const normTargetVec = { x: targetVec.x / mag, y: targetVec.y / mag, z: targetVec.z / mag };
 
-      // Update target angles and enter follow mode
-      targetRef.current.x = mappedX;
-      targetRef.current.y = mappedY;
-      setFollowing(true);
+      // The front face of the cube points along the positive Z-axis in its local space.
+      const frontVec = { x: 0, y: 0, z: 1 };
 
-      // Start inertial follow loop if not already running
-      if (!intervalIdRef.current) {
-        intervalIdRef.current = window.setInterval(step, TICK_MS);
+      // Calculate the rotation needed to align the front vector with the target vector.
+      const dot = frontVec.x * normTargetVec.x + frontVec.y * normTargetVec.y + frontVec.z * normTargetVec.z;
+      const angle = Math.acos(dot);
+
+      if (Math.abs(angle) < 0.001) {
+        targetQuatRef.current = currentQuatRef.current; // No rotation needed
+        return;
       }
+      
+      const axis = {
+        x: frontVec.y * normTargetVec.z - frontVec.z * normTargetVec.y,
+        y: frontVec.z * normTargetVec.x - frontVec.x * normTargetVec.z,
+        z: frontVec.x * normTargetVec.y - frontVec.y * normTargetVec.x,
+      };
+      
+      const axisMag = Math.sqrt(axis.x**2 + axis.y**2 + axis.z**2) || 1;
+      const normAxis: [number, number, number] = [axis.x / axisMag, axis.y / axisMag, axis.z / axisMag];
+      
+      targetQuatRef.current = quat_fromAxisAngle(normAxis, angle);
 
-      // Reset idle timer: resume auto-rotation after IDLE_TIMEOUT_MS
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
       timeoutRef.current = window.setTimeout(() => {
-        // Resume CSS animation from the CURRENT visual orientation by
-        // keeping the wrapper transform and letting the cube animation run on top
-        // clear follow-only state; CSS animation resumes, WAAPI restarts ramp
-        // Reset speed to base and restart WAAPI ramp
-        if (waapi.current?.anim) {
-          waapi.current.anim.playbackRate = WAAPI_BASE_RATE;
-        }
-        waapi.current?.restart?.();
         setFollowing(false);
-        if (intervalIdRef.current) {
-          window.clearInterval(intervalIdRef.current);
-          intervalIdRef.current = null;
-        }
       }, IDLE_TIMEOUT_MS);
     };
 
@@ -122,91 +205,22 @@ export default function LandingPage() {
     return () => {
       document.removeEventListener('mousemove', handleMove);
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-      if (intervalIdRef.current) window.clearInterval(intervalIdRef.current);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
-
-  // WAAPI Speed Ramp: gradually increase auto-rotation speed via cubic-bezier
-  useEffect(() => {
-    if (!cubeRef.current) return;
-
-    // Find the CSS animation (cube-rotate) on the cube element
-    const list = cubeRef.current.getAnimations();
-    const anim = list.length > 0 ? list[0] : null;
-    waapi.current = { anim: anim ?? null, start: performance.now(), raf: null, restart: null };
-
-    // Cubic-bezier evaluator: maps time t to easing curve y(t)
-    const cubicBezier = (_x1: number, y1: number, _x2: number, y2: number) => {
-      // Simplified cubic-bezier evaluation (x1,x2 unused for speed ramp)
-      return (t: number) => {
-        const u = 1 - t;
-        return u*u*u*0 + 3*u*u*t*y1 + 3*u*t*t*y2 + t*t*t*1;
-      };
-    };
-
-    // Create easing function from config
-    const ease = cubicBezier(WAAPI_EASE.x1, WAAPI_EASE.y1, WAAPI_EASE.x2, WAAPI_EASE.y2);
-
-    // Animation tick: update playbackRate along the bezier curve
-    const tick = () => {
-      if (!waapi.current?.anim) return;
-      
-      // Calculate progress (0 to 1) over ramp duration
-      const now = performance.now();
-      const elapsed = Math.min(1, (now - (waapi.current.start)) / WAAPI_RAMP_MS);
-      
-      // Apply easing and interpolate between base and max rate
-      const s = ease(elapsed);
-      const rate = WAAPI_BASE_RATE + (WAAPI_MAX_RATE - WAAPI_BASE_RATE) * s;
-      
-      // Update CSS animation playback rate
-      if (waapi.current.anim) {
-        waapi.current.anim.playbackRate = rate;
-      }
-      
-      // Continue until ramp completes
-      if (elapsed < 1) {
-        waapi.current.raf = requestAnimationFrame(tick);
-      } else {
-        waapi.current.raf = null;
-      }
-    };
-
-    // Define restart to reset ramp from base speed
-    waapi.current.restart = () => {
-      if (!waapi.current) return;
-      waapi.current.start = performance.now();
-      if (waapi.current.anim) {
-        waapi.current.anim.playbackRate = WAAPI_BASE_RATE;
-      }
-      if (waapi.current.raf) cancelAnimationFrame(waapi.current.raf);
-      waapi.current.raf = requestAnimationFrame(tick);
-    };
-
-    // Kick initial ramp
-    waapi.current.restart();
-
-    return () => {
-      if (waapi.current?.raf) cancelAnimationFrame(waapi.current.raf);
-      waapi.current = null;
-    };
-  }, []);
-
-  // No inline wrapper style - transforms applied directly via inertial loop
-  const wrapperStyle = undefined;
 
   return (
     <main className="LandingPage min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-700" data-testid="landing-root">
-      <div className="relative" style={{ perspective: `${PERSPECTIVE_PX}px` }} data-testid="cube-wrapper" ref={wrapperRef}>
-        <div className={styles['followWrapper']} ref={innerRef} style={wrapperStyle}>
-          <div className={`${styles['cube']} ${following ? styles['paused'] : ''}`} data-testid="cube" ref={cubeRef}>
-          <div className={`${styles['cubeFace']} ${styles['cubeFront']}`} />
-          <div className={`${styles['cubeFace']} ${styles['cubeBack']}`} />
-          <div className={`${styles['cubeFace']} ${styles['cubeRight']}`} />
-          <div className={`${styles['cubeFace']} ${styles['cubeLeft']}`} />
-          <div className={`${styles['cubeFace']} ${styles['cubeTop']}`} />
-          <div className={`${styles['cubeFace']} ${styles['cubeBottom']}`} />
-              </div>
+      <div className="relative" style={{ perspective: `${PERSPECTIVE_PX}px` }} data-testid="cube-wrapper">
+        <div className={styles['followWrapper']} ref={innerRef}>
+          <div className={`${styles['cube']}`} data-testid="cube">
+            <div className={`${styles['cubeFace']} ${styles['cubeFront']}`} />
+            <div className={`${styles['cubeFace']} ${styles['cubeBack']}`} />
+            <div className={`${styles['cubeFace']} ${styles['cubeRight']}`} />
+            <div className={`${styles['cubeFace']} ${styles['cubeLeft']}`} />
+            <div className={`${styles['cubeFace']} ${styles['cubeTop']}`} />
+            <div className={`${styles['cubeFace']} ${styles['cubeBottom']}`} />
+          </div>
         </div>
       </div>
     </main>
