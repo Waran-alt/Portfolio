@@ -13,9 +13,14 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   AUTO_ROTATION_SPEED,
+  CURSOR_Z_DEPTH_MULTIPLIER,
+  FRONT_FACE_Z,
   IDLE_TIMEOUT_MS,
+  MIN_ROTATION_ANGLE_RAD,
   PERSPECTIVE_PX,
+  SAFE_MAGNITUDE,
   SLERP_INTERPOLATION_FACTOR,
+  TARGET_FPS
 } from './landing.constants';
 import styles from './page.module.css';
 
@@ -46,9 +51,9 @@ const quat_normalize = (q: quat): quat => {
     const len = Math.sqrt(quat_dot(q, q));
     if (len === 0) return [1, 0, 0, 0];
     return [q[0] / len, q[1] / len, q[2] / len, q[3] / len];
-};
+  };
 
-/**
+  /**
  * Performs spherical linear interpolation between two quaternions.
  * @param q1 The starting quaternion.
  * @param q2 The ending quaternion.
@@ -63,7 +68,7 @@ const quat_slerp = (q1: quat, q2: quat, t: number): quat => {
         q2_ = [-q2[0], -q2[1], -q2[2], -q2[3]];
     }
 
-    if (cosTheta > 0.9995) {
+    if (cosTheta > 0.9995) { // QUATERNION_TOLERANCE
         return quat_normalize([
             q1[0] + t * (q2_[0] - q1[0]),
             q1[1] + t * (q2_[1] - q1[1]),
@@ -130,20 +135,27 @@ export default function LandingPage() {
 
   useEffect(() => {
     let rafId: number | null = null;
-    
-    // Create constant quaternions for auto-rotation
-    const rotationX = quat_fromAxisAngle([1, 0, 0], AUTO_ROTATION_SPEED);
-    const rotationY = quat_fromAxisAngle([0, 1, 0], AUTO_ROTATION_SPEED);
-    const autoRotationQuat = quat_multiply(rotationX, rotationY);
+    let lastTime = 0; // Track last frame timestamp for deltaTime calculation
 
-    const step = () => {
+    const step = (time: number) => {
+      // Calculate deltaTime for frame-rate independent animation
+      if (lastTime === 0) {
+        lastTime = time;
+      }
+      const deltaTime = (time - lastTime) / 1000; // DeltaTime in seconds
+      lastTime = time;
+
       if (followingRef.current) {
         // --- Follow Mode ---
-        // Interpolate towards the target quaternion
-        currentQuatRef.current = quat_slerp(currentQuatRef.current, targetQuatRef.current, SLERP_INTERPOLATION_FACTOR);
+        // Interpolate towards the target quaternion (time-based for consistency across refresh rates)
+        const interpolationFactor = Math.min(SLERP_INTERPOLATION_FACTOR * deltaTime * TARGET_FPS, 1);
+        currentQuatRef.current = quat_slerp(currentQuatRef.current, targetQuatRef.current, interpolationFactor);
       } else {
         // --- Auto-Rotation Mode ---
-        // Continuously apply a small rotation
+        // Apply time-scaled rotation for consistent speed across all frame rates
+        const rotationX = quat_fromAxisAngle([1, 0, 0], AUTO_ROTATION_SPEED * deltaTime);
+        const rotationY = quat_fromAxisAngle([0, 1, 0], AUTO_ROTATION_SPEED * deltaTime);
+        const autoRotationQuat = quat_multiply(rotationX, rotationY);
         currentQuatRef.current = quat_multiply(autoRotationQuat, currentQuatRef.current);
       }
 
@@ -167,19 +179,19 @@ export default function LandingPage() {
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
 
-      const zDepth = PERSPECTIVE_PX;
+      const zDepth = PERSPECTIVE_PX * CURSOR_Z_DEPTH_MULTIPLIER;
       const targetVec = { x: dx, y: dy, z: zDepth };
-      const mag = Math.sqrt(targetVec.x**2 + targetVec.y**2 + targetVec.z**2) || 1;
+      const mag = Math.sqrt(targetVec.x**2 + targetVec.y**2 + targetVec.z**2) || SAFE_MAGNITUDE;
       const normTargetVec = { x: targetVec.x / mag, y: targetVec.y / mag, z: targetVec.z / mag };
 
       // The front face of the cube points along the positive Z-axis in its local space.
-      const frontVec = { x: 0, y: 0, z: 1 };
+      const frontVec = { x: 0, y: 0, z: FRONT_FACE_Z };
 
       // Calculate the rotation needed to align the front vector with the target vector.
       const dot = frontVec.x * normTargetVec.x + frontVec.y * normTargetVec.y + frontVec.z * normTargetVec.z;
       const angle = Math.acos(dot);
 
-      if (Math.abs(angle) < 0.001) {
+      if (Math.abs(angle) < MIN_ROTATION_ANGLE_RAD) {
         targetQuatRef.current = currentQuatRef.current; // No rotation needed
         return;
       }
@@ -190,7 +202,7 @@ export default function LandingPage() {
         z: frontVec.x * normTargetVec.y - frontVec.y * normTargetVec.x,
       };
       
-      const axisMag = Math.sqrt(axis.x**2 + axis.y**2 + axis.z**2) || 1;
+      const axisMag = Math.sqrt(axis.x**2 + axis.y**2 + axis.z**2) || SAFE_MAGNITUDE;
       const normAxis: [number, number, number] = [axis.x / axisMag, axis.y / axisMag, axis.z / axisMag];
       
       targetQuatRef.current = quat_fromAxisAngle(normAxis, angle);
@@ -220,7 +232,7 @@ export default function LandingPage() {
             <div className={`${styles['cubeFace']} ${styles['cubeLeft']}`} />
             <div className={`${styles['cubeFace']} ${styles['cubeTop']}`} />
             <div className={`${styles['cubeFace']} ${styles['cubeBottom']}`} />
-          </div>
+              </div>
         </div>
       </div>
     </main>
