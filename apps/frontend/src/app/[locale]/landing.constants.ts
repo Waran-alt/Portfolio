@@ -24,9 +24,10 @@ export const SAFE_MAGNITUDE = 1; // Fallback value for vector magnitude normaliz
 export const LIGHT_INITIAL_X = 50; // Initial light X position (percent)
 export const LIGHT_INITIAL_Y = 50; // Initial light Y position (percent)
 export const LIGHT_SMOOTH_FACTOR = 0.15; // Smooth interpolation factor (0 to 1, higher = faster)
+export const LIGHT_MAX_SPEED = 2.0; // Maximum speed in percent per frame
 export const LIGHT_OPACITY = 0.2; // Light opacity (0 to 1)
 export const LIGHT_RADIUS_PERCENT = 70; // Light radius as percentage
-export const LIGHT_COLOR_RGB = '55, 55, 55'; // Light color RGB values
+export const LIGHT_COLOR_RGB = '155, 155, 155'; // Light color RGB values
 export const BG_GRADIENT_START = 'rgb(15, 23, 42)'; // Background gradient start (slate-900)
 export const BG_GRADIENT_END = 'rgb(51, 65, 85)'; // Background gradient end (slate-700)
 

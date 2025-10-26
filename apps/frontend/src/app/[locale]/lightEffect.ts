@@ -12,6 +12,7 @@ import {
   LIGHT_COLOR_RGB,
   LIGHT_INITIAL_X,
   LIGHT_INITIAL_Y,
+  LIGHT_MAX_SPEED,
   LIGHT_OPACITY,
   LIGHT_RADIUS_PERCENT,
   LIGHT_SMOOTH_FACTOR,
@@ -37,15 +38,26 @@ export const createLightEffect = (
 
   /**
    * Smooth interpolation loop for discrete light movement
-   * Uses requestAnimationFrame for smooth updates
+   * Uses requestAnimationFrame for smooth updates with max speed limiting
    */
   const animate = () => {
     const dx = targetPosition.x - currentPosition.x;
     const dy = targetPosition.y - currentPosition.y;
-
+    
     // Apply smooth interpolation for responsive feel
-    currentPosition.x += dx * LIGHT_SMOOTH_FACTOR;
-    currentPosition.y += dy * LIGHT_SMOOTH_FACTOR;
+    let moveX = dx * LIGHT_SMOOTH_FACTOR;
+    let moveY = dy * LIGHT_SMOOTH_FACTOR;
+    
+    // Cap movement to max speed if cursor moves too rapidly
+    const moveDistance = Math.sqrt(moveX * moveX + moveY * moveY);
+    if (moveDistance > LIGHT_MAX_SPEED) {
+      const scale = LIGHT_MAX_SPEED / moveDistance;
+      moveX *= scale;
+      moveY *= scale;
+    }
+    
+    currentPosition.x += moveX;
+    currentPosition.y += moveY;
 
     if (lightPositionRef.current) {
       lightPositionRef.current.x = currentPosition.x;
