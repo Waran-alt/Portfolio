@@ -13,7 +13,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  AUTO_ROTATION_SPEED,
+  AUTO_ROTATION_SPEED_X,
+  AUTO_ROTATION_SPEED_Y,
+  AUTO_ROTATION_SPEED_Z,
   CURSOR_Z_DEPTH_MULTIPLIER,
   FRONT_FACE_Z,
   IDLE_TIMEOUT_MS,
@@ -169,10 +171,11 @@ export default function LandingPage() {
       } else {
         // --- Auto-Rotation Mode: Continuous Rotation ---
         // Apply small rotation each frame, scaled by deltaTime for frame-rate independence
-        // Rotates around both X and Y axes simultaneously for complex motion
-        const rotationX = quat_fromAxisAngle([1, 0, 0], AUTO_ROTATION_SPEED * deltaTime);
-        const rotationY = quat_fromAxisAngle([0, 1, 0], AUTO_ROTATION_SPEED * deltaTime);
-        const autoRotationQuat = quat_multiply(rotationX, rotationY);
+        // Rotates around X, Y, and Z axes simultaneously with different speeds for complex 3D motion
+        const rotationX = quat_fromAxisAngle([1, 0, 0], AUTO_ROTATION_SPEED_X * deltaTime);
+        const rotationY = quat_fromAxisAngle([0, 1, 0], AUTO_ROTATION_SPEED_Y * deltaTime);
+        const rotationZ = quat_fromAxisAngle([0, 0, 1], AUTO_ROTATION_SPEED_Z * deltaTime);
+        const autoRotationQuat = quat_multiply(quat_multiply(rotationX, rotationY), rotationZ);
         currentQuatRef.current = quat_multiply(autoRotationQuat, currentQuatRef.current);
       }
 

@@ -1,5 +1,7 @@
 export const SLERP_INTERPOLATION_FACTOR = 6.0; // Speed of interpolation
-export const AUTO_ROTATION_SPEED = 0.5; // Radians per second for auto-rotation
+export const AUTO_ROTATION_SPEED_X = 0.5; // Radians per second for X-axis auto-rotation
+export const AUTO_ROTATION_SPEED_Y = 0.7; // Radians per second for Y-axis auto-rotation
+export const AUTO_ROTATION_SPEED_Z = 0.4; // Radians per second for Z-axis auto-rotation
 
 export const IDLE_TIMEOUT_MS = 2000;   // Pause duration before auto-rotate resumes
 export const NEAR_ZERO_EPS = 0.2;      // Threshold to consider angles/velocity settled
