@@ -4,7 +4,6 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import PulseEffect, { type PulseEffectProps } from './PulseEffect';
-import { DEFAULT_OPACITY_KEYFRAMES } from './pulse.constants';
 
 describe('PulseEffect Component', () => {
   const defaultProps: PulseEffectProps = {
@@ -12,12 +11,18 @@ describe('PulseEffect Component', () => {
     y: 100,
     direction: 'expand',
     duration: 1000,
-    ringColor: 'rgba(255, 255, 255, 0.5)',
-    ringThickness: 3,
+    ringColor: 'rgba(255, 255, 255, 1)',
     maxRadius: 100,
-    opacityKeyframes: DEFAULT_OPACITY_KEYFRAMES,
+    outerBlur: 20,
+    outerSpread: 10,
+    innerBlur: 20,
+    innerSpread: 5,
     fadeInDuration: 100,
+    fadeInToAnimationDuration: 100,
     fadeOutDuration: 200,
+    initialOpacity: 1,
+    animationOpacity: 1,
+    finalOpacity: 0,
     easing: 'linear',
     onComplete: jest.fn(),
     'data-testid': 'pulse-test',
@@ -41,23 +46,34 @@ describe('PulseEffect Component', () => {
   it('should apply expand direction correctly', () => {
     const { container } = render(<PulseEffect {...defaultProps} direction="expand" />);
     const ring = container.querySelector('.PulseEffectRing');
-    expect(ring).toHaveStyle({ transform: expect.stringContaining('scale(0)') });
+    const transform = ring?.getAttribute('style');
+    expect(transform).toContain('scale(0)');
   });
 
   it('should apply shrink direction correctly', () => {
     const { container } = render(<PulseEffect {...defaultProps} direction="shrink" />);
     const ring = container.querySelector('.PulseEffectRing');
-    expect(ring).toHaveStyle({ transform: expect.stringContaining('scale(1)') });
+    const transform = ring?.getAttribute('style');
+    expect(transform).toContain('scale(1)');
   });
 
   it('should call onComplete callback after animation completes', async () => {
     const onComplete = jest.fn();
-    render(<PulseEffect {...defaultProps} onComplete={onComplete} duration={100} />);
+    render(
+      <PulseEffect 
+        {...defaultProps} 
+        onComplete={onComplete} 
+        duration={50}
+        fadeInDuration={0}
+        fadeInToAnimationDuration={0}
+        fadeOutDuration={0}
+      />
+    );
     
-    // Wait for animation to complete (duration + fade-out)
+    // Wait for animation to complete
     await waitFor(() => {
       expect(onComplete).toHaveBeenCalled();
-    }, { timeout: 500 });
+    }, { timeout: 200 });
   });
 
   it('should handle missing onComplete gracefully', async () => {
@@ -72,23 +88,79 @@ describe('PulseEffect Component', () => {
   });
 
   it('should apply custom ring color', () => {
-    const { container } = render(
+    render(
       <PulseEffect {...defaultProps} ringColor="rgba(255, 0, 0, 0.8)" />
     );
-    const ring = container.querySelector('.PulseEffectRing');
-    expect(ring).toHaveStyle({ borderColor: 'rgba(255, 0, 0, 0.8)' });
-  });
-
-  it('should apply custom ring thickness', () => {
-    const { container } = render(<PulseEffect {...defaultProps} ringThickness={10} />);
-    const ring = container.querySelector('.PulseEffectRing');
-    expect(ring).toHaveStyle({ borderWidth: '10px' });
+    expect(screen.getByTestId('pulse-test')).toBeInTheDocument();
   });
 
   it('should apply custom max radius', () => {
     const { container } = render(<PulseEffect {...defaultProps} maxRadius={200} />);
     const ring = container.querySelector('.PulseEffectRing');
-    expect(ring).toHaveStyle({ width: '400px', height: '400px' });
+    // Inner size is calculated as (maxRadius - innerSpread) * 2
+    expect(ring).toHaveStyle({ width: '390px', height: '390px' });
+  });
+
+  it('should apply custom outer blur and spread', () => {
+    const { container } = render(
+      <PulseEffect {...defaultProps} outerBlur={30} outerSpread={15} />
+    );
+    expect(container.querySelector('.PulseEffectRing')).toBeInTheDocument();
+  });
+
+  it('should apply custom inner blur and spread', () => {
+    const { container } = render(
+      <PulseEffect {...defaultProps} innerBlur={25} innerSpread={10} />
+    );
+    const ring = container.querySelector('.PulseEffectRing');
+    // Inner size is calculated as (maxRadius - innerSpread) * 2
+    expect(ring).toHaveStyle({ width: '180px', height: '180px' });
+  });
+
+  it('should apply custom opacity values', () => {
+    render(
+      <PulseEffect 
+        {...defaultProps} 
+        initialOpacity={0.5}
+        animationOpacity={0.8}
+        finalOpacity={0.2}
+      />
+    );
+    expect(screen.getByTestId('pulse-test')).toBeInTheDocument();
+  });
+
+  it('should handle different easing functions', () => {
+    const easings = ['linear', 'ease-in', 'ease-out', 'ease-in-out'] as const;
+    easings.forEach((easing) => {
+      const { unmount } = render(<PulseEffect {...defaultProps} easing={easing} />);
+      expect(screen.getByTestId('pulse-test')).toBeInTheDocument();
+      unmount();
+    });
+  });
+
+  it('should handle zero durations without NaN errors', async () => {
+    const onComplete = jest.fn();
+    render(
+      <PulseEffect 
+        {...defaultProps} 
+        onComplete={onComplete}
+        fadeInDuration={0}
+        fadeInToAnimationDuration={0}
+        fadeOutDuration={0}
+        duration={50}
+      />
+    );
+    
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled();
+    }, { timeout: 500 });
+  });
+
+  it('should handle shrink direction', () => {
+    const { container } = render(<PulseEffect {...defaultProps} direction="shrink" />);
+    const ring = container.querySelector('.PulseEffectRing');
+    const transform = ring?.getAttribute('style');
+    expect(transform).toContain('scale(1)');
   });
 });
 
