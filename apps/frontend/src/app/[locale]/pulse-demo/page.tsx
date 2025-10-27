@@ -119,7 +119,7 @@ export default function PulseDemoPage() {
       />
       
       {/* Instructions */}
-      <div className="relative z-20 top-4 left-4 w-fit bg-black bg-opacity-60 backdrop-blur-sm text-white p-4 rounded-lg max-w-xs pointer-events-auto shadow-2xl h-[calc(100vh-2rem)] overflow-y-auto">
+      <div className="relative z-20 top-4 left-4 w-fit bg-black bg-opacity-60 backdrop-blur-sm text-white p-4 rounded-lg max-w-xs pointer-events-auto shadow-2xl h-[calc(100vh-2rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-gray-600">
         <h1 className="text-xl font-bold mb-1">Pulse Effect</h1>
         <p className="mb-3 text-xs text-gray-300">Click to spawn</p>
         
@@ -394,7 +394,7 @@ export default function PulseDemoPage() {
               Copy JSON
             </button>
           </div>
-          <pre className="bg-gray-900 text-gray-300 p-2 rounded text-xs overflow-x-auto max-h-64 overflow-y-auto">
+          <pre className="bg-gray-900 text-gray-300 p-2 rounded text-xs overflow-x-auto max-h-64 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-gray-600">
             {JSON.stringify({
               direction,
               duration,
