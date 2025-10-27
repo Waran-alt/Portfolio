@@ -1,0 +1,14 @@
+.PulseEffect {
+  position: absolute;
+  pointer-events: none;
+}
+
+.PulseEffectRing {
+  position: absolute;
+  border-radius: 50%;
+  border-style: solid;
+  will-change: transform, opacity;
+  /* GPU acceleration hints */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
