@@ -1,7 +1,3 @@
-/**
- * @file PulseEffect Component Tests
- */
-
 import { render, screen, waitFor } from '@testing-library/react';
 import PulseEffect, { type PulseEffectProps } from './PulseEffect';
 

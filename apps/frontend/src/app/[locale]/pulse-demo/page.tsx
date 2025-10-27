@@ -7,7 +7,7 @@
  */
 
 import { MouseEvent, useState } from 'react';
-import PulseEffect from '../components/PulseEffect';
+import PulseEffect from '../animations/pulse/PulseEffect';
 
 // Helper to copy text to clipboard
 const copyToClipboard = (text: string) => {
