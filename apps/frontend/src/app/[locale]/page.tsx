@@ -7,10 +7,11 @@
  * All animation logic is handled by cubeAnimation.ts module.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { createCubeAnimation, quat_create, type CubeAnimationState } from './cubeAnimation';
-import { LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './landing.constants';
-import { createLightEffect, createLightGradient, type LightPosition } from './lightEffect';
+import { MouseEvent, useEffect, useRef, useState } from 'react';
+import { LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/constants';
+import { createCubeAnimation, quat_create, type CubeAnimationState } from './animations/cube';
+import { createLightEffect, createLightGradient, type LightPosition } from './animations/light';
+import { LANDING_PAGE_AUTO_PULSE_CONFIG, LANDING_PAGE_CLICK_PULSE_CONFIG, PulseEffect, type Pulse } from './animations/pulse';
 import styles from './page.module.css';
 
 export default function LandingPage() {
@@ -24,6 +25,77 @@ export default function LandingPage() {
     targetQuat: quat_create(),
     following: false,
   });
+
+  // Pulse state
+  const [pulses, setPulses] = useState<Array<Pulse & { config: typeof LANDING_PAGE_CLICK_PULSE_CONFIG | typeof LANDING_PAGE_AUTO_PULSE_CONFIG }>>([]);
+  const idCounterRef = useRef(0);
+  
+  const generatePulseId = () => {
+    idCounterRef.current += 1;
+    return idCounterRef.current;
+  };
+
+  // Pulse handlers
+  const handleClick = (e: MouseEvent<HTMLElement>) => {
+    const newPulse = {
+      id: generatePulseId(),
+      x: e.clientX,
+      y: e.clientY,
+      timestamp: Date.now(),
+      config: LANDING_PAGE_CLICK_PULSE_CONFIG,
+    };
+    setPulses(prev => [...prev, newPulse]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      // Trigger pulse at center of screen
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const newPulse = {
+        id: generatePulseId(),
+        x,
+        y,
+        timestamp: Date.now(),
+        config: LANDING_PAGE_CLICK_PULSE_CONFIG,
+      };
+      setPulses(prev => [...prev, newPulse]);
+    }
+  };
+
+  // Auto-pulse generator
+  useEffect(() => {
+    let autoPulseId: NodeJS.Timeout;
+    
+    const createAutoPulse = () => {
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * window.innerHeight;
+      const newPulse = {
+        id: generatePulseId(),
+        x,
+        y,
+        timestamp: Date.now(),
+        config: LANDING_PAGE_AUTO_PULSE_CONFIG,
+      };
+      setPulses(prev => [...prev, newPulse]);
+
+      // Schedule next auto-pulse with random interval (3-8 seconds)
+      const nextInterval = 3000 + Math.random() * 5000;
+      autoPulseId = setTimeout(createAutoPulse, nextInterval);
+    };
+
+    const timeoutId = setTimeout(createAutoPulse, 2000); // Start after 2 seconds
+    
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(autoPulseId);
+    };
+  }, []); // Empty dependency array - only run once
+
+  const handlePulseComplete = (id: number) => {
+    setPulses(prev => prev.filter(pulse => pulse.id !== id));
+  };
 
   useEffect(() => {
     // Create and start the animation loop
@@ -51,7 +123,19 @@ export default function LandingPage() {
       data-testid="landing-root"
       style={{ background: lightGradient }}
     >
-      <div className="relative" style={{ perspective: `${PERSPECTIVE_PX}px` }} data-testid="cube-wrapper">
+      {/* Render pulse effects behind cube */}
+      {pulses.map(pulse => (
+        <PulseEffect
+          key={pulse.id}
+          x={pulse.x}
+          y={pulse.y}
+          {...pulse.config}
+          onComplete={() => handlePulseComplete(pulse.id)}
+          data-testid={`pulse-${pulse.id}`}
+        />
+      ))}
+      
+      <div className="relative z-10" style={{ perspective: `${PERSPECTIVE_PX}px` }} data-testid="cube-wrapper">
         <div 
           className={styles['followWrapper']} 
           ref={innerRef}
@@ -63,9 +147,20 @@ export default function LandingPage() {
             <div className={`${styles['cubeFace']} ${styles['cubeLeft']}`} />
             <div className={`${styles['cubeFace']} ${styles['cubeTop']}`} />
             <div className={`${styles['cubeFace']} ${styles['cubeBottom']}`} />
-          </div>
+              </div>
         </div>
       </div>
+      
+      {/* Interactive overlay for pulse effects - must be last to capture all clicks */}
+      <div
+        className="absolute inset-0 z-20"
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label="Interactive landing page - click or press space to add pulse effects"
+        data-testid="pulse-trigger-overlay"
+      />
     </main>
   );
 }

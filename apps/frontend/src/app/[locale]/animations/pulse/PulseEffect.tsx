@@ -3,12 +3,12 @@
 /**
  * @file Pulse Effect Component
  * 
- * A highly reusable React component that renders a "luminous pulse" or "wave" effect.
- * Supports both expanding and shrinking animations with configurable properties.
- * Each instance is self-contained and cleans itself up after completion.
+ * Render a luminous pulse or wave effect with configurable animations.
+ * Support expanding and shrinking animations with full lifecycle management.
+ * Optimize for performance using GPU-accelerated transforms and minimal DOM updates.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Type definitions for configuration
 export type Direction = 'expand' | 'shrink';
@@ -60,7 +60,11 @@ const easings = {
 };
 
 /**
- * Interpolates value based on current time and easing function
+ * Apply easing function to interpolation value.
+ * 
+ * @param t Normalized time (0 to 1)
+ * @param easingFn Easing function name
+ * @returns Eased value between 0 and 1
  */
 const ease = (t: number, easingFn: EasingFunction): number => {
   const easeFunction = easings[easingFn];
@@ -68,26 +72,27 @@ const ease = (t: number, easingFn: EasingFunction): number => {
 };
 
 /**
- * Converts a CSS color string with alpha to a new alpha value
- * Handles both rgb/rgba and hex colors
+ * Set alpha channel for CSS color string.
+ * 
+ * Support rgba/rgb color formats. Return original color for unsupported formats.
+ * 
+ * @param color CSS color string (rgba, rgb, or hex)
+ * @param alpha Alpha value (0 to 1)
+ * @returns New color string with updated alpha
  */
 const setColorAlpha = (color: string, alpha: number): string => {
-  // Handle rgba() colors
   if (color.startsWith('rgba(') || color.startsWith('rgb(')) {
     return color.replace(/rgba?\(([^)]+)\)/, (_, content) => {
       const components = content.split(',').map((c: string) => c.trim());
       if (components.length === 3) {
-        // rgb() format, convert to rgba
         return `rgba(${components[0]}, ${components[1]}, ${components[2]}, ${alpha})`;
       } else if (components.length === 4) {
-        // rgba() format, replace last component with new alpha
         return `rgba(${components[0]}, ${components[1]}, ${components[2]}, ${alpha})`;
       }
       return color;
     });
   }
   
-  // For other formats, return as-is (fallback)
   return color;
 };
 
@@ -113,87 +118,85 @@ export default function PulseEffect({
   'data-testid': testId,
 }: PulseEffectProps) {
   const ringRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const rafIdRef = useRef<number | null>(null);
-  const [componentOpacity, setComponentOpacity] = useState(0);
+  
+  // Pre-calculate constants to avoid repeated calculations
+  const innerSize = (maxRadius - innerSpread) * 2;
   
   useEffect(() => {
     const startTime = performance.now();
+    if (!ringRef.current || !containerRef.current) return;
+    
+    // Cache previous values to prevent unnecessary DOM updates
+    let prevScale = -1;
+    let prevOpacity = -1;
+    let prevRingOpacity = -1;
     
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const totalDuration = fadeInDuration + fadeInToAnimationDuration + duration + fadeOutDuration;
       
-      // Check if animation is complete
+      // Stop animation when complete
       if (elapsed >= totalDuration) {
         if (onComplete) onComplete();
         return;
       }
       
-      // --- Handle Ring Animation ---
+      // Update ring animation state
       const ringAnimationStart = fadeInDuration + fadeInToAnimationDuration;
       const animationElapsed = elapsed - ringAnimationStart;
       if (animationElapsed > 0 && ringRef.current) {
         const t = Math.min(animationElapsed / duration, 1);
         const easedT = ease(t, easing);
         
-        // Calculate current radius based on direction
+        // Calculate current radius and scale
         const currentRadius = direction === 'expand' 
           ? easedT * maxRadius 
           : (1 - easedT) * maxRadius;
-        
-        // Calculate opacity transition from animation opacity to final
         const ringOpacity = animationOpacity + (finalOpacity - animationOpacity) * easedT;
-        
-        // Calculate scale based on current radius
         const scale = Math.max(currentRadius / maxRadius, 0.01);
         
-        // Calculate dimensions for the ring
-        // The div size is determined by maxRadius and inner spread
-        // The inner spread controls how much the inner shadow extends, creating the ring effect
-        const innerSize = (maxRadius - innerSpread) * 2;
+        // Update transform only if scale changed to reduce DOM writes
+        if (Math.abs(scale - prevScale) > 0.001) {
+          ringRef.current.style.transform = `translate3d(-50%, -50%, 0) scale3d(${scale}, ${scale}, 1)`;
+          prevScale = scale;
+        }
         
-        // Create color with calculated opacity
-        const colorWithOpacity = setColorAlpha(ringColor, ringOpacity);
-        
-        // Create double box-shadow to form a ring:
-        // - Outer shadow: creates the soft outer edge of the ring (blurs and spreads outward)
-        // - Inner shadow: creates the soft inner edge (blurs and spreads inward)
-        const outerShadow = `0 0 ${outerBlur}px ${outerSpread}px ${colorWithOpacity}`;
-        const innerShadow = `inset 0 0 ${innerBlur}px ${innerSpread}px ${colorWithOpacity}`;
-        const boxShadow = `${outerShadow}, ${innerShadow}`;
-        
-        // Update ring dimensions and transform
-        ringRef.current.style.width = `${innerSize}px`;
-        ringRef.current.style.height = `${innerSize}px`;
-        ringRef.current.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        ringRef.current.style.boxShadow = boxShadow;
+        // Update shadow only if opacity changed to reduce DOM writes
+        if (Math.abs(ringOpacity - prevRingOpacity) > 0.01) {
+          const colorWithOpacity = setColorAlpha(ringColor, ringOpacity);
+          const outerShadow = `0 0 ${outerBlur}px ${outerSpread}px ${colorWithOpacity}`;
+          const innerShadow = `inset 0 0 ${innerBlur}px ${innerSpread}px ${colorWithOpacity}`;
+          const boxShadow = `${outerShadow}, ${innerShadow}`;
+          ringRef.current.style.boxShadow = boxShadow;
+          prevRingOpacity = ringOpacity;
+        }
       }
       
-      // --- Handle Component Opacity (Fading with three phases) ---
+      // Calculate component opacity across three phases
       let currentComponentOpacity = 0;
       
       if (elapsed < fadeInDuration) {
-        // Phase 1: Fade in from 0 to initial opacity
+        // Fade from 0 to initial opacity
         if (fadeInDuration > 0) {
-          const fadeInProgress = elapsed / fadeInDuration;
-          currentComponentOpacity = initialOpacity * fadeInProgress;
+          currentComponentOpacity = initialOpacity * (elapsed / fadeInDuration);
         } else {
           currentComponentOpacity = initialOpacity;
         }
       } else if (elapsed < fadeInDuration + fadeInToAnimationDuration) {
-        // Phase 2: Transition from initial to animation opacity
+        // Transition from initial to animation opacity
         if (fadeInToAnimationDuration > 0) {
-          const transitionElapsed = elapsed - fadeInDuration;
-          const transitionProgress = transitionElapsed / fadeInToAnimationDuration;
+          const transitionProgress = (elapsed - fadeInDuration) / fadeInToAnimationDuration;
           currentComponentOpacity = initialOpacity + (animationOpacity - initialOpacity) * transitionProgress;
         } else {
           currentComponentOpacity = animationOpacity;
         }
       } else if (elapsed < fadeInDuration + fadeInToAnimationDuration + duration) {
-        // Phase 3: Active animation at animation opacity
+        // Maintain animation opacity
         currentComponentOpacity = animationOpacity;
       } else {
-        // Phase 4: Fading out from animation opacity to final
+        // Fade from animation opacity to final
         const fadeOutElapsed = elapsed - (fadeInDuration + fadeInToAnimationDuration + duration);
         if (fadeOutDuration > 0) {
           const fadeOutProgress = fadeOutElapsed / fadeOutDuration;
@@ -202,7 +205,13 @@ export default function PulseEffect({
           currentComponentOpacity = finalOpacity;
         }
       }
-      setComponentOpacity(Math.max(0, Math.min(1, currentComponentOpacity)));
+      
+      // Update container opacity only if changed to reduce DOM writes
+      const clampedOpacity = Math.max(0, Math.min(1, currentComponentOpacity));
+      if (Math.abs(clampedOpacity - prevOpacity) > 0.01 && containerRef.current) {
+        containerRef.current.style.opacity = `${clampedOpacity}`;
+        prevOpacity = clampedOpacity;
+      }
       
       rafIdRef.current = requestAnimationFrame(animate);
     };
@@ -220,13 +229,15 @@ export default function PulseEffect({
   
   return (
     <div
+      ref={containerRef}
       className="PulseEffect fixed pointer-events-none"
       style={{
         left: `${x}px`,
         top: `${y}px`,
-        transform: 'translate(-50%, -50%)',
-        opacity: componentOpacity,
+        transform: 'translate3d(-50%, -50%, 0)',
+        opacity: 0,
         overflow: 'visible',
+        willChange: 'opacity',
       }}
       data-testid={testId}
     >
@@ -234,16 +245,14 @@ export default function PulseEffect({
         ref={ringRef}
         className="PulseEffectRing absolute rounded-full"
         style={{
-          // Set inner div dimensions based on maxRadius and inner spread
-          width: `${(maxRadius - innerSpread) * 2}px`,
-          height: `${(maxRadius - innerSpread) * 2}px`,
+          width: `${innerSize}px`,
+          height: `${innerSize}px`,
           backgroundColor: 'transparent',
           transformOrigin: 'center',
           willChange: 'transform, box-shadow',
-          transform: direction === 'expand' ? 'translate(-50%, -50%) scale(0)' : 'translate(-50%, -50%) scale(1)',
+          transform: direction === 'expand' ? 'translate3d(-50%, -50%, 0) scale3d(0, 0, 1)' : 'translate3d(-50%, -50%, 0) scale3d(1, 1, 1)',
         }}
       />
     </div>
   );
 }
-
