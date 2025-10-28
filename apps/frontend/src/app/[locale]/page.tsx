@@ -24,6 +24,15 @@ export default function LandingPage() {
     currentQuat: quat_create(),
     targetQuat: quat_create(),
     following: false,
+    initialized: false,
+    animationStartTime: 0,
+    // Initial speeds will be randomized when animation starts
+    currentSpeedX: 0,
+    targetSpeedX: 0,
+    currentSpeedY: 0,
+    targetSpeedY: 0,
+    currentSpeedZ: 0,
+    targetSpeedZ: 0,
   });
 
   // Pulse state

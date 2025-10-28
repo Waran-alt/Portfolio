@@ -10,12 +10,19 @@
 
 import { RefObject } from 'react';
 import {
-  AUTO_ROTATION_SPEED_X,
-  AUTO_ROTATION_SPEED_Y,
-  AUTO_ROTATION_SPEED_Z,
+  AUTO_ROTATION_SPEED_HOLD_DURATION_MAX,
+  AUTO_ROTATION_SPEED_HOLD_DURATION_MIN,
+  AUTO_ROTATION_SPEED_SMOOTHING_FACTOR,
+  AUTO_ROTATION_SPEED_X_MAX,
+  AUTO_ROTATION_SPEED_X_MIN,
+  AUTO_ROTATION_SPEED_Y_MAX,
+  AUTO_ROTATION_SPEED_Y_MIN,
+  AUTO_ROTATION_SPEED_Z_MAX,
+  AUTO_ROTATION_SPEED_Z_MIN,
   CURSOR_Z_DEPTH_MULTIPLIER,
   FRONT_FACE_Z,
   IDLE_TIMEOUT_MS,
+  INITIAL_CUBE_HOLD_DURATION,
   MIN_ROTATION_ANGLE_RAD,
   PERSPECTIVE_PX,
   QUATERNION_TOLERANCE,
@@ -132,13 +139,36 @@ export interface CubeAnimationState {
   currentQuat: quat;
   targetQuat: quat;
   following: boolean;
+  initialized: boolean;
+  animationStartTime: number;
+  currentSpeedX: number;
+  targetSpeedX: number;
+  currentSpeedY: number;
+  targetSpeedY: number;
+  currentSpeedZ: number;
+  targetSpeedZ: number;
 }
+
+/**
+ * Generates a random speed within the specified range
+ */
+const randomSpeed = (min: number, max: number): number => {
+  return min + Math.random() * (max - min);
+};
+
+/**
+ * Generates a random hold duration within the specified range
+ */
+const randomHoldDuration = (): number => {
+  return AUTO_ROTATION_SPEED_HOLD_DURATION_MIN + 
+    Math.random() * (AUTO_ROTATION_SPEED_HOLD_DURATION_MAX - AUTO_ROTATION_SPEED_HOLD_DURATION_MIN);
+};
 
 /**
  * Creates and manages the cube animation loop
  * 
  * @param innerRef Reference to the DOM element receiving transforms
- * @param stateRef Reference to animation state (currentQuat, targetQuat, following)
+ * @param stateRef Reference to animation state (currentQuat, targetQuat, following, speeds)
  * @returns Cleanup function to stop animation loop
  */
 export const createCubeAnimation = (
@@ -148,6 +178,50 @@ export const createCubeAnimation = (
   let rafId: number | null = null;
   let lastTime = 0;
   let timeoutId: number | null = null;
+  
+  // Timer references for independent speed changes per axis
+  let timerX: NodeJS.Timeout | null = null;
+  let timerY: NodeJS.Timeout | null = null;
+  let timerZ: NodeJS.Timeout | null = null;
+  
+  /**
+   * Schedules the next speed change for a specific axis
+   */
+  const scheduleNextSpeedChange = (axis: 'X' | 'Y' | 'Z') => {
+    // Clear existing timer for this axis
+    if (axis === 'X' && timerX) clearTimeout(timerX);
+    if (axis === 'Y' && timerY) clearTimeout(timerY);
+    if (axis === 'Z' && timerZ) clearTimeout(timerZ);
+    
+    // Calculate new target speed and schedule next change
+    const holdDuration = randomHoldDuration() * 1000; // Convert to milliseconds
+    
+    const timeoutId = setTimeout(() => {
+      if (!stateRef.current) return;
+      
+      // Update target speed for this axis (current speed will gradually approach target)
+      if (axis === 'X') {
+        stateRef.current.targetSpeedX = randomSpeed(AUTO_ROTATION_SPEED_X_MIN, AUTO_ROTATION_SPEED_X_MAX);
+      } else if (axis === 'Y') {
+        stateRef.current.targetSpeedY = randomSpeed(AUTO_ROTATION_SPEED_Y_MIN, AUTO_ROTATION_SPEED_Y_MAX);
+      } else if (axis === 'Z') {
+        stateRef.current.targetSpeedZ = randomSpeed(AUTO_ROTATION_SPEED_Z_MIN, AUTO_ROTATION_SPEED_Z_MAX);
+      }
+      
+      // Schedule next change
+      scheduleNextSpeedChange(axis);
+    }, holdDuration);
+    
+    // Store timer reference
+    if (axis === 'X') timerX = timeoutId;
+    if (axis === 'Y') timerY = timeoutId;
+    if (axis === 'Z') timerZ = timeoutId;
+  };
+  
+  // Initialize timers for all three axes
+  scheduleNextSpeedChange('X');
+  scheduleNextSpeedChange('Y');
+  scheduleNextSpeedChange('Z');
 
   /**
    * Main animation loop: runs continuously using requestAnimationFrame.
@@ -162,9 +236,30 @@ export const createCubeAnimation = (
     // First frame: initialize lastTime
     if (lastTime === 0) {
       lastTime = time;
+      
+      // Initialize animation on first frame
+      if (!stateRef.current.initialized) {
+        const currentTime = performance.now();
+        stateRef.current.animationStartTime = currentTime;
+        stateRef.current.initialized = true;
+        
+        // Initialize with random speeds
+        stateRef.current.currentSpeedX = randomSpeed(AUTO_ROTATION_SPEED_X_MIN, AUTO_ROTATION_SPEED_X_MAX);
+        stateRef.current.targetSpeedX = stateRef.current.currentSpeedX;
+        
+        stateRef.current.currentSpeedY = randomSpeed(AUTO_ROTATION_SPEED_Y_MIN, AUTO_ROTATION_SPEED_Y_MAX);
+        stateRef.current.targetSpeedY = stateRef.current.currentSpeedY;
+        
+        stateRef.current.currentSpeedZ = randomSpeed(AUTO_ROTATION_SPEED_Z_MIN, AUTO_ROTATION_SPEED_Z_MAX);
+        stateRef.current.targetSpeedZ = stateRef.current.currentSpeedZ;
+      }
     }
     const deltaTime = (time - lastTime) / 1000; // DeltaTime in seconds
     lastTime = time;
+    
+    // Check if we're still in the initial hold period
+    const elapsedTime = (performance.now() - stateRef.current.animationStartTime) / 1000;
+    const inInitialHold = elapsedTime < INITIAL_CUBE_HOLD_DURATION;
 
     if (stateRef.current.following) {
       // --- Follow Mode: Cursor-Following Animation ---
@@ -172,16 +267,24 @@ export const createCubeAnimation = (
       // Scale interpolation by deltaTime * TARGET_FPS for consistent speed across all refresh rates
       const interpolationFactor = Math.min(SLERP_INTERPOLATION_FACTOR * deltaTime * TARGET_FPS, 1);
       stateRef.current.currentQuat = quat_slerp(stateRef.current.currentQuat, stateRef.current.targetQuat, interpolationFactor);
-    } else {
-      // --- Auto-Rotation Mode: Continuous Rotation ---
-      // Apply small rotation each frame, scaled by deltaTime for frame-rate independence
-      // Rotates around X, Y, and Z axes simultaneously with different speeds for complex 3D motion
-      const rotationX = quat_fromAxisAngle([1, 0, 0], AUTO_ROTATION_SPEED_X * deltaTime);
-      const rotationY = quat_fromAxisAngle([0, 1, 0], AUTO_ROTATION_SPEED_Y * deltaTime);
-      const rotationZ = quat_fromAxisAngle([0, 0, 1], AUTO_ROTATION_SPEED_Z * deltaTime);
+    } else if (!inInitialHold) {
+      // --- Auto-Rotation Mode: Continuous Rotation with Independent Dynamic Speeds ---
+      
+      // Gradually adjust current speeds towards target speeds using incremental smoothing
+      // Each frame, move current speed closer to target by a small factor
+      // This creates smooth, gradual transitions over multiple frames
+      stateRef.current.currentSpeedX += (stateRef.current.targetSpeedX - stateRef.current.currentSpeedX) * AUTO_ROTATION_SPEED_SMOOTHING_FACTOR;
+      stateRef.current.currentSpeedY += (stateRef.current.targetSpeedY - stateRef.current.currentSpeedY) * AUTO_ROTATION_SPEED_SMOOTHING_FACTOR;
+      stateRef.current.currentSpeedZ += (stateRef.current.targetSpeedZ - stateRef.current.currentSpeedZ) * AUTO_ROTATION_SPEED_SMOOTHING_FACTOR;
+      
+      // Apply rotations using current interpolated speeds (independent per axis)
+      const rotationX = quat_fromAxisAngle([1, 0, 0], stateRef.current.currentSpeedX * deltaTime);
+      const rotationY = quat_fromAxisAngle([0, 1, 0], stateRef.current.currentSpeedY * deltaTime);
+      const rotationZ = quat_fromAxisAngle([0, 0, 1], stateRef.current.currentSpeedZ * deltaTime);
       const autoRotationQuat = quat_multiply(quat_multiply(rotationX, rotationY), rotationZ);
       stateRef.current.currentQuat = quat_multiply(autoRotationQuat, stateRef.current.currentQuat);
     }
+    // Note: During initial hold period, the cube remains static
 
     if (innerRef.current) {
       innerRef.current.style.transform = quat_toMatrix3d(stateRef.current.currentQuat);
@@ -265,6 +368,9 @@ export const createCubeAnimation = (
   return () => {
     document.removeEventListener('mousemove', handleMove);
     if (timeoutId) window.clearTimeout(timeoutId);
+    if (timerX) clearTimeout(timerX);
+    if (timerY) clearTimeout(timerY);
+    if (timerZ) clearTimeout(timerZ);
     if (rafId) cancelAnimationFrame(rafId);
   };
 };

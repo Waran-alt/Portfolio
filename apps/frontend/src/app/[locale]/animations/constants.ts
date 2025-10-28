@@ -1,7 +1,18 @@
 export const SLERP_INTERPOLATION_FACTOR = 6.0; // Speed of interpolation
-export const AUTO_ROTATION_SPEED_X = 0.5; // Radians per second for X-axis auto-rotation
-export const AUTO_ROTATION_SPEED_Y = 0.7; // Radians per second for Y-axis auto-rotation
-export const AUTO_ROTATION_SPEED_Z = 0.4; // Radians per second for Z-axis auto-rotation
+
+// Auto-rotation speed ranges (radians per second)
+export const AUTO_ROTATION_SPEED_X_MIN = -0.15;
+export const AUTO_ROTATION_SPEED_X_MAX = 0.25;
+export const AUTO_ROTATION_SPEED_Y_MIN = -0.2;
+export const AUTO_ROTATION_SPEED_Y_MAX = 0.25;
+export const AUTO_ROTATION_SPEED_Z_MIN = -0.2;
+export const AUTO_ROTATION_SPEED_Z_MAX = 0.15;
+
+// Speed transition control
+export const AUTO_ROTATION_SPEED_SMOOTHING_FACTOR = 0.005; // Rate at which speed adjusts towards target
+export const AUTO_ROTATION_SPEED_HOLD_DURATION_MIN = 4.0; // Minimum seconds to hold speed before changing
+export const AUTO_ROTATION_SPEED_HOLD_DURATION_MAX = 5.0; // Maximum seconds to hold speed before changing
+export const INITIAL_CUBE_HOLD_DURATION = 3.0; // Seconds to keep cube fixed before starting rotation
 
 export const IDLE_TIMEOUT_MS = 2000;   // Pause duration before auto-rotate resumes
 export const NEAR_ZERO_EPS = 0.2;      // Threshold to consider angles/velocity settled
