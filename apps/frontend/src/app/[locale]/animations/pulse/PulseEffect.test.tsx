@@ -43,14 +43,14 @@ describe('PulseEffect Component', () => {
     const { container } = render(<PulseEffect {...defaultProps} direction="expand" />);
     const ring = container.querySelector('.PulseEffectRing');
     const transform = ring?.getAttribute('style');
-    expect(transform).toContain('scale(0)');
+    expect(transform).toContain('scale3d(0, 0, 1)');
   });
 
   it('should apply shrink direction correctly', () => {
     const { container } = render(<PulseEffect {...defaultProps} direction="shrink" />);
     const ring = container.querySelector('.PulseEffectRing');
     const transform = ring?.getAttribute('style');
-    expect(transform).toContain('scale(1)');
+    expect(transform).toContain('scale3d(1, 1, 1)');
   });
 
   it('should call onComplete callback after animation completes', async () => {
@@ -156,6 +156,6 @@ describe('PulseEffect Component', () => {
     const { container } = render(<PulseEffect {...defaultProps} direction="shrink" />);
     const ring = container.querySelector('.PulseEffectRing');
     const transform = ring?.getAttribute('style');
-    expect(transform).toContain('scale(1)');
+    expect(transform).toContain('scale3d(1, 1, 1)');
   });
 });
