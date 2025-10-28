@@ -22,7 +22,7 @@ import {
   SAFE_MAGNITUDE,
   SLERP_INTERPOLATION_FACTOR,
   TARGET_FPS
-} from './landing.constants';
+} from '../constants';
 
 // --- Quaternion Math ---
 // All quaternions are in [w, x, y, z] order.
@@ -268,4 +268,3 @@ export const createCubeAnimation = (
     if (rafId) cancelAnimationFrame(rafId);
   };
 };
-

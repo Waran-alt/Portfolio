@@ -8,6 +8,22 @@
 
 import { MouseEvent, useState } from 'react';
 import PulseEffect from '../animations/pulse/PulseEffect';
+import {
+  DEMO_DEFAULT_ANIMATION_OPACITY,
+  DEMO_DEFAULT_DIRECTION,
+  DEMO_DEFAULT_DURATION,
+  DEMO_DEFAULT_EASING,
+  DEMO_DEFAULT_FADE_IN_DURATION,
+  DEMO_DEFAULT_FADE_IN_TO_ANIMATION_DURATION,
+  DEMO_DEFAULT_FADE_OUT_DURATION,
+  DEMO_DEFAULT_FINAL_OPACITY,
+  DEMO_DEFAULT_INITIAL_OPACITY,
+  DEMO_DEFAULT_INNER_BLUR,
+  DEMO_DEFAULT_INNER_SPREAD,
+  DEMO_DEFAULT_MAX_RADIUS,
+  DEMO_DEFAULT_OUTER_BLUR,
+  DEMO_DEFAULT_OUTER_SPREAD,
+} from './constants';
 
 // Helper to copy text to clipboard
 const copyToClipboard = (text: string) => {
@@ -44,20 +60,20 @@ interface Pulse {
 export default function PulseDemoPage() {
   const [pulses, setPulses] = useState<Pulse[]>([]);
   const [idCounter, setIdCounter] = useState(0);
-  const [fadeInDuration, setFadeInDuration] = useState(100);
-  const [fadeInToAnimationDuration, setFadeInToAnimationDuration] = useState(100);
-  const [fadeOutDuration, setFadeOutDuration] = useState(200);
-  const [maxRadius, setMaxRadius] = useState(150);
-  const [duration, setDuration] = useState(800);
-  const [outerBlur, setOuterBlur] = useState(20);
-  const [outerSpread, setOuterSpread] = useState(10);
-  const [innerBlur, setInnerBlur] = useState(20);
-  const [innerSpread, setInnerSpread] = useState(5);
-  const [initialOpacity, setInitialOpacity] = useState(0);
-  const [animationOpacity, setAnimationOpacity] = useState(1);
-  const [finalOpacity, setFinalOpacity] = useState(0);
-  const [direction, setDirection] = useState<'expand' | 'shrink'>('expand');
-  const [easing, setEasing] = useState<'linear' | 'ease-in-out' | 'ease-out' | 'ease-in'>('ease-out');
+  const [fadeInDuration, setFadeInDuration] = useState(DEMO_DEFAULT_FADE_IN_DURATION);
+  const [fadeInToAnimationDuration, setFadeInToAnimationDuration] = useState(DEMO_DEFAULT_FADE_IN_TO_ANIMATION_DURATION);
+  const [fadeOutDuration, setFadeOutDuration] = useState(DEMO_DEFAULT_FADE_OUT_DURATION);
+  const [maxRadius, setMaxRadius] = useState(DEMO_DEFAULT_MAX_RADIUS);
+  const [duration, setDuration] = useState(DEMO_DEFAULT_DURATION);
+  const [outerBlur, setOuterBlur] = useState(DEMO_DEFAULT_OUTER_BLUR);
+  const [outerSpread, setOuterSpread] = useState(DEMO_DEFAULT_OUTER_SPREAD);
+  const [innerBlur, setInnerBlur] = useState(DEMO_DEFAULT_INNER_BLUR);
+  const [innerSpread, setInnerSpread] = useState(DEMO_DEFAULT_INNER_SPREAD);
+  const [initialOpacity, setInitialOpacity] = useState(DEMO_DEFAULT_INITIAL_OPACITY);
+  const [animationOpacity, setAnimationOpacity] = useState(DEMO_DEFAULT_ANIMATION_OPACITY);
+  const [finalOpacity, setFinalOpacity] = useState(DEMO_DEFAULT_FINAL_OPACITY);
+  const [direction, setDirection] = useState<typeof DEMO_DEFAULT_DIRECTION>(DEMO_DEFAULT_DIRECTION);
+  const [easing, setEasing] = useState<typeof DEMO_DEFAULT_EASING>(DEMO_DEFAULT_EASING);
 
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();

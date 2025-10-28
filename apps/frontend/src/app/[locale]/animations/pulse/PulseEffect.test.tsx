@@ -159,4 +159,3 @@ describe('PulseEffect Component', () => {
     expect(transform).toContain('scale(1)');
   });
 });
-

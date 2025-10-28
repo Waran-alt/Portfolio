@@ -16,7 +16,7 @@ import {
   LIGHT_OPACITY,
   LIGHT_RADIUS_PERCENT,
   LIGHT_SMOOTH_FACTOR,
-} from './landing.constants';
+} from '../constants';
 
 export interface LightPosition {
   x: number;
@@ -95,4 +95,3 @@ export const createLightEffect = (
 export const createLightGradient = (position: LightPosition): string => {
   return `radial-gradient(circle at ${position.x}% ${position.y}%, rgba(${LIGHT_COLOR_RGB}, ${LIGHT_OPACITY}), transparent ${LIGHT_RADIUS_PERCENT}%), linear-gradient(to bottom, ${BG_GRADIENT_START}, ${BG_GRADIENT_END})`;
 };
-
