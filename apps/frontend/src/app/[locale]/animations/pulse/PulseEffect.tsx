@@ -165,11 +165,11 @@ export default function PulseEffect({
         
         // Update shadow only if opacity changed to reduce DOM writes
         if (Math.abs(ringOpacity - prevRingOpacity) > 0.01) {
-          const colorWithOpacity = setColorAlpha(ringColor, ringOpacity);
-          const outerShadow = `0 0 ${outerBlur}px ${outerSpread}px ${colorWithOpacity}`;
-          const innerShadow = `inset 0 0 ${innerBlur}px ${innerSpread}px ${colorWithOpacity}`;
-          const boxShadow = `${outerShadow}, ${innerShadow}`;
-          ringRef.current.style.boxShadow = boxShadow;
+        const colorWithOpacity = setColorAlpha(ringColor, ringOpacity);
+        const outerShadow = `0 0 ${outerBlur}px ${outerSpread}px ${colorWithOpacity}`;
+        const innerShadow = `inset 0 0 ${innerBlur}px ${innerSpread}px ${colorWithOpacity}`;
+        const boxShadow = `${outerShadow}, ${innerShadow}`;
+        ringRef.current.style.boxShadow = boxShadow;
           prevRingOpacity = ringOpacity;
         }
       }
