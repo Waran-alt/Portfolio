@@ -12,26 +12,12 @@ import { LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/c
 import { createCubeAnimation, quat_create, type CubeAnimationState } from './animations/cube';
 import { createLightGradient } from './animations/light';
 import { LANDING_PAGE_AUTO_PULSE_CONFIG, LANDING_PAGE_CLICK_PULSE_CONFIG, PulseEffect, type Pulse } from './animations/pulse';
-import { CUBE_HALF_SIZE } from './page.constants';
+import {
+  CUBE_CORNER_OFFSETS,
+  CURSOR_GUIDE_GRADIENT_COLOR,
+  CURSOR_GUIDE_GRADIENT_STOPS,
+} from './page.constants';
 import styles from './page.module.css';
-
-type CornerOffset = {
-  key: string;
-  x: number;
-  y: number;
-  z: number;
-};
-
-const CUBE_CORNER_OFFSETS: CornerOffset[] = [
-  { key: 'front-top-right', x: CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
-  { key: 'front-top-left', x: -CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
-  { key: 'front-bottom-right', x: CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
-  { key: 'front-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
-  { key: 'back-top-right', x: CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
-  { key: 'back-top-left', x: -CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
-  { key: 'back-bottom-right', x: CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
-  { key: 'back-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
-] as const;
 
 export default function LandingPage() {
   const innerRef = useRef<HTMLDivElement | null>(null);
@@ -280,12 +266,14 @@ export default function LandingPage() {
                 ref={gradientRef}
                 gradientUnits="userSpaceOnUse"
               >
-                <stop offset="0%" stopColor="#1a1c20" stopOpacity="0" />
-                <stop offset="15%" stopColor="#1a1c20" stopOpacity="0" />
-                <stop offset="30%" stopColor="#1a1c20" stopOpacity="0.9" />
-                <stop offset="70%" stopColor="#1a1c20" stopOpacity="0.9" />
-                <stop offset="85%" stopColor="#1a1c20" stopOpacity="0" />
-                <stop offset="100%" stopColor="#1a1c20" stopOpacity="0" />
+                {CURSOR_GUIDE_GRADIENT_STOPS.map((stop) => (
+                  <stop
+                    key={`${corner.key}-${stop.offset}`}
+                    offset={stop.offset}
+                    stopColor={CURSOR_GUIDE_GRADIENT_COLOR}
+                    stopOpacity={stop.opacity}
+                  />
+                ))}
               </linearGradient>
             );
           })}

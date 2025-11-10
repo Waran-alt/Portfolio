@@ -6,6 +6,13 @@
 
 import type { LightConfig, MaterialConfig, Vector3 } from './animations/illumination';
 
+export type CubeCornerOffset = {
+  key: string;
+  x: number;
+  y: number;
+  z: number;
+};
+
 // ============================================================================
 // Cube Geometry Constants
 // ============================================================================
@@ -44,6 +51,35 @@ export const BASE_POSITIONS = {
   top: { x: 0, y: CUBE_HALF_SIZE, z: 0 } as Vector3,
   bottom: { x: 0, y: -CUBE_HALF_SIZE, z: 0 } as Vector3,
 } as const satisfies Record<string, Vector3>;
+
+/**
+ * Corner positions relative to cube center for guide lines
+ */
+export const CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [
+  { key: 'front-top-right', x: CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'front-top-left', x: -CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'front-bottom-right', x: CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'front-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'back-top-right', x: CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+  { key: 'back-top-left', x: -CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+  { key: 'back-bottom-right', x: CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+  { key: 'back-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+] as const;
+
+// ============================================================================
+// Cursor Guide Styling
+// ============================================================================
+
+export const CURSOR_GUIDE_GRADIENT_COLOR = '#1a1c20';
+
+export const CURSOR_GUIDE_GRADIENT_STOPS = [
+  { offset: '0%', opacity: 0 },
+  { offset: '15%', opacity: 0 },
+  { offset: '30%', opacity: 0.9 },
+  { offset: '70%', opacity: 0.9 },
+  { offset: '85%', opacity: 0 },
+  { offset: '100%', opacity: 0 },
+] as const;
 
 // ============================================================================
 // Light Configuration Constants
