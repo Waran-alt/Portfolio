@@ -65,6 +65,10 @@ export default function LandingPage() {
     () => CUBE_CORNER_OFFSETS.map(() => createRef<SVGLineElement>()),
     []
   );
+  const gradientRefs = useMemo(
+    () => CUBE_CORNER_OFFSETS.map(() => createRef<SVGLinearGradientElement>()),
+    []
+  );
   
   const generatePulseId = () => {
     idCounterRef.current += 1;
@@ -159,14 +163,16 @@ export default function LandingPage() {
 
       cornerRefs.forEach((cornerRef, index) => {
         const lineRef = lineRefs[index];
-        if (!cornerRef || !lineRef) {
+        const gradientRef = gradientRefs[index];
+        if (!cornerRef || !lineRef || !gradientRef) {
           return;
         }
 
         const cornerElement = cornerRef.current;
         const lineElement = lineRef.current;
+        const gradientElement = gradientRef.current;
 
-        if (!cornerElement || !lineElement) {
+        if (!cornerElement || !lineElement || !gradientElement) {
           return;
         }
 
@@ -178,6 +184,11 @@ export default function LandingPage() {
         lineElement.setAttribute('y1', `${cursor.y}`);
         lineElement.setAttribute('x2', `${cornerX}`);
         lineElement.setAttribute('y2', `${cornerY}`);
+
+        gradientElement.setAttribute('x1', `${cursor.x}`);
+        gradientElement.setAttribute('y1', `${cursor.y}`);
+        gradientElement.setAttribute('x2', `${cornerX}`);
+        gradientElement.setAttribute('y2', `${cornerY}`);
       });
 
       animationFrameId = requestAnimationFrame(updateGuideLines);
@@ -188,7 +199,7 @@ export default function LandingPage() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [cornerRefs, lineRefs]);
+  }, [cornerRefs, gradientRefs, lineRefs]);
 
   return (
     <main 
@@ -254,12 +265,31 @@ export default function LandingPage() {
         </div>
       </div>
       
-      <svg
-        className={styles['guideOverlay']}
-        width="100%"
-        height="100%"
-        role="presentation"
-      >
+      <svg className={styles['guideOverlay']} width="100%" height="100%" role="presentation">
+        <defs>
+          {CUBE_CORNER_OFFSETS.map((corner, index) => {
+            const gradientRef = gradientRefs[index];
+            if (!gradientRef) {
+              return null;
+            }
+
+            return (
+              <linearGradient
+                key={corner.key}
+                id={`cursor-guide-gradient-${corner.key}`}
+                ref={gradientRef}
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop offset="0%" stopColor="#1a1c20" stopOpacity="0" />
+                <stop offset="15%" stopColor="#1a1c20" stopOpacity="0" />
+                <stop offset="30%" stopColor="#1a1c20" stopOpacity="0.9" />
+                <stop offset="70%" stopColor="#1a1c20" stopOpacity="0.9" />
+                <stop offset="85%" stopColor="#1a1c20" stopOpacity="0" />
+                <stop offset="100%" stopColor="#1a1c20" stopOpacity="0" />
+              </linearGradient>
+            );
+          })}
+        </defs>
         {CUBE_CORNER_OFFSETS.map((corner, index) => {
           const lineRef = lineRefs[index];
           if (!lineRef) {
@@ -270,6 +300,7 @@ export default function LandingPage() {
             <line
               key={corner.key}
               ref={lineRef}
+              stroke={`url(#cursor-guide-gradient-${corner.key})`}
               data-testid="cursor-guide-line"
               strokeLinecap="round"
             />
