@@ -7,17 +7,35 @@
  * All animation logic is handled by cubeAnimation.ts module.
  */
 
-import { MouseEvent, useEffect, useRef, useState } from 'react';
+import { MouseEvent, createRef, useEffect, useMemo, useRef, useState } from 'react';
 import { LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/constants';
 import { createCubeAnimation, quat_create, type CubeAnimationState } from './animations/cube';
-import { createLightEffect, createLightGradient, type LightPosition } from './animations/light';
+import { createLightGradient } from './animations/light';
 import { LANDING_PAGE_AUTO_PULSE_CONFIG, LANDING_PAGE_CLICK_PULSE_CONFIG, PulseEffect, type Pulse } from './animations/pulse';
+import { CUBE_HALF_SIZE } from './page.constants';
 import styles from './page.module.css';
+
+type CornerOffset = {
+  key: string;
+  x: number;
+  y: number;
+  z: number;
+};
+
+const CUBE_CORNER_OFFSETS: CornerOffset[] = [
+  { key: 'front-top-right', x: CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'front-top-left', x: -CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'front-bottom-right', x: CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'front-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
+  { key: 'back-top-right', x: CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+  { key: 'back-top-left', x: -CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+  { key: 'back-bottom-right', x: CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+  { key: 'back-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+] as const;
 
 export default function LandingPage() {
   const innerRef = useRef<HTMLDivElement | null>(null);
-  const lightPositionRef = useRef<LightPosition>({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y });
-  const [lightGradient, setLightGradient] = useState(createLightGradient({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y }));
+  const [lightGradient] = useState(createLightGradient({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y }));
 
   // Animation state
   const animationStateRef = useRef<CubeAnimationState>({
@@ -38,6 +56,15 @@ export default function LandingPage() {
   // Pulse state
   const [pulses, setPulses] = useState<Array<Pulse & { config: typeof LANDING_PAGE_CLICK_PULSE_CONFIG | typeof LANDING_PAGE_AUTO_PULSE_CONFIG }>>([]);
   const idCounterRef = useRef(0);
+  const cursorPositionRef = useRef({ x: 0, y: 0 });
+  const cornerRefs = useMemo(
+    () => CUBE_CORNER_OFFSETS.map(() => createRef<HTMLDivElement>()),
+    []
+  );
+  const lineRefs = useMemo(
+    () => CUBE_CORNER_OFFSETS.map(() => createRef<SVGLineElement>()),
+    []
+  );
   
   const generatePulseId = () => {
     idCounterRef.current += 1;
@@ -99,7 +126,7 @@ export default function LandingPage() {
     return () => {
       clearTimeout(timeoutId);
       clearTimeout(autoPulseId);
-    };
+  };
   }, []); // Empty dependency array - only run once
 
   const handlePulseComplete = (id: number) => {
@@ -110,27 +137,64 @@ export default function LandingPage() {
     // Create and start the animation loop
     const cleanup = createCubeAnimation(innerRef, animationStateRef);
 
-    // Start light effect
-    const lightCleanup = createLightEffect(lightPositionRef);
-
-    // Update gradient as light position changes
-    const updateGradient = () => {
-      setLightGradient(createLightGradient(lightPositionRef.current));
-      requestAnimationFrame(updateGradient);
-    };
-    updateGradient();
-
     return () => {
       cleanup();
-      lightCleanup();
-    };
+  };
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      cursorPositionRef.current = {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const updateGuideLines = () => {
+      const cursor = cursorPositionRef.current;
+
+      cornerRefs.forEach((cornerRef, index) => {
+        const lineRef = lineRefs[index];
+        if (!cornerRef || !lineRef) {
+          return;
+        }
+
+        const cornerElement = cornerRef.current;
+        const lineElement = lineRef.current;
+
+        if (!cornerElement || !lineElement) {
+          return;
+        }
+
+        const rect = cornerElement.getBoundingClientRect();
+        const cornerX = rect.left + rect.width / 2;
+        const cornerY = rect.top + rect.height / 2;
+
+        lineElement.setAttribute('x1', `${cursor.x}`);
+        lineElement.setAttribute('y1', `${cursor.y}`);
+        lineElement.setAttribute('x2', `${cornerX}`);
+        lineElement.setAttribute('y2', `${cornerY}`);
+      });
+
+      animationFrameId = requestAnimationFrame(updateGuideLines);
+    };
+
+    animationFrameId = requestAnimationFrame(updateGuideLines);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [cornerRefs, lineRefs]);
 
   return (
     <main 
       className="LandingPage min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-700" 
       data-testid="landing-root"
-      style={{ background: lightGradient }}
+      style={{ background: lightGradient, position: 'relative' }}
     >
       {/* Render pulse effects behind cube */}
       {pulses.map(pulse => (
@@ -150,20 +214,76 @@ export default function LandingPage() {
           ref={innerRef}
         >
           <div className={`${styles['cube']}`} data-testid="cube">
+            {/* Front face - normal (0, 0, 1) */}
             <div className={`${styles['cubeFace']} ${styles['cubeFront']}`} />
+              
+            {/* Back face - normal (0, 0, -1) */}
             <div className={`${styles['cubeFace']} ${styles['cubeBack']}`} />
+            
+            {/* Right face - normal (1, 0, 0) */}
             <div className={`${styles['cubeFace']} ${styles['cubeRight']}`} />
+            
+            {/* Left face - normal (-1, 0, 0) */}
             <div className={`${styles['cubeFace']} ${styles['cubeLeft']}`} />
+            
+            {/* Top face - normal (0, 1, 0) */}
             <div className={`${styles['cubeFace']} ${styles['cubeTop']}`} />
+            
+            {/* Bottom face - normal (0, -1, 0) */}
             <div className={`${styles['cubeFace']} ${styles['cubeBottom']}`} />
+            
+            {CUBE_CORNER_OFFSETS.map((corner, index) => {
+              const cornerRef = cornerRefs[index];
+              if (!cornerRef) {
+                return null;
+              }
+
+              return (
+                <div
+                  key={corner.key}
+                  data-corner-key={corner.key}
+                  ref={cornerRef}
+                  className={styles['cornerMarker']}
+                  style={{
+                    transform: `translate3d(${corner.x}px, ${corner.y}px, ${corner.z}px)`,
+                  }}
+                />
+              );
+            })}
               </div>
         </div>
       </div>
+      
+      <svg
+        className={styles['guideOverlay']}
+        width="100%"
+        height="100%"
+        role="presentation"
+      >
+        {CUBE_CORNER_OFFSETS.map((corner, index) => {
+          const lineRef = lineRefs[index];
+          if (!lineRef) {
+            return null;
+          }
+
+          return (
+            <line
+              key={corner.key}
+              ref={lineRef}
+              data-testid="cursor-guide-line"
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </svg>
       
       {/* Interactive overlay for pulse effects - must be last to capture all clicks */}
       <div
         className="absolute inset-0 z-20"
         onClick={handleClick}
+        onMouseMove={(event) => {
+          cursorPositionRef.current = { x: event.clientX, y: event.clientY };
+        }}
         onKeyDown={handleKeyDown}
         role="button"
         tabIndex={0}

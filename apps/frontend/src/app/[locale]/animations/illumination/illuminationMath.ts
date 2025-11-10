@@ -36,13 +36,24 @@ export function calculateDistanceAttenuation(
 /**
  * Calculate brightness factor based on angle between light and surface normal
  * Uses dot product: 1.0 when facing light, 0.0 when perpendicular, negative when facing away
+ * 
+ * @param lightDirection - Direction vector from plane to light (normalized)
+ * @param surfaceNormal - Surface normal vector (normalized)
+ * @param illuminateBackFaces - If true, use absolute value so back faces are also illuminated
  */
 export function calculateAngleBrightness(
   lightDirection: Vector3,
-  surfaceNormal: Vector3
+  surfaceNormal: Vector3,
+  illuminateBackFaces: boolean = false
 ): number {
   const dotProduct = vectorDot(lightDirection, surfaceNormal);
-  // Clamp to minimum to avoid negative illumination (can be adjusted for backlighting)
+  
+  if (illuminateBackFaces) {
+    // Use absolute value: -1 becomes 1, so back faces are illuminated
+    return Math.abs(dotProduct);
+  }
+  
+  // Clamp to minimum to avoid negative illumination (standard behavior)
   return Math.max(dotProduct, MIN_DOT_PRODUCT);
 }
 
@@ -91,7 +102,11 @@ export function calculatePlaneIllumination(
   const lightDirection = vectorDirection(planePosition, lightConfig.position);
   
   // Calculate angle-based brightness (dot product with surface normal)
-  const angleBrightness = calculateAngleBrightness(lightDirection, planeNormal);
+  const angleBrightness = calculateAngleBrightness(
+    lightDirection,
+    planeNormal,
+    materialConfig.illuminateBackFaces ?? false
+  );
   
   // Combine angle brightness, distance attenuation, and light intensity
   const brightness = angleBrightness * distanceAttenuation * lightConfig.intensity;

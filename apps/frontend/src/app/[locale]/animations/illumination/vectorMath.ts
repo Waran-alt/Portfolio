@@ -4,7 +4,7 @@
  * Optimized vector operations for illumination calculations.
  */
 
-import { DEFAULT_FORWARD_VECTOR, ZERO_MAGNITUDE_THRESHOLD } from './constants';
+import { DEFAULT_FORWARD_VECTOR, MATRIX_DEFAULT_VALUE, ZERO_MAGNITUDE_THRESHOLD } from './constants';
 import type { Vector3 } from './types';
 
 /**
@@ -63,16 +63,16 @@ export function vectorDirection(from: Vector3, to: Vector3): Vector3 {
  */
 export function vectorTransform(v: Vector3, matrix: number[]): Vector3 {
   // Column-major 3x3 matrix: [m00, m10, m20, m01, m11, m21, m02, m12, m22]
-  // Ensure matrix has at least 9 elements, default to 0 if missing
-  const m00 = matrix[0] ?? 0;
-  const m10 = matrix[1] ?? 0;
-  const m20 = matrix[2] ?? 0;
-  const m01 = matrix[3] ?? 0;
-  const m11 = matrix[4] ?? 0;
-  const m21 = matrix[5] ?? 0;
-  const m02 = matrix[6] ?? 0;
-  const m12 = matrix[7] ?? 0;
-  const m22 = matrix[8] ?? 0;
+  // Ensure matrix has at least 9 elements, default to MATRIX_DEFAULT_VALUE if missing
+  const m00 = matrix[0] ?? MATRIX_DEFAULT_VALUE;
+  const m10 = matrix[1] ?? MATRIX_DEFAULT_VALUE;
+  const m20 = matrix[2] ?? MATRIX_DEFAULT_VALUE;
+  const m01 = matrix[3] ?? MATRIX_DEFAULT_VALUE;
+  const m11 = matrix[4] ?? MATRIX_DEFAULT_VALUE;
+  const m21 = matrix[5] ?? MATRIX_DEFAULT_VALUE;
+  const m02 = matrix[6] ?? MATRIX_DEFAULT_VALUE;
+  const m12 = matrix[7] ?? MATRIX_DEFAULT_VALUE;
+  const m22 = matrix[8] ?? MATRIX_DEFAULT_VALUE;
   
   return {
     x: m00 * v.x + m01 * v.y + m02 * v.z,

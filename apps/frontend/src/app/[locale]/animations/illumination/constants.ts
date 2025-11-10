@@ -84,6 +84,31 @@ export const MULTIPLICATIVE_BLEND_BASE = 1.0;
  */
 export const BRIGHTNESS_AMPLIFICATION = 500.0;
 
+/**
+ * Minimum opacity value (0.0 = fully transparent)
+ */
+export const OPACITY_MIN = 0.0;
+
+/**
+ * Maximum opacity value (1.0 = fully opaque)
+ */
+export const OPACITY_MAX = 1.0;
+
+/**
+ * Minimum brightness threshold (faces with brightness <= this get opacity 0)
+ */
+export const MIN_BRIGHTNESS_THRESHOLD = 0.0;
+
+/**
+ * Default z-index for illumination overlay element
+ */
+export const OVERLAY_Z_INDEX = 1;
+
+/**
+ * Default value for missing matrix elements
+ */
+export const MATRIX_DEFAULT_VALUE = 0;
+
 // ============================================================================
 // Component Defaults
 // ============================================================================
@@ -114,5 +139,5 @@ export const DEFAULT_MATERIAL_CONFIG: MaterialConfig = {
   baseColor: { r: 100, g: 100, b: 200 },
   reflectivity: 0.5,
   blendMode: 'multiply',
+  illuminateBackFaces: true,
 };
-

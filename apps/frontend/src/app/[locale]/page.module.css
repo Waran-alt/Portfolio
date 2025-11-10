@@ -23,8 +23,7 @@
 
 .cubeFront {
   transform: rotateY(0deg) translateZ(80px);
-  background: #374151; /* gray-700, slightly lighter for distinction */
-  border-color: #9ca3af; /* gray-400 */
+  border-color: #9ca3af; /* gray-400 for distinction */
 }
 .cubeBack {
   transform: rotateY(180deg) translateZ(80px);
@@ -40,6 +39,31 @@
 }
 .cubeBottom {
   transform: rotateX(-90deg) translateZ(80px);
+}
+
+.cornerMarker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.guideOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.guideOverlay line {
+  stroke: rgba(148, 163, 184, 0.6);
+  stroke-width: 1.5px;
+  transition: stroke 0.2s ease;
 }
 
 .paused {

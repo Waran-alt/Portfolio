@@ -12,8 +12,19 @@ describe('[locale]/page (LandingPage) - integration', () => {
     expect(root.className).toMatch(/bg-gradient-to-b/);
 
     expect(screen.getByTestId('cube-wrapper')).toBeInTheDocument();
-    expect(screen.getByTestId('cube')).toBeInTheDocument();
+    const cube = screen.getByTestId('cube');
+    expect(cube).toBeInTheDocument();
+
+    const faces = Array.from(cube.children);
+    expect(faces).toHaveLength(6);
+
+    expect(screen.getByTestId('pulse-trigger-overlay')).toBeInTheDocument();
+  });
+
+  it('renders guide lines for each cube corner', () => {
+    render(<LandingPage />);
+
+    const guideLines = screen.getAllByTestId('cursor-guide-line');
+    expect(guideLines).toHaveLength(8);
   });
 });
-
-

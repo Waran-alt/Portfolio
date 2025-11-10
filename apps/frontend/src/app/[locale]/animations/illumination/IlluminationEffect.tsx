@@ -10,7 +10,7 @@
 
 import type { RefObject } from 'react';
 import { useEffect, useRef } from 'react';
-import { BRIGHTNESS_AMPLIFICATION } from './constants';
+import { BRIGHTNESS_AMPLIFICATION, MIN_BRIGHTNESS_THRESHOLD, OPACITY_MAX, OPACITY_MIN, OVERLAY_Z_INDEX } from './constants';
 import { calculatePlaneIllumination, rgbToHex } from './illuminationMath';
 import type { LightConfig, MaterialConfig, Vector3 } from './types';
 
@@ -28,6 +28,10 @@ export interface IlluminationEffectProps {
   materialConfig: MaterialConfig;
   /** Ref to the DOM element (plane container) */
   elementRef: RefObject<HTMLElement | null>;
+  /** Optional ref for dynamic plane position (overrides planePosition if provided) */
+  positionRef?: RefObject<Vector3>;
+  /** Optional ref for dynamic plane normal (overrides planeNormal if provided) */
+  normalRef?: RefObject<Vector3>;
 }
 
 /**
@@ -48,6 +52,8 @@ export function IlluminationEffect({
   lightConfig,
   materialConfig,
   elementRef,
+  positionRef,
+  normalRef,
 }: IlluminationEffectProps) {
   // Store latest config values for RAF updates
   const configRef = useRef({
@@ -56,6 +62,8 @@ export function IlluminationEffect({
     lightConfig,
     materialConfig,
     elementRef,
+    positionRef,
+    normalRef,
   });
 
   // Ref to the overlay element (created dynamically)
@@ -63,10 +71,6 @@ export function IlluminationEffect({
 
   // RAF ID for animation loop
   const rafIdRef = useRef<number | null>(null);
-  
-  // Cache previous color and opacity to avoid redundant DOM updates
-  const previousColorRef = useRef<string | null>(null);
-  const previousOpacityRef = useRef<number | null>(null);
 
   // Update config ref when props change
   useEffect(() => {
@@ -76,8 +80,10 @@ export function IlluminationEffect({
       lightConfig,
       materialConfig,
       elementRef,
+      positionRef,
+      normalRef,
     };
-  }, [planePosition, planeNormal, lightConfig, materialConfig, elementRef]);
+  }, [planePosition, planeNormal, lightConfig, materialConfig, elementRef, positionRef, normalRef]);
 
   // Create overlay element on mount
   useEffect(() => {
@@ -95,7 +101,7 @@ export function IlluminationEffect({
       position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: 1;
+      z-index: ${OVERLAY_Z_INDEX};
       mix-blend-mode: screen;
     `;
     
@@ -121,10 +127,14 @@ export function IlluminationEffect({
       const config = configRef.current;
       if (!overlayRef.current) return;
 
+      // Use dynamic refs if provided, otherwise use static props
+      const currentPosition = config.positionRef?.current ?? config.planePosition;
+      const currentNormal = config.normalRef?.current ?? config.planeNormal;
+
       // Calculate brightness only (we use light color directly on overlay)
       const { brightness } = calculatePlaneIllumination(
-        config.planePosition,
-        config.planeNormal,
+        currentPosition,
+        currentNormal,
         config.lightConfig,
         config.materialConfig
       );
@@ -138,21 +148,17 @@ export function IlluminationEffect({
       
       // Calculate opacity from brightness and reflectivity
       // Amplify brightness for visible effect, then apply reflectivity
-      const baseOpacity = Math.min(1.0, Math.max(0.0, brightness * BRIGHTNESS_AMPLIFICATION));
+      const baseOpacity = Math.min(OPACITY_MAX, Math.max(OPACITY_MIN, brightness * BRIGHTNESS_AMPLIFICATION));
       const opacity = baseOpacity * config.materialConfig.reflectivity;
 
-      // Only update DOM if color or opacity changed (reduce DOM writes)
-      const colorChanged = previousColorRef.current !== lightColorHex;
-      const opacityChanged = previousOpacityRef.current === null || 
-        Math.abs(previousOpacityRef.current - opacity) > 0.01; // Only update if change > 1%
+      // When brightness is 0 or negative, opacity should be 0
+      // Note: With illuminateBackFaces enabled, brightness uses absolute value of dot product,
+      // so back faces are illuminated. Without it, back faces get brightness 0.
+      const finalOpacity = brightness <= MIN_BRIGHTNESS_THRESHOLD ? OPACITY_MIN : opacity;
 
-      if (colorChanged || opacityChanged) {
-        overlayRef.current.style.backgroundColor = lightColorHex;
-        overlayRef.current.style.opacity = opacity.toString();
-        
-        previousColorRef.current = lightColorHex;
-        previousOpacityRef.current = opacity;
-      }
+      // Update DOM every frame for smooth animation
+      overlayRef.current.style.backgroundColor = lightColorHex;
+      overlayRef.current.style.opacity = finalOpacity.toString();
 
       // Continue animation loop
       rafIdRef.current = requestAnimationFrame(update);

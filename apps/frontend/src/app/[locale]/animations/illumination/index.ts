@@ -7,31 +7,21 @@
 export { IlluminationEffect } from './IlluminationEffect';
 export type { IlluminationEffectProps } from './IlluminationEffect';
 
-export { calculatePlaneIllumination, rgbToHex, hexToRgb } from './illuminationMath';
-export { calculateDistanceAttenuation, calculateAngleBrightness } from './illuminationMath';
+export { calculateAngleBrightness, calculateDistanceAttenuation, calculatePlaneIllumination, hexToRgb, rgbToHex } from './illuminationMath';
 
 export {
-  vectorMagnitude,
-  vectorNormalize,
-  vectorDot,
-  vectorDistance,
-  vectorDirection,
-  vectorTransform,
+  vectorDirection, vectorDistance, vectorDot, vectorMagnitude,
+  vectorNormalize, vectorTransform
 } from './vectorMath';
 
 export type {
-  Vector3,
-  RGB,
-  LightConfig,
+  IlluminationResult, LightConfig,
   MaterialConfig,
-  Plane,
-  IlluminationResult,
+  Plane, RGB, Vector3
 } from './types';
 
 export {
   DEFAULT_LIGHT_CONFIG,
-  DEFAULT_MATERIAL_CONFIG,
-  MIN_DOT_PRODUCT,
-  MIN_DISTANCE,
+  DEFAULT_MATERIAL_CONFIG, MATRIX_DEFAULT_VALUE, MIN_BRIGHTNESS_THRESHOLD, MIN_DISTANCE, MIN_DOT_PRODUCT, OPACITY_MAX, OPACITY_MIN, OVERLAY_Z_INDEX
 } from './constants';
 

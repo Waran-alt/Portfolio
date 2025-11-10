@@ -104,6 +104,31 @@ export const quat_slerp = (q1: quat, q2: quat, t: number): quat => {
     ];
 };
 
+/**
+ * Converts a quaternion to a 3x3 rotation matrix (column-major format).
+ * Optimized for vector transformations in world space calculations.
+ * Returns array of 9 elements: [m00, m10, m20, m01, m11, m21, m02, m12, m22]
+ */
+export const quat_toRotationMatrix3x3 = (q: quat): number[] => {
+    const [w, x, y, z] = q;
+    const x2 = x * x, y2 = y * y, z2 = z * z;
+    const wx = w * x, wy = w * y, wz = w * z;
+    const xy = x * y, xz = x * z, yz = y * z;
+
+    // Column-major 3x3 rotation matrix: [m00, m10, m20, m01, m11, m21, m02, m12, m22]
+    return [
+        1 - 2 * (y2 + z2),  // m00
+        2 * (xy + wz),       // m10
+        2 * (xz - wy),       // m20
+        2 * (xy - wz),       // m01
+        1 - 2 * (x2 + z2),   // m11
+        2 * (yz + wx),       // m21
+        2 * (xz + wy),       // m02
+        2 * (yz - wx),       // m12
+        1 - 2 * (x2 + y2),   // m22
+    ];
+};
+
 /** Converts a quaternion to a CSS `matrix3d()` string. */
 export const quat_toMatrix3d = (q: quat): string => {
     const [w, x, y, z] = q;

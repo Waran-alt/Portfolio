@@ -46,6 +46,8 @@ export interface MaterialConfig {
   reflectivity: number;
   /** Blending mode: 'multiply' or 'additive' */
   blendMode: 'multiply' | 'additive';
+  /** If true, illuminate faces even when facing away from light (uses absolute value of dot product) */
+  illuminateBackFaces?: boolean;
 }
 
 /**

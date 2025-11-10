@@ -104,7 +104,7 @@ export default function IlluminationTestPage() {
     ...DEFAULT_LIGHT_CONFIG,
     position: { x: 0, y: 0, z: 200 },
   });
-
+  
   // Dragging state
   const [isDragging, setIsDragging] = useState(false);
 
@@ -521,7 +521,7 @@ export default function IlluminationTestPage() {
                   {!useGridView && plane.label && (
                     <div className="absolute bottom-2 left-2 right-2 text-xs text-white/80 font-medium text-center bg-black/30 px-2 py-1 rounded pointer-events-none">
                       {plane.label}
-                    </div>
+                  </div>
                   )}
             </div>
           );

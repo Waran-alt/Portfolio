@@ -4,6 +4,7 @@ import {
   quat_normalize,
   quat_slerp,
   quat_toMatrix3d,
+  quat_toRotationMatrix3x3,
   type quat,
 } from './cubeAnimation';
 
@@ -197,6 +198,106 @@ describe('Cube Animation - Quaternion Math', () => {
         expect(nums[7]).toBeCloseTo(0, 2);
         expect(nums[11]).toBeCloseTo(0, 2);
       }
+    });
+  });
+
+  describe('quat_toRotationMatrix3x3', () => {
+    it('returns identity matrix for identity quaternion', () => {
+      const matrix = quat_toRotationMatrix3x3([1, 0, 0, 0]);
+      expect(matrix).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+    });
+
+    it('produces column-major rotation matrix for 45° around Y axis', () => {
+      const angle = Math.PI / 4;
+      const q = quat_fromAxisAngle([0, 1, 0], angle);
+      const matrix = quat_toRotationMatrix3x3(q);
+
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const expected = [cos, 0, -sin, 0, 1, 0, sin, 0, cos];
+
+      expected.forEach((value, index) => {
+        expect(matrix[index]).toBeCloseTo(value, 6);
+      });
+    });
+
+    it('matches the top-left 3x3 block of matrix3d output', () => {
+      const q = quat_fromAxisAngle([1, 0, 0], Math.PI / 6);
+      const rotation3x3 = quat_toRotationMatrix3x3(q);
+      const matrix3d = quat_toMatrix3d(q);
+
+      const valuesMatch = matrix3d.match(/matrix3d\(([^)]+)\)/);
+      if (!valuesMatch) {
+        throw new Error('matrix3d output did not match expected format');
+      }
+
+      const rawValues = valuesMatch[1];
+      if (rawValues === undefined) {
+        throw new Error('matrix3d output missing captured values');
+      }
+
+      const values = rawValues.split(',').map((value) => Number.parseFloat(value.trim()));
+
+      expect(values).toHaveLength(16);
+
+      const topLeft = [values[0], values[1], values[2], values[4], values[5], values[6], values[8], values[9], values[10]] as [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number
+      ];
+      const topLeftArray: number[] = [...topLeft];
+
+      rotation3x3.forEach((value, index) => {
+        expect(value).toBeCloseTo(topLeftArray[index]!, 6);
+      });
+    });
+
+    it('returns orthonormal columns', () => {
+      const q = quat_fromAxisAngle([1, 1, 0], Math.PI / 3);
+      const matrix = quat_toRotationMatrix3x3(q);
+
+      expect(matrix).toHaveLength(9);
+
+      const typedMatrix = matrix as [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number
+      ];
+
+      const [m00, m10, m20, m01, m11, m21, m02, m12, m22] = typedMatrix;
+      const columns = [
+        [m00, m10, m20],
+        [m01, m11, m21],
+        [m02, m12, m22]
+      ] as [
+        [number, number, number],
+        [number, number, number],
+        [number, number, number]
+      ];
+      const dot = (a: [number, number, number], b: [number, number, number]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const magnitude = (v: [number, number, number]) => Math.sqrt(dot(v, v));
+
+      const [col0, col1, col2] = columns;
+
+      expect(magnitude(col0)).toBeCloseTo(1, 6);
+      expect(magnitude(col1)).toBeCloseTo(1, 6);
+      expect(magnitude(col2)).toBeCloseTo(1, 6);
+
+      expect(dot(col0, col1)).toBeCloseTo(0, 6);
+      expect(dot(col1, col2)).toBeCloseTo(0, 6);
+      expect(dot(col0, col2)).toBeCloseTo(0, 6);
     });
   });
 });
