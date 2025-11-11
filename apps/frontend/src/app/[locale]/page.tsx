@@ -7,17 +7,42 @@
  * All animation logic is handled by cubeAnimation.ts module.
  */
 
-import { MouseEvent, createRef, useEffect, useMemo, useRef, useState } from 'react';
+import { createRef, MouseEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/constants';
 import { createCubeAnimation, quat_create, type CubeAnimationState } from './animations/cube';
 import { createLightGradient } from './animations/light';
 import { LANDING_PAGE_AUTO_PULSE_CONFIG, LANDING_PAGE_CLICK_PULSE_CONFIG, PulseEffect, type Pulse } from './animations/pulse';
 import {
   CUBE_CORNER_OFFSETS,
+  CUBE_FACE_KEYS,
+  CUBE_FACE_TRANSFORMS,
+  CUBE_PULSE_BORDER_COLOR,
+  CUBE_PULSE_DELAY_MS,
+  CUBE_PULSE_DURATION_MS,
+  CUBE_PULSE_EASING,
+  CUBE_PULSE_EDGE_BLUR_PX,
+  CUBE_PULSE_EDGE_OPACITY,
+  CUBE_PULSE_FACE_BACKGROUND,
+  CUBE_PULSE_GLOW_COLOR,
+  CUBE_PULSE_GLOW_RADIUS_PX,
+  CUBE_PULSE_LOOP_DELAY_MS,
+  CUBE_PULSE_OPACITY_END,
+  CUBE_PULSE_OPACITY_MID,
+  CUBE_PULSE_OPACITY_START,
+  CUBE_PULSE_SECONDARY_DELAY_MS,
+  CUBE_PULSE_SECONDARY_LOOP_DELAY_MS,
+  CUBE_PULSE_SECONDARY_OPACITY_MID,
+  CUBE_PULSE_SECONDARY_OPACITY_START,
+  CUBE_PULSE_SECONDARY_TRANSFORMS,
+  CUBE_PULSE_THICKNESS_PX,
+  CUBE_PULSE_TRANSFORMS,
   CURSOR_GUIDE_GRADIENT_COLOR,
   CURSOR_GUIDE_GRADIENT_STOPS,
+  type CubeFaceKey,
 } from './page.constants';
 import styles from './page.module.css';
+
+type CSSVariableProperties = CSSProperties & Record<string, string | number>;
 
 export default function LandingPage() {
   const innerRef = useRef<HTMLDivElement | null>(null);
@@ -43,6 +68,28 @@ export default function LandingPage() {
   const [pulses, setPulses] = useState<Array<Pulse & { config: typeof LANDING_PAGE_CLICK_PULSE_CONFIG | typeof LANDING_PAGE_AUTO_PULSE_CONFIG }>>([]);
   const idCounterRef = useRef(0);
   const cursorPositionRef = useRef({ x: 0, y: 0 });
+  const cubeFaceClassNames = useMemo<Record<CubeFaceKey, string>>(
+    () => ({
+      front: styles['cubeFront']!,
+      back: styles['cubeBack']!,
+      right: styles['cubeRight']!,
+      left: styles['cubeLeft']!,
+      top: styles['cubeTop']!,
+      bottom: styles['cubeBottom']!,
+    }),
+    []
+  );
+  const cubeFaces = useMemo(
+    () =>
+      CUBE_FACE_KEYS.map(faceKey => ({
+        key: faceKey,
+        className: cubeFaceClassNames[faceKey],
+        transformStart: CUBE_FACE_TRANSFORMS[faceKey],
+        transformEnd: CUBE_PULSE_TRANSFORMS[faceKey],
+        secondaryTransformEnd: CUBE_PULSE_SECONDARY_TRANSFORMS[faceKey],
+      })),
+    [cubeFaceClassNames]
+  );
   const cornerRefs = useMemo(
     () => CUBE_CORNER_OFFSETS.map(() => createRef<HTMLDivElement>()),
     []
@@ -53,6 +100,28 @@ export default function LandingPage() {
   );
   const gradientRefs = useMemo(
     () => CUBE_CORNER_OFFSETS.map(() => createRef<SVGLinearGradientElement>()),
+    []
+  );
+  const cubePulseStyle = useMemo<CSSVariableProperties>(
+    () => ({
+      '--cube-pulse-duration': `${CUBE_PULSE_DURATION_MS}ms`,
+      '--cube-pulse-delay': `${CUBE_PULSE_DELAY_MS}ms`,
+      '--cube-pulse-opacity-start': CUBE_PULSE_OPACITY_START,
+      '--cube-pulse-opacity-mid': CUBE_PULSE_OPACITY_MID,
+      '--cube-pulse-opacity-end': CUBE_PULSE_OPACITY_END,
+      '--cube-pulse-easing': CUBE_PULSE_EASING,
+      '--cube-pulse-secondary-delay': `${CUBE_PULSE_SECONDARY_DELAY_MS}ms`,
+      '--cube-pulse-loop-delay': `${CUBE_PULSE_LOOP_DELAY_MS}ms`,
+      '--cube-pulse-secondary-loop-delay': `${CUBE_PULSE_SECONDARY_LOOP_DELAY_MS}ms`,
+      '--cube-pulse-thickness': `${CUBE_PULSE_THICKNESS_PX}px`,
+      '--cube-pulse-half-thickness': `${CUBE_PULSE_THICKNESS_PX / 2}px`,
+      '--cube-pulse-edge-opacity': CUBE_PULSE_EDGE_OPACITY,
+      '--cube-pulse-edge-blur': `${CUBE_PULSE_EDGE_BLUR_PX}px`,
+      '--cube-pulse-glow-radius': `${CUBE_PULSE_GLOW_RADIUS_PX}px`,
+      '--cube-pulse-glow-color': CUBE_PULSE_GLOW_COLOR,
+      '--cube-pulse-face-bg': CUBE_PULSE_FACE_BACKGROUND,
+      '--cube-pulse-border-color': CUBE_PULSE_BORDER_COLOR,
+    }),
     []
   );
   
@@ -178,7 +247,7 @@ export default function LandingPage() {
       });
 
       animationFrameId = requestAnimationFrame(updateGuideLines);
-    };
+  };
 
     animationFrameId = requestAnimationFrame(updateGuideLines);
 
@@ -211,24 +280,53 @@ export default function LandingPage() {
           ref={innerRef}
         >
           <div className={`${styles['cube']}`} data-testid="cube">
-            {/* Front face - normal (0, 0, 1) */}
-            <div className={`${styles['cubeFace']} ${styles['cubeFront']}`} />
-              
-            {/* Back face - normal (0, 0, -1) */}
-            <div className={`${styles['cubeFace']} ${styles['cubeBack']}`} />
-            
-            {/* Right face - normal (1, 0, 0) */}
-            <div className={`${styles['cubeFace']} ${styles['cubeRight']}`} />
-            
-            {/* Left face - normal (-1, 0, 0) */}
-            <div className={`${styles['cubeFace']} ${styles['cubeLeft']}`} />
-            
-            {/* Top face - normal (0, 1, 0) */}
-            <div className={`${styles['cubeFace']} ${styles['cubeTop']}`} />
-            
-            {/* Bottom face - normal (0, -1, 0) */}
-            <div className={`${styles['cubeFace']} ${styles['cubeBottom']}`} />
-            
+            <div
+              className={styles['cubePulseWrapper']}
+              style={cubePulseStyle}
+              data-testid="cube-pulse"
+              aria-hidden="true"
+            >
+              <div className={styles['cubePulse']}>
+                {cubeFaces.map(face => (
+                  <div
+                    key={`pulse-${face.key}`}
+                    data-testid="cube-pulse-face"
+                    className={`${styles['cubeFace']} ${styles['cubePulseFace']} ${face.className}`}
+                    style={
+                      {
+                        '--cube-pulse-transform-start': face.transformStart,
+                        '--cube-pulse-transform-end': face.transformEnd,
+                      } as CSSVariableProperties
+                    }
+                  />
+                ))}
+                {cubeFaces.map(face => (
+                  <div
+                    key={`pulse-secondary-${face.key}`}
+                    data-testid="cube-pulse-face-secondary"
+                    className={`${styles['cubeFace']} ${styles['cubePulseFace']} ${styles['cubePulseFaceSecondary']} ${face.className}`}
+                    style={
+                      {
+                        '--cube-pulse-transform-start': face.transformStart,
+                        '--cube-pulse-transform-end': face.secondaryTransformEnd,
+                        '--cube-pulse-opacity-start': CUBE_PULSE_SECONDARY_OPACITY_START,
+                        '--cube-pulse-opacity-mid': CUBE_PULSE_SECONDARY_OPACITY_MID,
+                      } as CSSVariableProperties
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+
+            {cubeFaces.map(face => (
+              <div
+                key={`core-${face.key}`}
+                data-testid="cube-face"
+                data-face={face.key}
+                className={`${styles['cubeFace']} ${face.className}`}
+              />
+            ))}
+
             {CUBE_CORNER_OFFSETS.map((corner, index) => {
               const cornerRef = cornerRefs[index];
               if (!cornerRef) {

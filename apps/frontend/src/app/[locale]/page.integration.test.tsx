@@ -16,8 +16,15 @@ describe('[locale]/page (LandingPage) - integration', () => {
     const cube = screen.getByTestId('cube');
     expect(cube).toBeInTheDocument();
 
-    const faces = cube.querySelectorAll('[class*="cubeFace"]');
+    const faces = screen.getAllByTestId('cube-face');
     expect(faces).toHaveLength(6);
+
+    const pulseWrapper = screen.getByTestId('cube-pulse');
+    expect(pulseWrapper).toBeInTheDocument();
+    const pulseFaces = screen.getAllByTestId('cube-pulse-face');
+    expect(pulseFaces).toHaveLength(6);
+    const pulseFacesSecondary = screen.getAllByTestId('cube-pulse-face-secondary');
+    expect(pulseFacesSecondary).toHaveLength(6);
 
     const cornerMarkers = cube.querySelectorAll('[data-corner-key]');
     expect(cornerMarkers).toHaveLength(CUBE_CORNER_OFFSETS.length);

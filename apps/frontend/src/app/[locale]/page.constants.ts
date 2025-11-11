@@ -66,6 +66,24 @@ export const CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [
   { key: 'back-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
 ] as const;
 
+/**
+ * Ordered cube face keys for iteration
+ */
+export const CUBE_FACE_KEYS = ['front', 'back', 'right', 'left', 'top', 'bottom'] as const;
+
+export type CubeFaceKey = (typeof CUBE_FACE_KEYS)[number];
+
+const createCubeFaceTransforms = (halfSize: number): Record<CubeFaceKey, string> => ({
+  front: `rotateY(0deg) translateZ(${halfSize}px)`,
+  back: `rotateY(180deg) translateZ(${halfSize}px)`,
+  right: `rotateY(90deg) translateZ(${halfSize}px)`,
+  left: `rotateY(-90deg) translateZ(${halfSize}px)`,
+  top: `rotateX(90deg) translateZ(${halfSize}px)`,
+  bottom: `rotateX(-90deg) translateZ(${halfSize}px)`,
+});
+
+export const CUBE_FACE_TRANSFORMS = createCubeFaceTransforms(CUBE_HALF_SIZE);
+
 // ============================================================================
 // Cursor Guide Styling
 // ============================================================================
@@ -80,6 +98,36 @@ export const CURSOR_GUIDE_GRADIENT_STOPS = [
   { offset: '85%', opacity: 0 },
   { offset: '100%', opacity: 0 },
 ] as const;
+
+// ============================================================================
+// Cube Pulse Animation
+// ============================================================================
+
+export const CUBE_PULSE_SCALE = 1.25;
+export const CUBE_PULSE_DURATION_MS = 1200;
+export const CUBE_PULSE_DELAY_MS = 0;
+export const CUBE_PULSE_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
+export const CUBE_PULSE_OPACITY_START = 0.7;
+export const CUBE_PULSE_OPACITY_MID = 0.3;
+export const CUBE_PULSE_OPACITY_END = 0;
+export const CUBE_PULSE_GLOW_RADIUS_PX = 48;
+export const CUBE_PULSE_GLOW_COLOR = 'rgba(4, 8, 5, 0.05)';
+export const CUBE_PULSE_FACE_BACKGROUND = 'rgba(19, 21, 25, 0.18)';
+export const CUBE_PULSE_BORDER_COLOR = 'rgba(19, 21, 25, 0.75)';
+export const CUBE_PULSE_SECONDARY_DELAY_MS = 200;
+export const CUBE_PULSE_SECONDARY_SCALE_MULTIPLIER = 1.02;
+export const CUBE_PULSE_SECONDARY_OPACITY_START = 0.4;
+export const CUBE_PULSE_SECONDARY_OPACITY_MID = 0.18;
+export const CUBE_PULSE_THICKNESS_PX = 10;
+export const CUBE_PULSE_EDGE_OPACITY = 0.42;
+export const CUBE_PULSE_EDGE_BLUR_PX = 42;
+export const CUBE_PULSE_LOOP_DELAY_MS = 400;
+export const CUBE_PULSE_SECONDARY_LOOP_DELAY_MS = 400;
+
+export const CUBE_PULSE_TRANSFORMS = createCubeFaceTransforms(CUBE_HALF_SIZE * CUBE_PULSE_SCALE);
+export const CUBE_PULSE_SECONDARY_TRANSFORMS = createCubeFaceTransforms(
+  CUBE_HALF_SIZE * CUBE_PULSE_SCALE * CUBE_PULSE_SECONDARY_SCALE_MULTIPLIER
+);
 
 // ============================================================================
 // Light Configuration Constants

@@ -21,6 +21,68 @@
   transform: translateZ(0);
 }
 
+.cubePulseWrapper {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  will-change: transform;
+  transform-origin: center;
+}
+
+.cubePulse {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.cubePulseFace {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--cube-pulse-face-bg, rgba(31, 41, 25, 0.18));
+  border: 1px solid var(--cube-pulse-border-color, rgba(191, 219, 254, 0.35));
+  box-shadow:
+    0 0 var(--cube-pulse-glow-radius, 48px) var(--cube-pulse-glow-color, rgba(148, 181, 255, 0.5)),
+    inset 0 0 calc(var(--cube-pulse-glow-radius, 48px) * 0.35) var(--cube-pulse-glow-color, rgba(148, 181, 255, 0.5));
+  will-change: opacity, transform;
+  backface-visibility: visible;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  animation-name: cubePulseFace;
+  animation-duration: calc(var(--cube-pulse-duration, 1200ms) + var(--cube-pulse-loop-delay, 400ms));
+  animation-timing-function: var(--cube-pulse-easing, cubic-bezier(0.16, 1, 0.3, 1));
+  animation-iteration-count: infinite;
+  animation-delay: var(--cube-pulse-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.cubePulseFace::before,
+.cubePulseFace::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: inherit;
+  background: inherit;
+  opacity: var(--cube-pulse-edge-opacity, 0.42);
+  box-shadow: 0 0 var(--cube-pulse-edge-blur, 42px) var(--cube-pulse-glow-color, rgba(148, 181, 255, 0.5));
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.cubePulseFace::before {
+  transform: translateZ(var(--cube-pulse-half-thickness, 5px));
+}
+
+.cubePulseFace::after {
+  transform: translateZ(calc(var(--cube-pulse-half-thickness, 5px) * -1)) rotateY(180deg);
+}
+
+.cubePulseFaceSecondary {
+  --cube-pulse-loop-delay: var(--cube-pulse-secondary-loop-delay, var(--cube-pulse-loop-delay, 400ms));
+  animation-delay: var(--cube-pulse-secondary-delay, 200ms);
+}
+
 .cubeFront {
   transform: rotateY(0deg) translateZ(80px);
   border-width: 3px;
@@ -67,4 +129,21 @@
 
 .paused {
   animation-play-state: paused;
+}
+
+@keyframes cubePulseFace {
+  0% {
+    transform: var(--cube-pulse-transform-start);
+    opacity: var(--cube-pulse-opacity-start, 0.7);
+  }
+
+  75% {
+    transform: var(--cube-pulse-transform-end);
+    opacity: var(--cube-pulse-opacity-mid, 0.3);
+  }
+
+  100% {
+    transform: var(--cube-pulse-transform-end);
+    opacity: var(--cube-pulse-opacity-end, 0);
+  }
 }
