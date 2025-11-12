@@ -108,10 +108,61 @@
 }
 
 .innerCube {
-  position: absolute;
+  position: relative;
+  width: 100%;
+  height: 100%;
   transform-style: preserve-3d;
   transform-origin: center center;
   pointer-events: none;
+  animation-name: innerCubePulse;
+  animation-duration: calc(var(--cube-pulse-duration, 1200ms) + var(--cube-pulse-loop-delay, 400ms));
+  animation-timing-function: var(--cube-pulse-easing, cubic-bezier(0.16, 1, 0.3, 1));
+  animation-iteration-count: infinite;
+  animation-delay: var(--cube-pulse-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.cubePulsePaused .innerCube {
+  animation-play-state: paused;
+}
+
+@keyframes innerCubePulse {
+  /* First pulse: start at 0% (matching outer cube primary pulse start) */
+  0% {
+    transform: scale3d(1, 1, 1);
+  }
+
+  /* First pulse: expand over 100ms (0ms to 100ms = 0% to 6.25%) */
+  6.25% {
+    transform: scale3d(
+      var(--inner-cube-pulse-scale, 1.15),
+      var(--inner-cube-pulse-scale, 1.15),
+      var(--inner-cube-pulse-scale, 1.15)
+    );
+  }
+
+  /* First pulse: shrink over 100ms */
+  12.5% {
+    transform: scale3d(1.05, 1.05, 1.05);
+  }
+
+  /* Second pulse: expand over 100ms to reach peak at 18.75% */
+  18.75% {
+    transform: scale3d(
+      var(--inner-cube-pulse-scale, 1.25),
+      var(--inner-cube-pulse-scale, 1.25),
+      var(--inner-cube-pulse-scale, 1.25)
+    );
+  }
+
+  80% {
+    transform: scale3d(1, 1, 1);
+  }
+
+  /* Hold until loop repeats */
+  100% {
+    transform: scale3d(1, 1, 1);
+  }
 }
 
 .innerCubeFace {

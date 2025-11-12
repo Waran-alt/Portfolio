@@ -58,6 +58,7 @@ import {
   INNER_CUBE_FACE_SHADOW,
   INNER_CUBE_FACE_TRANSFORMS,
   INNER_CUBE_HALF_SIZE,
+  INNER_CUBE_PULSE_SCALE,
   INNER_CUBE_SIZE_PX,
   TESSERACT_LINE_COLOR,
   TESSERACT_LINE_STROKE_WIDTH,
@@ -469,7 +470,7 @@ export default function LandingPage() {
           ref={innerRef}
         >
           <div 
-            className={`${styles['cube']}`} 
+            className={`${styles['cube']} ${isPulsePaused ? styles['cubePulsePaused'] : ''}`}
             data-testid="cube"
             style={{
               '--cube-face-background': CUBE_FACE_BACKGROUND,
@@ -482,7 +483,7 @@ export default function LandingPage() {
           >
             <div
               ref={cubePulseWrapperRef}
-              className={`${styles['cubePulseWrapper']} ${isPulsePaused ? styles['cubePulsePaused'] : ''}`}
+              className={styles['cubePulseWrapper']}
               style={cubePulseStyle}
               data-testid="cube-pulse"
               aria-hidden="true"
@@ -549,16 +550,23 @@ export default function LandingPage() {
 
             {/* Inner cube */}
             <div
-              className={styles['innerCube']}
               style={{
+                position: 'absolute',
                 width: `${INNER_CUBE_SIZE_PX}px`,
                 height: `${INNER_CUBE_SIZE_PX}px`,
                 left: `calc(50% - ${INNER_CUBE_HALF_SIZE}px)`,
                 top: `calc(50% - ${INNER_CUBE_HALF_SIZE}px)`,
                 transform: `scale3d(${isInnerCubeExpanded ? INNER_CUBE_EXPAND_SCALE : 1}, ${isInnerCubeExpanded ? INNER_CUBE_EXPAND_SCALE : 1}, ${isInnerCubeExpanded ? INNER_CUBE_EXPAND_SCALE : 1})`,
                 transition: `transform ${isInnerCubeExpanded ? INNER_CUBE_EXPAND_DURATION_MS : INNER_CUBE_CONTRACT_DURATION_MS}ms ${isInnerCubeExpanded ? 'cubic-bezier(0.16, 1, 0.7, 1)' : 'ease-in'}`,
+                transformStyle: 'preserve-3d',
               } as CSSVariableProperties}
             >
+              <div
+                className={styles['innerCube']}
+                style={{
+                  '--inner-cube-pulse-scale': INNER_CUBE_PULSE_SCALE,
+                } as CSSVariableProperties}
+              >
               {cubeFaces.map(face => (
                 <div
                   key={`inner-${face.key}`}
@@ -588,7 +596,8 @@ export default function LandingPage() {
                   />
                 );
               })}
-                </div>
+              </div>
+            </div>
               </div>
         </div>
       </div>

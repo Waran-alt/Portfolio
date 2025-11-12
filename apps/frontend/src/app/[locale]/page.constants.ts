@@ -83,6 +83,11 @@ export const INNER_CUBE_EXPAND_DURATION_MS = 3000;
 export const INNER_CUBE_CONTRACT_DURATION_MS = 300;
 
 /**
+ * Inner cube pulse scale (how much it expands during pulse animation)
+ */
+export const INNER_CUBE_PULSE_SCALE = 1.15;
+
+/**
  * Corner positions relative to cube center for guide lines (outer cube)
  */
 export const CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [
