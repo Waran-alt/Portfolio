@@ -73,8 +73,13 @@ export default function LandingPage() {
   const cubePulseWrapperRef = useRef<HTMLDivElement | null>(null);
   const [lightGradient] = useState(createLightGradient({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y }));
   const [isInnerCubeExpanded, setIsInnerCubeExpanded] = useState(false);
-  const [isPulsePaused, setIsPulsePaused] = useState(false);
+  const [hasCompletedLoopWhileExpanded, setHasCompletedLoopWhileExpanded] = useState(false);
   const shouldPauseAfterLoopRef = useRef(false);
+  
+  // Derive pulse pause state: paused only if expanded AND loop has completed
+  const isPulsePaused = useMemo(() => {
+    return isInnerCubeExpanded && hasCompletedLoopWhileExpanded;
+  }, [isInnerCubeExpanded, hasCompletedLoopWhileExpanded]);
 
   // Animation state
   const animationStateRef = useRef<CubeAnimationState>({
@@ -279,13 +284,20 @@ export default function LandingPage() {
     setPulses(prev => prev.filter(pulse => pulse.id !== id));
   };
 
-  // Handle pulse pause/resume based on inner cube expansion
+  // Reset loop completion state when expansion stops
   useEffect(() => {
     if (!isInnerCubeExpanded) {
-      // Immediately resume when not expanded
-      // Note: This synchronous state update is intentional for immediate UX feedback when expansion stops
       shouldPauseAfterLoopRef.current = false;
-      setIsPulsePaused(false);
+      // Defer state update to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setHasCompletedLoopWhileExpanded(false);
+      });
+    }
+  }, [isInnerCubeExpanded]);
+
+  // Handle pulse pause after animation loop completes when expanded
+  useEffect(() => {
+    if (!isInnerCubeExpanded) {
       return;
     }
 
@@ -305,8 +317,8 @@ export default function LandingPage() {
 
     const handleAnimationIteration = () => {
       // Only pause if we still want to pause (expansion might have been released)
-      if (shouldPauseAfterLoopRef.current) {
-        setIsPulsePaused(true);
+      if (shouldPauseAfterLoopRef.current && isInnerCubeExpanded) {
+        setHasCompletedLoopWhileExpanded(true);
       }
     };
 
