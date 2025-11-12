@@ -68,6 +68,21 @@ export const INNER_CUBE_SIZE_PX = CUBE_SIZE_PX * INNER_CUBE_SIZE_RATIO;
 export const INNER_CUBE_HALF_SIZE = INNER_CUBE_SIZE_PX / 2;
 
 /**
+ * Inner cube expansion scale when mouse/key is pressed
+ */
+export const INNER_CUBE_EXPAND_SCALE = 1 / INNER_CUBE_SIZE_RATIO;
+
+/**
+ * Inner cube expansion duration in milliseconds (ease-out)
+ */
+export const INNER_CUBE_EXPAND_DURATION_MS = 3000;
+
+/**
+ * Inner cube contraction duration in milliseconds (swift return)
+ */
+export const INNER_CUBE_CONTRACT_DURATION_MS = 300;
+
+/**
  * Corner positions relative to cube center for guide lines (outer cube)
  */
 export const CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [

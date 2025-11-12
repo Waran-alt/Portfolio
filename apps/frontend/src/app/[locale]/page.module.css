@@ -30,6 +30,10 @@
   transform-origin: center;
 }
 
+.cubePulsePaused .cubePulseFace {
+  animation-play-state: paused;
+}
+
 .cubePulse {
   position: absolute;
   inset: 0;
@@ -106,6 +110,7 @@
 .innerCube {
   position: absolute;
   transform-style: preserve-3d;
+  transform-origin: center center;
   pointer-events: none;
 }
 

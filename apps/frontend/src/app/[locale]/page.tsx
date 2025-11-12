@@ -49,7 +49,10 @@ import {
   CUBE_PULSE_TRANSFORMS,
   CURSOR_GUIDE_GRADIENT_COLOR,
   CURSOR_GUIDE_GRADIENT_STOPS,
+  INNER_CUBE_CONTRACT_DURATION_MS,
   INNER_CUBE_CORNER_OFFSETS,
+  INNER_CUBE_EXPAND_DURATION_MS,
+  INNER_CUBE_EXPAND_SCALE,
   INNER_CUBE_FACE_BACKGROUND,
   INNER_CUBE_FACE_BORDER,
   INNER_CUBE_FACE_SHADOW,
@@ -66,7 +69,11 @@ type CSSVariableProperties = CSSProperties & Record<string, string | number>;
 
 export default function LandingPage() {
   const innerRef = useRef<HTMLDivElement | null>(null);
+  const cubePulseWrapperRef = useRef<HTMLDivElement | null>(null);
   const [lightGradient] = useState(createLightGradient({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y }));
+  const [isInnerCubeExpanded, setIsInnerCubeExpanded] = useState(false);
+  const [isPulsePaused, setIsPulsePaused] = useState(false);
+  const shouldPauseAfterLoopRef = useRef(false);
 
   // Animation state
   const animationStateRef = useRef<CubeAnimationState>({
@@ -165,6 +172,11 @@ export default function LandingPage() {
 
   // Cursor movement pulse generator - triggers based on distance (25px) or time (300ms min, 150ms max rate)
   const checkAndTriggerPulse = (cursorX: number, cursorY: number) => {
+    // Don't pulse if inner cube is expanded
+    if (isInnerCubeExpanded) {
+      return;
+    }
+
     const now = Date.now();
     const timeSinceLastPulse = now - lastPulseTimeRef.current;
     const timeSinceLastMove = now - lastCursorMoveTimeRef.current;
@@ -265,6 +277,79 @@ export default function LandingPage() {
   const handlePulseComplete = (id: number) => {
     setPulses(prev => prev.filter(pulse => pulse.id !== id));
   };
+
+  // Handle pulse pause/resume based on inner cube expansion
+  useEffect(() => {
+    if (!isInnerCubeExpanded) {
+      // Immediately resume when not expanded
+      // Note: This synchronous state update is intentional for immediate UX feedback when expansion stops
+      shouldPauseAfterLoopRef.current = false;
+      setIsPulsePaused(false);
+      return;
+    }
+
+    // When expanded, set flag to pause after current loop completes
+    shouldPauseAfterLoopRef.current = true;
+
+    // Wait for current loop to complete before pausing
+    const pulseWrapper = cubePulseWrapperRef.current;
+    if (!pulseWrapper) {
+      return;
+    }
+
+    const pulseFaces = pulseWrapper.querySelectorAll('[data-testid="cube-pulse-face"]');
+    if (pulseFaces.length === 0) {
+      return;
+    }
+
+    const handleAnimationIteration = () => {
+      // Only pause if we still want to pause (expansion might have been released)
+      if (shouldPauseAfterLoopRef.current) {
+        setIsPulsePaused(true);
+      }
+    };
+
+    // Listen to the first pulse face for iteration completion
+    const firstPulseFace = pulseFaces[0] as HTMLElement;
+    firstPulseFace.addEventListener('animationiteration', handleAnimationIteration);
+
+    return () => {
+      firstPulseFace.removeEventListener('animationiteration', handleAnimationIteration);
+    };
+  }, [isInnerCubeExpanded]);
+
+  // Inner cube expansion handlers
+  useEffect(() => {
+    const handleMouseDown = () => {
+      setIsInnerCubeExpanded(true);
+    };
+
+    const handleMouseUp = () => {
+      setIsInnerCubeExpanded(false);
+    };
+
+    const handleKeyDown = () => {
+      // Trigger on any key press
+      setIsInnerCubeExpanded(true);
+    };
+
+    const handleKeyUp = () => {
+      setIsInnerCubeExpanded(false);
+    };
+
+    // Add global event listeners
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   useEffect(() => {
     // Create and start the animation loop
@@ -396,7 +481,8 @@ export default function LandingPage() {
             } as CSSVariableProperties}
           >
             <div
-              className={styles['cubePulseWrapper']}
+              ref={cubePulseWrapperRef}
+              className={`${styles['cubePulseWrapper']} ${isPulsePaused ? styles['cubePulsePaused'] : ''}`}
               style={cubePulseStyle}
               data-testid="cube-pulse"
               aria-hidden="true"
@@ -469,7 +555,9 @@ export default function LandingPage() {
                 height: `${INNER_CUBE_SIZE_PX}px`,
                 left: `calc(50% - ${INNER_CUBE_HALF_SIZE}px)`,
                 top: `calc(50% - ${INNER_CUBE_HALF_SIZE}px)`,
-              }}
+                transform: `scale3d(${isInnerCubeExpanded ? INNER_CUBE_EXPAND_SCALE : 1}, ${isInnerCubeExpanded ? INNER_CUBE_EXPAND_SCALE : 1}, ${isInnerCubeExpanded ? INNER_CUBE_EXPAND_SCALE : 1})`,
+                transition: `transform ${isInnerCubeExpanded ? INNER_CUBE_EXPAND_DURATION_MS : INNER_CUBE_CONTRACT_DURATION_MS}ms ${isInnerCubeExpanded ? 'cubic-bezier(0.16, 1, 0.7, 1)' : 'ease-in'}`,
+              } as CSSVariableProperties}
             >
               {cubeFaces.map(face => (
                 <div
