@@ -119,17 +119,66 @@ export const INNER_CUBE_FACE_TRANSFORMS = createCubeFaceTransforms(INNER_CUBE_HA
 export const CUBE_FACE_TRANSFORMS = createCubeFaceTransforms(CUBE_HALF_SIZE);
 
 // ============================================================================
+// Color Palette
+// ============================================================================
+
+/**
+ * Base color values (RGB 0-255)
+ */
+export const COLORS = {
+  // Dark grays (slate-900 range)
+  darkGray: { r: 19, g: 21, b: 25 },
+  darkGrayAlt: { r: 26, g: 28, b: 32 },
+  darkGrayLight: { r: 31, g: 41, b: 55 },
+  darkGrayLighter: { r: 34, g: 42, b: 55 },
+  
+  // Black
+  black: { r: 0, g: 0, b: 0 },
+  
+  // Light blue accents (for glows and highlights)
+  lightBlue: { r: 148, g: 181, b: 255 },
+  lightBlueDark: { r: 191, g: 219, b: 254 },
+  
+  // Very dark green (for pulse glow)
+  darkGreen: { r: 4, g: 8, b: 5 },
+} as const;
+
+/**
+ * Helper to create rgba string from RGB object and opacity
+ */
+export const rgba = (color: { r: number; g: number; b: number }, opacity: number): string =>
+  `rgba(${color.r}, ${color.g}, ${color.b}, ${opacity})`;
+
+/**
+ * Helper to create rgb string from RGB object
+ */
+export const rgb = (color: { r: number; g: number; b: number }): string =>
+  `rgb(${color.r}, ${color.g}, ${color.b})`;
+
+// ============================================================================
+// Cube Face Colors
+// ============================================================================
+
+export const CUBE_FACE_BACKGROUND = rgba(COLORS.darkGrayLight, 0.6); // #1f293799
+export const CUBE_FACE_BORDER = rgba(COLORS.darkGray, 0.6); // #1a1c2099
+export const CUBE_FACE_SHADOW = rgba(COLORS.black, 0.25);
+
+export const INNER_CUBE_FACE_BACKGROUND = rgba(COLORS.darkGrayLight, 0.18);
+export const INNER_CUBE_FACE_BORDER = rgba(COLORS.darkGray, 0.75);
+export const INNER_CUBE_FACE_SHADOW = rgba(COLORS.black, 0.2);
+
+// ============================================================================
 // Tesseract Connecting Lines
 // ============================================================================
 
-export const TESSERACT_LINE_COLOR = 'rgba(19, 21, 25, 0.4)';
+export const TESSERACT_LINE_COLOR = rgba(COLORS.darkGrayAlt, 0.4);
 export const TESSERACT_LINE_STROKE_WIDTH = 1;
 
 // ============================================================================
 // Cursor Guide Styling
 // ============================================================================
 
-export const CURSOR_GUIDE_GRADIENT_COLOR = 'rgb(34, 42, 55)';
+export const CURSOR_GUIDE_GRADIENT_COLOR = rgb(COLORS.darkGrayLighter);
 
 export const CURSOR_GUIDE_GRADIENT_STOPS = [
   { offset: '0%', opacity: 0 },
@@ -152,9 +201,9 @@ export const CUBE_PULSE_OPACITY_START = 0.7;
 export const CUBE_PULSE_OPACITY_MID = 0.3;
 export const CUBE_PULSE_OPACITY_END = 0;
 export const CUBE_PULSE_GLOW_RADIUS_PX = 48;
-export const CUBE_PULSE_GLOW_COLOR = 'rgba(4, 8, 5, 0.05)';
-export const CUBE_PULSE_FACE_BACKGROUND = 'rgba(19, 21, 25, 0.18)';
-export const CUBE_PULSE_BORDER_COLOR = 'rgba(19, 21, 25, 0.75)';
+export const CUBE_PULSE_GLOW_COLOR = rgba(COLORS.darkGreen, 0.05);
+export const CUBE_PULSE_FACE_BACKGROUND = rgba(COLORS.darkGray, 0.18);
+export const CUBE_PULSE_BORDER_COLOR = rgba(COLORS.darkGray, 0.75);
 export const CUBE_PULSE_SECONDARY_DELAY_MS = 200;
 export const CUBE_PULSE_SECONDARY_SCALE_MULTIPLIER = 1.02;
 export const CUBE_PULSE_SECONDARY_OPACITY_START = 0.8;

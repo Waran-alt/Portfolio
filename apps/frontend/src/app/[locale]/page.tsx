@@ -14,7 +14,10 @@ import { createLightGradient } from './animations/light';
 import { LANDING_PAGE_AUTO_PULSE_CONFIG, LANDING_PAGE_CLICK_PULSE_CONFIG, PulseEffect, type Pulse } from './animations/pulse';
 import {
   CUBE_CORNER_OFFSETS,
+  CUBE_FACE_BACKGROUND,
+  CUBE_FACE_BORDER,
   CUBE_FACE_KEYS,
+  CUBE_FACE_SHADOW,
   CUBE_FACE_TRANSFORMS,
   CUBE_PULSE_BORDER_COLOR,
   CUBE_PULSE_DELAY_MS,
@@ -39,6 +42,9 @@ import {
   CURSOR_GUIDE_GRADIENT_COLOR,
   CURSOR_GUIDE_GRADIENT_STOPS,
   INNER_CUBE_CORNER_OFFSETS,
+  INNER_CUBE_FACE_BACKGROUND,
+  INNER_CUBE_FACE_BORDER,
+  INNER_CUBE_FACE_SHADOW,
   INNER_CUBE_FACE_TRANSFORMS,
   INNER_CUBE_HALF_SIZE,
   INNER_CUBE_SIZE_PX,
@@ -323,7 +329,18 @@ export default function LandingPage() {
           className={styles['followWrapper']} 
           ref={innerRef}
         >
-          <div className={`${styles['cube']}`} data-testid="cube">
+          <div 
+            className={`${styles['cube']}`} 
+            data-testid="cube"
+            style={{
+              '--cube-face-background': CUBE_FACE_BACKGROUND,
+              '--cube-face-border': CUBE_FACE_BORDER,
+              '--cube-face-shadow': CUBE_FACE_SHADOW,
+              '--inner-cube-face-background': INNER_CUBE_FACE_BACKGROUND,
+              '--inner-cube-face-border': INNER_CUBE_FACE_BORDER,
+              '--inner-cube-face-shadow': INNER_CUBE_FACE_SHADOW,
+            } as CSSVariableProperties}
+          >
             <div
               className={styles['cubePulseWrapper']}
               style={cubePulseStyle}

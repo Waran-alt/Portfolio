@@ -14,9 +14,9 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  background: #1f293799; /* gray-800 */
-  border: 1px solid #1a1c2099;
-  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.25);
+  background: var(--cube-face-background, rgba(31, 41, 55, 0.6));
+  border: 1px solid var(--cube-face-border, rgba(26, 28, 32, 0.6));
+  box-shadow: inset 0 0 24px var(--cube-face-shadow, rgba(0, 0, 0, 0.25));
   will-change: transform;
   transform: translateZ(0);
 }
@@ -110,9 +110,9 @@
 }
 
 .innerCubeFace {
-  background: rgba(31, 41, 55, 0.18);
-  border: 1px solid rgba(19, 21, 25, 0.75);
-  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.2);
+  background: var(--inner-cube-face-background, rgba(31, 41, 55, 0.18));
+  border: 1px solid var(--inner-cube-face-border, rgba(19, 21, 25, 0.75));
+  box-shadow: inset 0 0 12px var(--inner-cube-face-shadow, rgba(0, 0, 0, 0.2));
 }
 
 .cornerMarker {
