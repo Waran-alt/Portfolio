@@ -38,6 +38,12 @@ import {
   CUBE_PULSE_TRANSFORMS,
   CURSOR_GUIDE_GRADIENT_COLOR,
   CURSOR_GUIDE_GRADIENT_STOPS,
+  INNER_CUBE_CORNER_OFFSETS,
+  INNER_CUBE_FACE_TRANSFORMS,
+  INNER_CUBE_HALF_SIZE,
+  INNER_CUBE_SIZE_PX,
+  TESSERACT_LINE_COLOR,
+  TESSERACT_LINE_STROKE_WIDTH,
   type CubeFaceKey,
 } from './page.constants';
 import styles from './page.module.css';
@@ -94,7 +100,15 @@ export default function LandingPage() {
     () => CUBE_CORNER_OFFSETS.map(() => createRef<HTMLDivElement>()),
     []
   );
+  const innerCornerRefs = useMemo(
+    () => INNER_CUBE_CORNER_OFFSETS.map(() => createRef<HTMLDivElement>()),
+    []
+  );
   const lineRefs = useMemo(
+    () => CUBE_CORNER_OFFSETS.map(() => createRef<SVGLineElement>()),
+    []
+  );
+  const tesseractLineRefs = useMemo(
     () => CUBE_CORNER_OFFSETS.map(() => createRef<SVGLineElement>()),
     []
   );
@@ -246,6 +260,36 @@ export default function LandingPage() {
         gradientElement.setAttribute('y2', `${cornerY}`);
       });
 
+      // Update tesseract connecting lines
+      cornerRefs.forEach((outerCornerRef, index) => {
+        const innerCornerRef = innerCornerRefs[index];
+        const tesseractLineRef = tesseractLineRefs[index];
+        if (!outerCornerRef || !innerCornerRef || !tesseractLineRef) {
+          return;
+        }
+
+        const outerElement = outerCornerRef.current;
+        const innerElement = innerCornerRef.current;
+        const lineElement = tesseractLineRef.current;
+
+        if (!outerElement || !innerElement || !lineElement) {
+          return;
+        }
+
+        const outerRect = outerElement.getBoundingClientRect();
+        const innerRect = innerElement.getBoundingClientRect();
+
+        const outerX = outerRect.left + outerRect.width / 2;
+        const outerY = outerRect.top + outerRect.height / 2;
+        const innerX = innerRect.left + innerRect.width / 2;
+        const innerY = innerRect.top + innerRect.height / 2;
+
+        lineElement.setAttribute('x1', `${outerX}`);
+        lineElement.setAttribute('y1', `${outerY}`);
+        lineElement.setAttribute('x2', `${innerX}`);
+        lineElement.setAttribute('y2', `${innerY}`);
+      });
+
       animationFrameId = requestAnimationFrame(updateGuideLines);
   };
 
@@ -254,7 +298,7 @@ export default function LandingPage() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [cornerRefs, gradientRefs, lineRefs]);
+  }, [cornerRefs, gradientRefs, lineRefs, innerCornerRefs, tesseractLineRefs]);
 
   return (
     <main 
@@ -345,6 +389,47 @@ export default function LandingPage() {
                 />
               );
             })}
+
+            {/* Inner cube */}
+            <div
+              className={styles['innerCube']}
+              style={{
+                width: `${INNER_CUBE_SIZE_PX}px`,
+                height: `${INNER_CUBE_SIZE_PX}px`,
+                left: `calc(50% - ${INNER_CUBE_HALF_SIZE}px)`,
+                top: `calc(50% - ${INNER_CUBE_HALF_SIZE}px)`,
+              }}
+            >
+              {cubeFaces.map(face => (
+                <div
+                  key={`inner-${face.key}`}
+                  data-testid="inner-cube-face"
+                  className={`${styles['cubeFace']} ${styles['innerCubeFace']} ${face.className}`}
+                  style={{
+                    transform: INNER_CUBE_FACE_TRANSFORMS[face.key],
+                  }}
+                />
+              ))}
+
+              {INNER_CUBE_CORNER_OFFSETS.map((corner, index) => {
+                const innerCornerRef = innerCornerRefs[index];
+                if (!innerCornerRef) {
+                  return null;
+                }
+
+                return (
+                  <div
+                    key={corner.key}
+                    data-corner-key={corner.key}
+                    ref={innerCornerRef}
+                    className={styles['cornerMarker']}
+                    style={{
+                      transform: `translate3d(${corner.x}px, ${corner.y}px, ${corner.z}px)`,
+                    }}
+                  />
+                );
+              })}
+            </div>
               </div>
         </div>
       </div>
@@ -388,6 +473,23 @@ export default function LandingPage() {
               ref={lineRef}
               stroke={`url(#cursor-guide-gradient-${corner.key})`}
               data-testid="cursor-guide-line"
+              strokeLinecap="round"
+            />
+          );
+        })}
+        {CUBE_CORNER_OFFSETS.map((corner, index) => {
+          const tesseractLineRef = tesseractLineRefs[index];
+          if (!tesseractLineRef) {
+            return null;
+          }
+
+          return (
+            <line
+              key={`tesseract-${corner.key}`}
+              ref={tesseractLineRef}
+              stroke={TESSERACT_LINE_COLOR}
+              strokeWidth={TESSERACT_LINE_STROKE_WIDTH}
+              data-testid="tesseract-connecting-line"
               strokeLinecap="round"
             />
           );

@@ -53,7 +53,22 @@ export const BASE_POSITIONS = {
 } as const satisfies Record<string, Vector3>;
 
 /**
- * Corner positions relative to cube center for guide lines
+ * Inner cube size ratio (relative to outer cube)
+ */
+export const INNER_CUBE_SIZE_RATIO = 0.4;
+
+/**
+ * Inner cube size in pixels
+ */
+export const INNER_CUBE_SIZE_PX = CUBE_SIZE_PX * INNER_CUBE_SIZE_RATIO;
+
+/**
+ * Half inner cube size (face offset from center)
+ */
+export const INNER_CUBE_HALF_SIZE = INNER_CUBE_SIZE_PX / 2;
+
+/**
+ * Corner positions relative to cube center for guide lines (outer cube)
  */
 export const CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [
   { key: 'front-top-right', x: CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: CUBE_HALF_SIZE },
@@ -64,6 +79,20 @@ export const CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [
   { key: 'back-top-left', x: -CUBE_HALF_SIZE, y: -CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
   { key: 'back-bottom-right', x: CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
   { key: 'back-bottom-left', x: -CUBE_HALF_SIZE, y: CUBE_HALF_SIZE, z: -CUBE_HALF_SIZE },
+] as const;
+
+/**
+ * Inner cube corner positions relative to cube center
+ */
+export const INNER_CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [
+  { key: 'inner-front-top-right', x: INNER_CUBE_HALF_SIZE, y: -INNER_CUBE_HALF_SIZE, z: INNER_CUBE_HALF_SIZE },
+  { key: 'inner-front-top-left', x: -INNER_CUBE_HALF_SIZE, y: -INNER_CUBE_HALF_SIZE, z: INNER_CUBE_HALF_SIZE },
+  { key: 'inner-front-bottom-right', x: INNER_CUBE_HALF_SIZE, y: INNER_CUBE_HALF_SIZE, z: INNER_CUBE_HALF_SIZE },
+  { key: 'inner-front-bottom-left', x: -INNER_CUBE_HALF_SIZE, y: INNER_CUBE_HALF_SIZE, z: INNER_CUBE_HALF_SIZE },
+  { key: 'inner-back-top-right', x: INNER_CUBE_HALF_SIZE, y: -INNER_CUBE_HALF_SIZE, z: -INNER_CUBE_HALF_SIZE },
+  { key: 'inner-back-top-left', x: -INNER_CUBE_HALF_SIZE, y: -INNER_CUBE_HALF_SIZE, z: -INNER_CUBE_HALF_SIZE },
+  { key: 'inner-back-bottom-right', x: INNER_CUBE_HALF_SIZE, y: INNER_CUBE_HALF_SIZE, z: -INNER_CUBE_HALF_SIZE },
+  { key: 'inner-back-bottom-left', x: -INNER_CUBE_HALF_SIZE, y: INNER_CUBE_HALF_SIZE, z: -INNER_CUBE_HALF_SIZE },
 ] as const;
 
 /**
@@ -82,7 +111,19 @@ const createCubeFaceTransforms = (halfSize: number): Record<CubeFaceKey, string>
   bottom: `rotateX(-90deg) translateZ(${halfSize}px)`,
 });
 
+/**
+ * Inner cube face transforms
+ */
+export const INNER_CUBE_FACE_TRANSFORMS = createCubeFaceTransforms(INNER_CUBE_HALF_SIZE);
+
 export const CUBE_FACE_TRANSFORMS = createCubeFaceTransforms(CUBE_HALF_SIZE);
+
+// ============================================================================
+// Tesseract Connecting Lines
+// ============================================================================
+
+export const TESSERACT_LINE_COLOR = 'rgba(19, 21, 25, 0.4)';
+export const TESSERACT_LINE_STROKE_WIDTH = 1;
 
 // ============================================================================
 // Cursor Guide Styling

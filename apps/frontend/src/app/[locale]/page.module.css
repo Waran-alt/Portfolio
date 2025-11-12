@@ -103,6 +103,18 @@
   transform: rotateX(-90deg) translateZ(80px);
 }
 
+.innerCube {
+  position: absolute;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.innerCubeFace {
+  background: rgba(31, 41, 55, 0.18);
+  border: 1px solid rgba(19, 21, 25, 0.75);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.2);
+}
+
 .cornerMarker {
   position: absolute;
   top: 50%;
@@ -125,6 +137,11 @@
 .guideOverlay line {
   stroke-width: 1px;
   transition: opacity 0.2s ease;
+}
+
+.guideOverlay line[data-testid='tesseract-connecting-line'] {
+  stroke-width: var(--tesseract-line-stroke-width, 1px);
+  stroke: var(--tesseract-line-color, rgba(26, 28, 32, 0.4));
 }
 
 .paused {
