@@ -142,6 +142,10 @@
     opacity: var(--cube-pulse-opacity-mid, 0.3);
   }
 
+  90% {
+    opacity: var(--cube-pulse-opacity-end, 0);
+  }
+
   100% {
     transform: var(--cube-pulse-transform-end);
     opacity: var(--cube-pulse-opacity-end, 0);
