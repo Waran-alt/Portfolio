@@ -308,7 +308,7 @@ export default function LandingPage() {
 
   return (
     <main 
-      className="LandingPage min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-700" 
+      className={`LandingPage ${styles['landingPage']} min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-700`}
       data-testid="landing-root"
       style={{ background: lightGradient, position: 'relative' }}
     >
