@@ -129,14 +129,14 @@ export const TESSERACT_LINE_STROKE_WIDTH = 1;
 // Cursor Guide Styling
 // ============================================================================
 
-export const CURSOR_GUIDE_GRADIENT_COLOR = '#1a1c20';
+export const CURSOR_GUIDE_GRADIENT_COLOR = 'rgb(34, 42, 55)';
 
 export const CURSOR_GUIDE_GRADIENT_STOPS = [
   { offset: '0%', opacity: 0 },
   { offset: '15%', opacity: 0 },
   { offset: '30%', opacity: 0.9 },
-  { offset: '70%', opacity: 0.9 },
-  { offset: '85%', opacity: 0 },
+  { offset: '50%', opacity: 0.9 },
+  { offset: '70%', opacity: 0 },
   { offset: '100%', opacity: 0 },
 ] as const;
 
