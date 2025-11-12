@@ -46,7 +46,7 @@ export const BG_GRADIENT_END = 'rgb(51, 65, 85)'; // Background gradient end (sl
 export const CLICK_PULSE_CONFIG = {
   direction: "shrink",
   duration: 396,
-  maxRadius: 202,
+  maxRadius: 102,
   outerBlur: 33,
   outerSpread: 25,
   innerBlur: 13,
@@ -55,10 +55,10 @@ export const CLICK_PULSE_CONFIG = {
   fadeInToAnimationDuration: 100,
   fadeOutDuration: 153,
   initialOpacity: 0,
-  animationOpacity: 1,
+  animationOpacity: 0.8,
   finalOpacity: 0,
   easing: "ease-in",
-  ringColor: "rgba(255, 255, 255, 1)"
+  ringColor: "rgba(34, 42, 55, 1)"
 };
 
 export const AUTO_PULSE_CONFIG = {
@@ -78,3 +78,9 @@ export const AUTO_PULSE_CONFIG = {
   finalOpacity: 0,
   easing: 'ease-in-out' as const,
 };
+
+// Cursor movement pulse configuration
+export const CURSOR_MOVE_PULSE_DISTANCE_PX = 25; // Minimum distance moved to trigger pulse (pixels)
+export const CURSOR_MOVE_PULSE_MIN_INTERVAL_MS = 300; // Minimum time between pulses for slow movement (milliseconds)
+export const CURSOR_MOVE_PULSE_MAX_RATE_MS = 100; // Maximum pulse rate - never pulse faster than this (milliseconds)
+export const CURSOR_STOP_THRESHOLD_MS = 150; // Time without movement to consider cursor stopped (milliseconds)

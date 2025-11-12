@@ -7,8 +7,16 @@
  * All animation logic is handled by cubeAnimation.ts module.
  */
 
-import { createRef, MouseEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/constants';
+import { createRef, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import {
+  CURSOR_MOVE_PULSE_DISTANCE_PX,
+  CURSOR_MOVE_PULSE_MAX_RATE_MS,
+  CURSOR_MOVE_PULSE_MIN_INTERVAL_MS,
+  CURSOR_STOP_THRESHOLD_MS,
+  LIGHT_INITIAL_X,
+  LIGHT_INITIAL_Y,
+  PERSPECTIVE_PX,
+} from './animations/constants';
 import { createCubeAnimation, quat_create, type CubeAnimationState } from './animations/cube';
 import { createLightGradient } from './animations/light';
 import { LANDING_PAGE_AUTO_PULSE_CONFIG, LANDING_PAGE_CLICK_PULSE_CONFIG, PulseEffect, type Pulse } from './animations/pulse';
@@ -150,63 +158,109 @@ export default function LandingPage() {
     return idCounterRef.current;
   };
 
-  // Pulse handlers
-  const handleClick = (e: MouseEvent<HTMLElement>) => {
-    const newPulse = {
-      id: generatePulseId(),
-      x: e.clientX,
-      y: e.clientY,
-      timestamp: Date.now(),
-      config: LANDING_PAGE_CLICK_PULSE_CONFIG,
-    };
-    setPulses(prev => [...prev, newPulse]);
-  };
+  // Track cursor movement for pulse generation
+  const lastCursorMoveTimeRef = useRef<number>(0);
+  const lastPulsePositionRef = useRef<{ x: number; y: number } | null>(null);
+  const lastPulseTimeRef = useRef<number>(0);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      // Trigger pulse at center of screen
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
+  // Cursor movement pulse generator - triggers based on distance (25px) or time (300ms min, 150ms max rate)
+  const checkAndTriggerPulse = (cursorX: number, cursorY: number) => {
+    const now = Date.now();
+    const timeSinceLastPulse = now - lastPulseTimeRef.current;
+    const timeSinceLastMove = now - lastCursorMoveTimeRef.current;
+
+    // Don't pulse if cursor has stopped moving
+    if (timeSinceLastMove >= CURSOR_STOP_THRESHOLD_MS) {
+      return;
+    }
+
+    // Rate limit: never pulse faster than max rate
+    if (timeSinceLastPulse < CURSOR_MOVE_PULSE_MAX_RATE_MS) {
+      return;
+    }
+
+    let shouldTrigger = false;
+
+    if (lastPulsePositionRef.current === null) {
+      // First pulse - trigger immediately
+      shouldTrigger = true;
+    } else {
+      // Calculate distance moved since last pulse
+      const dx = cursorX - lastPulsePositionRef.current.x;
+      const dy = cursorY - lastPulsePositionRef.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Trigger if moved 25px or more
+      if (distance >= CURSOR_MOVE_PULSE_DISTANCE_PX) {
+        shouldTrigger = true;
+      }
+      // Or trigger if minimum interval has passed (slow movement)
+      else if (timeSinceLastPulse >= CURSOR_MOVE_PULSE_MIN_INTERVAL_MS) {
+        shouldTrigger = true;
+      }
+    }
+
+    if (shouldTrigger) {
       const newPulse = {
         id: generatePulseId(),
-        x,
-        y,
-        timestamp: Date.now(),
+        x: cursorX,
+        y: cursorY,
+        timestamp: now,
         config: LANDING_PAGE_CLICK_PULSE_CONFIG,
       };
       setPulses(prev => [...prev, newPulse]);
+      lastPulsePositionRef.current = { x: cursorX, y: cursorY };
+      lastPulseTimeRef.current = now;
     }
   };
 
-  // Auto-pulse generator
+  // Reset pulse tracking when cursor stops moving
   useEffect(() => {
-    let autoPulseId: NodeJS.Timeout;
-    
-    const createAutoPulse = () => {
-      const x = Math.random() * window.innerWidth;
-      const y = Math.random() * window.innerHeight;
-      const newPulse = {
-        id: generatePulseId(),
-        x,
-        y,
-        timestamp: Date.now(),
-        config: LANDING_PAGE_AUTO_PULSE_CONFIG,
-      };
-      setPulses(prev => [...prev, newPulse]);
+    const checkCursorStopped = () => {
+      const now = Date.now();
+      const timeSinceLastMove = now - lastCursorMoveTimeRef.current;
 
-      // Schedule next auto-pulse with random interval (3-8 seconds)
-      const nextInterval = 3000 + Math.random() * 5000;
-      autoPulseId = setTimeout(createAutoPulse, nextInterval);
+      if (timeSinceLastMove >= CURSOR_STOP_THRESHOLD_MS) {
+        // Cursor has stopped - reset pulse position so next movement triggers immediately
+        lastPulsePositionRef.current = null;
+      }
     };
 
-    const timeoutId = setTimeout(createAutoPulse, 2000); // Start after 2 seconds
-    
+    const interval = setInterval(checkCursorStopped, 50); // Check every 50ms
+
     return () => {
-      clearTimeout(timeoutId);
-      clearTimeout(autoPulseId);
-  };
-  }, []); // Empty dependency array - only run once
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Auto-pulse generator - DISABLED: will be re-enabled after a certain action later in development
+  // useEffect(() => {
+  //   let autoPulseId: NodeJS.Timeout;
+  //   
+  //   const createAutoPulse = () => {
+  //     const x = Math.random() * window.innerWidth;
+  //     const y = Math.random() * window.innerHeight;
+  //     const newPulse = {
+  //       id: generatePulseId(),
+  //       x,
+  //       y,
+  //       timestamp: Date.now(),
+  //       config: LANDING_PAGE_AUTO_PULSE_CONFIG,
+  //     };
+  //     setPulses(prev => [...prev, newPulse]);
+
+  //     // Schedule next auto-pulse with random interval (3-8 seconds)
+  //     const nextInterval = 3000 + Math.random() * 5000;
+  //     autoPulseId = setTimeout(createAutoPulse, nextInterval);
+  //   };
+
+  //   const timeoutId = setTimeout(createAutoPulse, 2000); // Start after 2 seconds
+  //   
+  //   return () => {
+  //     clearTimeout(timeoutId);
+  //     clearTimeout(autoPulseId);
+  // };
+  // }, []); // Empty dependency array - only run once
 
   const handlePulseComplete = (id: number) => {
     setPulses(prev => prev.filter(pulse => pulse.id !== id));
@@ -446,7 +500,7 @@ export default function LandingPage() {
                   />
                 );
               })}
-            </div>
+                </div>
               </div>
         </div>
       </div>
@@ -513,17 +567,16 @@ export default function LandingPage() {
         })}
       </svg>
       
-      {/* Interactive overlay for pulse effects - must be last to capture all clicks */}
+      {/* Interactive overlay for pulse effects - must be last to capture cursor movement */}
       <div
         className="absolute inset-0 z-20"
-        onClick={handleClick}
         onMouseMove={(event) => {
+          const now = Date.now();
           cursorPositionRef.current = { x: event.clientX, y: event.clientY };
+          lastCursorMoveTimeRef.current = now;
+          checkAndTriggerPulse(event.clientX, event.clientY);
         }}
-        onKeyDown={handleKeyDown}
-        role="button"
-        tabIndex={0}
-        aria-label="Interactive landing page - click or press space to add pulse effects"
+        aria-label="Interactive landing page - move cursor to create pulse effects"
         data-testid="pulse-trigger-overlay"
       />
     </main>
