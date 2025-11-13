@@ -5,6 +5,31 @@
   transform-style: preserve-3d;
 }
 
+/* Entrance animation - elements start invisible and fade in */
+.cubeEntrance {
+  opacity: 0;
+  animation-name: cubeEntrance;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes cubeEntrance {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Prevent animations until entrance completes */
+.cubeEntrancePending .cubePulseFace,
+.cubeEntrancePending .innerCube {
+  animation-play-state: paused;
+  opacity: 0;
+}
+
 .followWrapper {
   transform-style: preserve-3d;
   transition: transform 0.1s ease-out; /* Smooth transition for mouse follow */
@@ -198,6 +223,26 @@
 .guideOverlay line[data-testid='tesseract-connecting-line'] {
   stroke-width: var(--tesseract-line-stroke-width, 1px);
   stroke: var(--tesseract-line-color, rgba(26, 28, 32, 0.4));
+}
+
+.guideOverlay line[data-testid='tesseract-connecting-line'].cubeEntrance {
+  opacity: 0;
+  stroke-opacity: 0;
+  animation-name: cubeEntranceLine;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes cubeEntranceLine {
+  from {
+    opacity: 0;
+    stroke-opacity: 0;
+  }
+  to {
+    opacity: 1;
+    stroke-opacity: 1;
+  }
 }
 
 .paused {

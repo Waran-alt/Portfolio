@@ -22,6 +22,9 @@ import { createLightGradient } from './animations/light';
 import { LANDING_PAGE_AUTO_PULSE_CONFIG, LANDING_PAGE_CLICK_PULSE_CONFIG, PulseEffect, type Pulse } from './animations/pulse';
 import {
   CUBE_CORNER_OFFSETS,
+  CUBE_ENTRANCE_DURATION_MS,
+  CUBE_ENTRANCE_INITIAL_DELAY_MS,
+  CUBE_ENTRANCE_STAGGER_DELAY_MS,
   CUBE_FACE_BACKGROUND,
   CUBE_FACE_BORDER,
   CUBE_FACE_KEYS,
@@ -74,6 +77,7 @@ export default function LandingPage() {
   const [lightGradient] = useState(createLightGradient({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y }));
   const [isInnerCubeExpanded, setIsInnerCubeExpanded] = useState(false);
   const [hasCompletedLoopWhileExpanded, setHasCompletedLoopWhileExpanded] = useState(false);
+  const [isEntranceComplete, setIsEntranceComplete] = useState(false);
   const shouldPauseAfterLoopRef = useRef(false);
   
   // Derive pulse pause state: paused only if expanded AND loop has completed
@@ -170,6 +174,44 @@ export default function LandingPage() {
     idCounterRef.current += 1;
     return idCounterRef.current;
   };
+
+  // Calculate entrance delay for each element based on its index
+  const getEntranceDelay = (elementIndex: number): number => {
+    return CUBE_ENTRANCE_INITIAL_DELAY_MS + (elementIndex * CUBE_ENTRANCE_STAGGER_DELAY_MS);
+  };
+
+  // Pre-calculate entrance delays for all elements
+  const entranceDelays = useMemo(() => {
+    const delays: number[] = [];
+    let index = 0;
+    
+    // Outer cube faces (6)
+    for (let i = 0; i < CUBE_FACE_KEYS.length; i++) {
+      delays.push(getEntranceDelay(index++));
+    }
+    
+    // Outer corners (8)
+    for (let i = 0; i < CUBE_CORNER_OFFSETS.length; i++) {
+      delays.push(getEntranceDelay(index++));
+    }
+    
+    // Inner cube faces (6)
+    for (let i = 0; i < CUBE_FACE_KEYS.length; i++) {
+      delays.push(getEntranceDelay(index++));
+    }
+    
+    // Inner corners (8)
+    for (let i = 0; i < INNER_CUBE_CORNER_OFFSETS.length; i++) {
+      delays.push(getEntranceDelay(index++));
+    }
+    
+    // Tesseract lines (8)
+    for (let i = 0; i < CUBE_CORNER_OFFSETS.length; i++) {
+      delays.push(getEntranceDelay(index++));
+    }
+    
+    return delays;
+  }, []);
 
   // Track cursor movement for pulse generation
   const lastCursorMoveTimeRef = useRef<number>(0);
@@ -364,14 +406,31 @@ export default function LandingPage() {
     };
   }, []);
 
+  // Mark entrance as complete after animation duration
   useEffect(() => {
+    const totalEntranceTime = CUBE_ENTRANCE_INITIAL_DELAY_MS + CUBE_ENTRANCE_DURATION_MS;
+    const timer = setTimeout(() => {
+      setIsEntranceComplete(true);
+    }, totalEntranceTime);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Only start cube animation after entrance completes
+    if (!isEntranceComplete) {
+      return;
+    }
+
     // Create and start the animation loop
     const cleanup = createCubeAnimation(innerRef, animationStateRef);
 
     return () => {
       cleanup();
-  };
-  }, []);
+    };
+  }, [isEntranceComplete]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -482,7 +541,7 @@ export default function LandingPage() {
           ref={innerRef}
         >
           <div 
-            className={`${styles['cube']} ${isPulsePaused ? styles['cubePulsePaused'] : ''}`}
+            className={`${styles['cube']} ${isPulsePaused ? styles['cubePulsePaused'] : ''} ${!isEntranceComplete ? styles['cubeEntrancePending'] : ''}`}
             data-testid="cube"
             style={{
               '--cube-face-background': CUBE_FACE_BACKGROUND,
@@ -493,13 +552,14 @@ export default function LandingPage() {
               '--inner-cube-face-shadow': INNER_CUBE_FACE_SHADOW,
             } as CSSVariableProperties}
           >
-            <div
-              ref={cubePulseWrapperRef}
-              className={styles['cubePulseWrapper']}
-              style={cubePulseStyle}
-              data-testid="cube-pulse"
-              aria-hidden="true"
-            >
+            {isEntranceComplete && (
+              <div
+                ref={cubePulseWrapperRef}
+                className={styles['cubePulseWrapper']}
+                style={cubePulseStyle}
+                data-testid="cube-pulse"
+                aria-hidden="true"
+              >
               <div className={styles['cubePulse']}>
                 {cubeFaces.map(face => (
                   <div
@@ -530,16 +590,23 @@ export default function LandingPage() {
                   />
                 ))}
               </div>
-            </div>
+              </div>
+            )}
 
-            {cubeFaces.map(face => (
-              <div
-                key={`core-${face.key}`}
-                data-testid="cube-face"
-                data-face={face.key}
-                className={`${styles['cubeFace']} ${face.className}`}
-              />
-            ))}
+            {cubeFaces.map((face, index) => {
+              const delay = entranceDelays[index];
+              return (
+                <div
+                  key={`core-${face.key}`}
+                  data-testid="cube-face"
+                  data-face={face.key}
+                  className={`${styles['cubeFace']} ${styles['cubeEntrance']} ${face.className}`}
+                  style={{
+                    animationDelay: `${delay}ms`,
+                  } as CSSVariableProperties}
+                />
+              );
+            })}
 
             {CUBE_CORNER_OFFSETS.map((corner, index) => {
               const cornerRef = cornerRefs[index];
@@ -547,15 +614,17 @@ export default function LandingPage() {
                 return null;
               }
 
+              const delay = entranceDelays[CUBE_FACE_KEYS.length + index];
               return (
                 <div
                   key={corner.key}
                   data-corner-key={corner.key}
                   ref={cornerRef}
-                  className={styles['cornerMarker']}
+                  className={`${styles['cornerMarker']} ${styles['cubeEntrance']}`}
                   style={{
                     transform: `translate3d(${corner.x}px, ${corner.y}px, ${corner.z}px)`,
-                  }}
+                    animationDelay: `${delay}ms`,
+                  } as CSSVariableProperties}
                 />
               );
             })}
@@ -579,16 +648,20 @@ export default function LandingPage() {
                   '--inner-cube-pulse-scale': INNER_CUBE_PULSE_SCALE,
                 } as CSSVariableProperties}
               >
-              {cubeFaces.map(face => (
-                <div
-                  key={`inner-${face.key}`}
-                  data-testid="inner-cube-face"
-                  className={`${styles['cubeFace']} ${styles['innerCubeFace']} ${face.className}`}
-                  style={{
-                    transform: INNER_CUBE_FACE_TRANSFORMS[face.key],
-                  }}
-                />
-              ))}
+              {cubeFaces.map((face, index) => {
+                const delay = entranceDelays[CUBE_FACE_KEYS.length + CUBE_CORNER_OFFSETS.length + index];
+                return (
+                  <div
+                    key={`inner-${face.key}`}
+                    data-testid="inner-cube-face"
+                    className={`${styles['cubeFace']} ${styles['innerCubeFace']} ${styles['cubeEntrance']} ${face.className}`}
+                    style={{
+                      transform: INNER_CUBE_FACE_TRANSFORMS[face.key],
+                      animationDelay: `${delay}ms`,
+                    } as CSSVariableProperties}
+                  />
+                );
+              })}
 
               {INNER_CUBE_CORNER_OFFSETS.map((corner, index) => {
                 const innerCornerRef = innerCornerRefs[index];
@@ -596,20 +669,22 @@ export default function LandingPage() {
                   return null;
                 }
 
+                const delay = entranceDelays[CUBE_FACE_KEYS.length + CUBE_CORNER_OFFSETS.length + CUBE_FACE_KEYS.length + index];
                 return (
                   <div
                     key={corner.key}
                     data-corner-key={corner.key}
                     ref={innerCornerRef}
-                    className={styles['cornerMarker']}
+                    className={`${styles['cornerMarker']} ${styles['cubeEntrance']}`}
                     style={{
                       transform: `translate3d(${corner.x}px, ${corner.y}px, ${corner.z}px)`,
-                    }}
+                      animationDelay: `${delay}ms`,
+                    } as CSSVariableProperties}
                   />
                 );
               })}
               </div>
-            </div>
+                </div>
               </div>
         </div>
       </div>
@@ -663,6 +738,7 @@ export default function LandingPage() {
             return null;
           }
 
+          const delay = entranceDelays[CUBE_FACE_KEYS.length + CUBE_CORNER_OFFSETS.length + CUBE_FACE_KEYS.length + INNER_CUBE_CORNER_OFFSETS.length + index];
           return (
             <line
               key={`tesseract-${corner.key}`}
@@ -671,6 +747,10 @@ export default function LandingPage() {
               strokeWidth={TESSERACT_LINE_STROKE_WIDTH}
               data-testid="tesseract-connecting-line"
               strokeLinecap="round"
+              className={styles['cubeEntrance']}
+              style={{
+                animationDelay: `${delay}ms`,
+              } as CSSVariableProperties}
             />
           );
         })}

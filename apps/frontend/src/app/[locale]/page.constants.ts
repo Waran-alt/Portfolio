@@ -195,6 +195,37 @@ export const TESSERACT_LINE_COLOR = rgba(COLORS.darkGrayAlt, 0.4);
 export const TESSERACT_LINE_STROKE_WIDTH = 1;
 
 // ============================================================================
+// Entrance Animation Constants
+// ============================================================================
+
+/**
+ * Initial delay before entrance animation starts (for script optimization)
+ */
+export const CUBE_ENTRANCE_INITIAL_DELAY_MS = 200;
+
+/**
+ * Total duration of the entrance animation sequence
+ */
+export const CUBE_ENTRANCE_DURATION_MS = 1000;
+
+/**
+ * Number of cube elements to animate (faces + corners + inner elements + lines)
+ * Used to calculate staggered delays
+ */
+export const CUBE_ENTRANCE_ELEMENT_COUNT = 
+  CUBE_FACE_KEYS.length + // 6 outer faces
+  CUBE_CORNER_OFFSETS.length + // 8 outer corners
+  CUBE_FACE_KEYS.length + // 6 inner faces
+  INNER_CUBE_CORNER_OFFSETS.length + // 8 inner corners
+  CUBE_CORNER_OFFSETS.length; // 8 tesseract lines
+
+/**
+ * Delay between each element appearing (in milliseconds)
+ */
+export const CUBE_ENTRANCE_STAGGER_DELAY_MS = 
+  CUBE_ENTRANCE_DURATION_MS / CUBE_ENTRANCE_ELEMENT_COUNT;
+
+// ============================================================================
 // Cursor Guide Styling
 // ============================================================================
 
