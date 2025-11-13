@@ -45,8 +45,8 @@ import {
   INNER_CUBE_SIZE_PX,
   type CubeFaceKey,
 } from '../page.constants';
-import { calculateEntranceDelays } from '../utils/entranceDelays';
 import styles from '../page.module.css';
+import { calculateEntranceDelays } from '../utils/entranceDelays';
 
 type CSSVariableProperties = CSSProperties & Record<string, string | number>;
 

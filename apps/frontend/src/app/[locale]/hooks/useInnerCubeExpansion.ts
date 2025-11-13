@@ -15,7 +15,7 @@ export interface UseInnerCubeExpansionReturn {
   isInnerCubeExpanded: boolean;
   isPulsePaused: boolean;
   cubeVibrationTransform: string;
-  cubePulseWrapperRef: React.RefObject<HTMLDivElement>;
+  cubePulseWrapperRef: React.RefObject<HTMLDivElement | null>;
 }
 
 /**

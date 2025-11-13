@@ -11,11 +11,11 @@ import {
 } from '../page.constants';
 
 export interface UseGuideLinesReturn {
-  cornerRefs: React.RefObject<HTMLDivElement>[];
-  innerCornerRefs: React.RefObject<HTMLDivElement>[];
-  lineRefs: React.RefObject<SVGLineElement>[];
-  tesseractLineRefs: React.RefObject<SVGLineElement>[];
-  gradientRefs: React.RefObject<SVGLinearGradientElement>[];
+  cornerRefs: React.RefObject<HTMLDivElement | null>[];
+  innerCornerRefs: React.RefObject<HTMLDivElement | null>[];
+  lineRefs: React.RefObject<SVGLineElement | null>[];
+  tesseractLineRefs: React.RefObject<SVGLineElement | null>[];
+  gradientRefs: React.RefObject<SVGLinearGradientElement | null>[];
 }
 
 /**

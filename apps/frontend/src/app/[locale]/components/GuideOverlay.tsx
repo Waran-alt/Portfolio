@@ -14,15 +14,15 @@ import {
   TESSERACT_LINE_COLOR,
   TESSERACT_LINE_STROKE_WIDTH,
 } from '../page.constants';
-import { calculateEntranceDelays } from '../utils/entranceDelays';
 import styles from '../page.module.css';
+import { calculateEntranceDelays } from '../utils/entranceDelays';
 
 export interface GuideOverlayProps {
-  cornerRefs: React.RefObject<HTMLDivElement>[];
-  innerCornerRefs: React.RefObject<HTMLDivElement>[];
-  lineRefs: React.RefObject<SVGLineElement>[];
-  tesseractLineRefs: React.RefObject<SVGLineElement>[];
-  gradientRefs: React.RefObject<SVGLinearGradientElement>[];
+  cornerRefs: React.RefObject<HTMLDivElement | null>[];
+  innerCornerRefs: React.RefObject<HTMLDivElement | null>[];
+  lineRefs: React.RefObject<SVGLineElement | null>[];
+  tesseractLineRefs: React.RefObject<SVGLineElement | null>[];
+  gradientRefs: React.RefObject<SVGLinearGradientElement | null>[];
 }
 
 const entranceDelays = calculateEntranceDelays();
@@ -34,8 +34,6 @@ const entranceDelays = calculateEntranceDelays();
  * outer and inner cube corners (tesseract lines).
  */
 export default function GuideOverlay({
-  cornerRefs,
-  innerCornerRefs,
   lineRefs,
   tesseractLineRefs,
   gradientRefs,
