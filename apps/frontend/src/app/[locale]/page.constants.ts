@@ -88,6 +88,16 @@ export const INNER_CUBE_CONTRACT_DURATION_MS = 300;
 export const INNER_CUBE_PULSE_SCALE = 1.15;
 
 /**
+ * Maximum vibration intensity in pixels (applied to outer cube during expansion)
+ */
+export const CUBE_VIBRATION_MAX_INTENSITY_PX = 4;
+
+/**
+ * Vibration frequency (oscillations per second)
+ */
+export const CUBE_VIBRATION_FREQUENCY_HZ = 12;
+
+/**
  * Corner positions relative to cube center for guide lines (outer cube)
  */
 export const CUBE_CORNER_OFFSETS: readonly CubeCornerOffset[] = [

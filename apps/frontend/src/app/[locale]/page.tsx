@@ -50,6 +50,8 @@ import {
   CUBE_PULSE_SECONDARY_TRANSFORMS,
   CUBE_PULSE_THICKNESS_PX,
   CUBE_PULSE_TRANSFORMS,
+  CUBE_VIBRATION_FREQUENCY_HZ,
+  CUBE_VIBRATION_MAX_INTENSITY_PX,
   CURSOR_GUIDE_GRADIENT_COLOR,
   CURSOR_GUIDE_GRADIENT_STOPS,
   INNER_CUBE_CONTRACT_DURATION_MS,
@@ -74,11 +76,14 @@ type CSSVariableProperties = CSSProperties & Record<string, string | number>;
 export default function LandingPage() {
   const innerRef = useRef<HTMLDivElement | null>(null);
   const cubePulseWrapperRef = useRef<HTMLDivElement | null>(null);
+  const cubeRef = useRef<HTMLDivElement | null>(null);
   const [lightGradient] = useState(createLightGradient({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y }));
   const [isInnerCubeExpanded, setIsInnerCubeExpanded] = useState(false);
   const [hasCompletedLoopWhileExpanded, setHasCompletedLoopWhileExpanded] = useState(false);
   const [isEntranceComplete, setIsEntranceComplete] = useState(false);
   const shouldPauseAfterLoopRef = useRef(false);
+  const expansionStartTimeRef = useRef<number | null>(null);
+  const [cubeVibrationTransform, setCubeVibrationTransform] = useState<string>('');
   
   // Derive pulse pause state: paused only if expanded AND loop has completed
   const isPulsePaused = useMemo(() => {
@@ -376,20 +381,26 @@ export default function LandingPage() {
   // Inner cube expansion handlers
   useEffect(() => {
     const handleMouseDown = () => {
+      expansionStartTimeRef.current = performance.now();
       setIsInnerCubeExpanded(true);
     };
 
     const handleMouseUp = () => {
+      expansionStartTimeRef.current = null;
       setIsInnerCubeExpanded(false);
+      setCubeVibrationTransform('');
     };
 
     const handleKeyDown = () => {
       // Trigger on any key press
+      expansionStartTimeRef.current = performance.now();
       setIsInnerCubeExpanded(true);
     };
 
     const handleKeyUp = () => {
+      expansionStartTimeRef.current = null;
       setIsInnerCubeExpanded(false);
+      setCubeVibrationTransform('');
     };
 
     // Add global event listeners
@@ -405,6 +416,57 @@ export default function LandingPage() {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+
+  // Vibration effect during inner cube expansion
+  useEffect(() => {
+    if (!isInnerCubeExpanded || !expansionStartTimeRef.current) {
+      return;
+    }
+
+    let animationFrameId: number;
+
+    const updateVibration = () => {
+      if (!expansionStartTimeRef.current) {
+        setCubeVibrationTransform('');
+        return;
+      }
+
+      const now = performance.now();
+      const elapsed = now - expansionStartTimeRef.current;
+      
+      // Calculate expansion progress (0 to 1) using cubic-bezier easing
+      // cubic-bezier(0.16, 1, 0.7, 1) - ease-out cubic
+      const rawProgress = Math.min(elapsed / INNER_CUBE_EXPAND_DURATION_MS, 1);
+      
+      // Apply cubic-bezier(0.16, 1, 0.7, 1) easing approximation
+      // This is a simplified approximation - for exact easing, we'd need a bezier solver
+      const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
+      
+      // Vibration intensity increases with expansion progress
+      const intensity = easedProgress * CUBE_VIBRATION_MAX_INTENSITY_PX;
+      
+      // Generate vibration using sine waves with different phases for x, y, z
+      const time = now * 0.001; // Convert to seconds
+      const frequency = CUBE_VIBRATION_FREQUENCY_HZ;
+      const x = Math.sin(time * frequency * 2 * Math.PI) * intensity;
+      const y = Math.cos(time * frequency * 2 * Math.PI * 1.3) * intensity;
+      const z = Math.sin(time * frequency * 2 * Math.PI * 0.7) * intensity * 0.5;
+      
+      setCubeVibrationTransform(`translate3d(${x}px, ${y}px, ${z}px)`);
+      
+      if (isInnerCubeExpanded && expansionStartTimeRef.current) {
+        animationFrameId = requestAnimationFrame(updateVibration);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(updateVibration);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [isInnerCubeExpanded]);
 
   // Mark entrance as complete after animation duration
   useEffect(() => {
@@ -541,6 +603,7 @@ export default function LandingPage() {
           ref={innerRef}
         >
           <div 
+            ref={cubeRef}
             className={`${styles['cube']} ${isPulsePaused ? styles['cubePulsePaused'] : ''} ${!isEntranceComplete ? styles['cubeEntrancePending'] : ''}`}
             data-testid="cube"
             style={{
@@ -550,6 +613,7 @@ export default function LandingPage() {
               '--inner-cube-face-background': INNER_CUBE_FACE_BACKGROUND,
               '--inner-cube-face-border': INNER_CUBE_FACE_BORDER,
               '--inner-cube-face-shadow': INNER_CUBE_FACE_SHADOW,
+              transform: cubeVibrationTransform || undefined,
             } as CSSVariableProperties}
           >
             {isEntranceComplete && (
