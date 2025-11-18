@@ -209,6 +209,24 @@ code duplication across pages.
 ❌ chore: stuff (#001) (too vague, even with task ID)
 ```
 
+### Simple Changes
+
+For simple, straightforward fixes or changes, keep the commit message concise:
+
+```
+fix(frontend): delay cursor following until entrance completes
+```
+
+```
+style(ui): adjust button padding
+```
+
+```
+refactor(api): extract validation helper
+```
+
+Keep it under 50 characters and focus on what changed, not how or why (unless the why is non-obvious).
+
 ## Quick Templates
 
 ### Feature Addition with Task ID
