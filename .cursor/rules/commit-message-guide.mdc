@@ -96,7 +96,7 @@ feat(db): add migration system (#011)
 
 ### Body (Optional)
 - **Length**: Wrap at 72 characters
-- **Content**: Explain what and why, not how
+- **Content**: Explain what and why, not how. Keep it concise and focused - avoid exhaustive lists of every change. Summarize the key changes and their purpose.
 - **Separation**: Blank line between subject and body
 
 ### Footer (Optional)
@@ -259,13 +259,13 @@ refactor(<scope>): <action> <component/functionality> (#XXX)
 When helping with commit messages:
 
 1. **ALWAYS check git status first**: Before any commit, run `git status` to see what's staged vs modified
-2. **Stage missing changes**: If files are modified but not staged, add them before committing
-3. **Ask for context**: What changed, why, and what scope it affects
+2. **Analyze staged changes**: Review actual staged files and their diffs (`git diff --staged`) to understand what changed. Write commit messages based on the staged changes, not from memory or assumptions. Act like an external professional reviewing the code changes.
+3. **Stage missing changes logically**: If files are modified but not staged, review them and stage them logically. Consider splitting into multiple commits if changes are unrelated.
 4. **Identify task ID**: Check if work relates to a project board task (simple #XXX format)
-5. **Suggest appropriate type**: Based on the nature of changes 
-6. **Recommend scope**: Based on affected files/functionality
-7. **Craft clear subject**: Imperative mood, under 50 characters (including task ID)
-8. **Add body if needed**: For complex changes requiring explanation
+5. **Suggest appropriate type**: Based on the nature of changes observed in the diffs
+6. **Recommend scope**: Based on affected files/functionality from the staged changes
+7. **Craft clear subject**: Imperative present tense, under 50 characters (including task ID)
+8. **Add concise body**: For complex changes, explain what and why, not exhaustive lists. Keep it focused and descriptive without being overly detailed.
 9. **Include footers**: For breaking changes or issue references
 10. **Validate format**: Ensure compliance with conventional commits
 11. **Check spelling**: Ensure professional appearance
