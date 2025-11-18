@@ -14,6 +14,10 @@ export const AUTO_ROTATION_SPEED_HOLD_DURATION_MIN = 4.0; // Minimum seconds to 
 export const AUTO_ROTATION_SPEED_HOLD_DURATION_MAX = 5.0; // Maximum seconds to hold speed before changing
 export const INITIAL_CUBE_HOLD_DURATION = 3.0; // Seconds to keep cube fixed before starting rotation
 
+// Initial cube perspective rotation (radians) - ensures cube is viewed in 3D, not as a flat square
+export const INITIAL_CUBE_ROTATION_X = 0.5; // ~28.6 degrees rotation around X-axis
+export const INITIAL_CUBE_ROTATION_Y = 0.4; // ~22.9 degrees rotation around Y-axis
+
 export const IDLE_TIMEOUT_MS = 2000;   // Pause duration before auto-rotate resumes
 export const NEAR_ZERO_EPS = 0.2;      // Threshold to consider angles/velocity settled
 

@@ -25,10 +25,14 @@ export interface UseGuideLinesReturn {
  * based on cursor position and cube corner positions.
  *
  * @param cursorPositionRef - Reference to current cursor position
+ * @param isStage3Active - Whether Stage 3 is active (affects tesseract line direction)
+ * @param areAnimationsComplete - Whether all entrance animations are complete (cursor guide lines only update after this)
  * @returns Refs for all guide line elements
  */
 export function useGuideLines(
-  cursorPositionRef: React.MutableRefObject<{ x: number; y: number }>
+  cursorPositionRef: React.MutableRefObject<{ x: number; y: number }>,
+  isStage3Active: boolean = false,
+  areAnimationsComplete: boolean = false
 ): UseGuideLinesReturn {
   const cornerRefs = useMemo(
     () => CUBE_CORNER_OFFSETS.map(() => createRef<HTMLDivElement>()),
@@ -51,44 +55,50 @@ export function useGuideLines(
     []
   );
 
-  // Update guide lines based on cursor and corner positions
+  // Continuously update guide line positions based on cursor and corner positions
   useEffect(() => {
     let animationFrameId: number;
 
     const updateGuideLines = () => {
       const cursor = cursorPositionRef.current;
 
-      cornerRefs.forEach((cornerRef, index) => {
-        const lineRef = lineRefs[index];
-        const gradientRef = gradientRefs[index];
-        if (!cornerRef || !lineRef || !gradientRef) {
-          return;
-        }
+      // Update cursor-to-corner guide lines (only after animations complete)
+      if (areAnimationsComplete) {
+        cornerRefs.forEach((cornerRef, index) => {
+          const lineRef = lineRefs[index];
+          const gradientRef = gradientRefs[index];
+          if (!cornerRef || !lineRef || !gradientRef) {
+            return;
+          }
 
-        const cornerElement = cornerRef.current;
-        const lineElement = lineRef.current;
-        const gradientElement = gradientRef.current;
+          const cornerElement = cornerRef.current;
+          const lineElement = lineRef.current;
+          const gradientElement = gradientRef.current;
 
-        if (!cornerElement || !lineElement || !gradientElement) {
-          return;
-        }
+          if (!cornerElement || !lineElement || !gradientElement) {
+            return;
+          }
 
-        const rect = cornerElement.getBoundingClientRect();
-        const cornerX = rect.left + rect.width / 2;
-        const cornerY = rect.top + rect.height / 2;
+          // Calculate corner center position
+          const rect = cornerElement.getBoundingClientRect();
+          const cornerX = rect.left + rect.width / 2;
+          const cornerY = rect.top + rect.height / 2;
 
-        lineElement.setAttribute('x1', `${cursor.x}`);
-        lineElement.setAttribute('y1', `${cursor.y}`);
-        lineElement.setAttribute('x2', `${cornerX}`);
-        lineElement.setAttribute('y2', `${cornerY}`);
+          // Update line endpoints (cursor to corner)
+          lineElement.setAttribute('x1', `${cursor.x}`);
+          lineElement.setAttribute('y1', `${cursor.y}`);
+          lineElement.setAttribute('x2', `${cornerX}`);
+          lineElement.setAttribute('y2', `${cornerY}`);
 
-        gradientElement.setAttribute('x1', `${cursor.x}`);
-        gradientElement.setAttribute('y1', `${cursor.y}`);
-        gradientElement.setAttribute('x2', `${cornerX}`);
-        gradientElement.setAttribute('y2', `${cornerY}`);
-      });
+          // Update gradient endpoints to match line
+          gradientElement.setAttribute('x1', `${cursor.x}`);
+          gradientElement.setAttribute('y1', `${cursor.y}`);
+          gradientElement.setAttribute('x2', `${cornerX}`);
+          gradientElement.setAttribute('y2', `${cornerY}`);
+        });
+      }
 
-      // Update tesseract connecting lines
+      // Update tesseract connecting lines (inner cube to outer cube)
       cornerRefs.forEach((outerCornerRef, index) => {
         const innerCornerRef = innerCornerRefs[index];
         const tesseractLineRef = tesseractLineRefs[index];
@@ -104,6 +114,7 @@ export function useGuideLines(
           return;
         }
 
+        // Calculate corner center positions
         const outerRect = outerElement.getBoundingClientRect();
         const innerRect = innerElement.getBoundingClientRect();
 
@@ -112,10 +123,18 @@ export function useGuideLines(
         const innerX = innerRect.left + innerRect.width / 2;
         const innerY = innerRect.top + innerRect.height / 2;
 
-        lineElement.setAttribute('x1', `${outerX}`);
-        lineElement.setAttribute('y1', `${outerY}`);
-        lineElement.setAttribute('x2', `${innerX}`);
-        lineElement.setAttribute('y2', `${innerY}`);
+        // Set line direction based on Stage 3: inner→outer for growth, outer→inner otherwise
+        if (isStage3Active) {
+          lineElement.setAttribute('x1', `${innerX}`);
+          lineElement.setAttribute('y1', `${innerY}`);
+          lineElement.setAttribute('x2', `${outerX}`);
+          lineElement.setAttribute('y2', `${outerY}`);
+        } else {
+          lineElement.setAttribute('x1', `${outerX}`);
+          lineElement.setAttribute('y1', `${outerY}`);
+          lineElement.setAttribute('x2', `${innerX}`);
+          lineElement.setAttribute('y2', `${innerY}`);
+        }
       });
 
       animationFrameId = requestAnimationFrame(updateGuideLines);
@@ -126,7 +145,7 @@ export function useGuideLines(
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [cornerRefs, gradientRefs, lineRefs, innerCornerRefs, tesseractLineRefs, cursorPositionRef]);
+  }, [cornerRefs, gradientRefs, lineRefs, innerCornerRefs, tesseractLineRefs, cursorPositionRef, isStage3Active, areAnimationsComplete]);
 
   return {
     cornerRefs,

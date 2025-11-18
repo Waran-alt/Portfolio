@@ -36,32 +36,30 @@ export function useInnerCubeExpansion(): UseInnerCubeExpansionReturn {
   const expansionStartTimeRef = useRef<number | null>(null);
   const cubePulseWrapperRef = useRef<HTMLDivElement | null>(null);
 
-  // Derive pulse pause state: paused only if expanded AND loop has completed
+  // Calculate pulse pause state: pause only when expanded AND current loop has completed
   const isPulsePaused = useMemo(() => {
     return isInnerCubeExpanded && hasCompletedLoopWhileExpanded;
   }, [isInnerCubeExpanded, hasCompletedLoopWhileExpanded]);
 
-  // Reset loop completion state when expansion stops
+  // Reset loop completion flag when expansion stops
   useEffect(() => {
     if (!isInnerCubeExpanded) {
       shouldPauseAfterLoopRef.current = false;
-      // Defer state update to avoid synchronous setState in effect
       queueMicrotask(() => {
         setHasCompletedLoopWhileExpanded(false);
       });
     }
   }, [isInnerCubeExpanded]);
 
-  // Handle pulse pause after animation loop completes when expanded
+  // Pause pulse animation after current loop completes when cube is expanded
   useEffect(() => {
     if (!isInnerCubeExpanded) {
       return;
     }
 
-    // When expanded, set flag to pause after current loop completes
+    // Mark that we want to pause after the current animation loop
     shouldPauseAfterLoopRef.current = true;
 
-    // Wait for current loop to complete before pausing
     const pulseWrapper = cubePulseWrapperRef.current;
     if (!pulseWrapper) {
       return;
@@ -72,14 +70,13 @@ export function useInnerCubeExpansion(): UseInnerCubeExpansionReturn {
       return;
     }
 
+    // Listen for animation iteration to detect when loop completes
     const handleAnimationIteration = () => {
-      // Only pause if we still want to pause (expansion might have been released)
       if (shouldPauseAfterLoopRef.current && isInnerCubeExpanded) {
         setHasCompletedLoopWhileExpanded(true);
       }
     };
 
-    // Listen to the first pulse face for iteration completion
     const firstPulseFace = pulseFaces[0] as HTMLElement;
     firstPulseFace.addEventListener('animationiteration', handleAnimationIteration);
 
@@ -88,7 +85,7 @@ export function useInnerCubeExpansion(): UseInnerCubeExpansionReturn {
     };
   }, [isInnerCubeExpanded]);
 
-  // Inner cube expansion handlers
+  // Set up global event listeners for mouse/keyboard expansion triggers
   useEffect(() => {
     const handleMouseDown = () => {
       expansionStartTimeRef.current = performance.now();
@@ -102,7 +99,6 @@ export function useInnerCubeExpansion(): UseInnerCubeExpansionReturn {
     };
 
     const handleKeyDown = () => {
-      // Trigger on any key press
       expansionStartTimeRef.current = performance.now();
       setIsInnerCubeExpanded(true);
     };
@@ -113,7 +109,6 @@ export function useInnerCubeExpansion(): UseInnerCubeExpansionReturn {
       setCubeVibrationTransform('');
     };
 
-    // Add global event listeners
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('keydown', handleKeyDown);
@@ -127,7 +122,7 @@ export function useInnerCubeExpansion(): UseInnerCubeExpansionReturn {
     };
   }, []);
 
-  // Vibration effect during inner cube expansion
+  // Generate vibration effect during expansion: intensity increases with expansion progress
   useEffect(() => {
     if (!isInnerCubeExpanded || !expansionStartTimeRef.current) {
       return;
@@ -144,19 +139,15 @@ export function useInnerCubeExpansion(): UseInnerCubeExpansionReturn {
       const now = performance.now();
       const elapsed = now - expansionStartTimeRef.current;
 
-      // Calculate expansion progress (0 to 1) using cubic-bezier easing
-      // cubic-bezier(0.16, 1, 0.7, 1) - ease-out cubic
+      // Calculate expansion progress (0 to 1) with cubic ease-out approximation
       const rawProgress = Math.min(elapsed / INNER_CUBE_EXPAND_DURATION_MS, 1);
-
-      // Apply cubic-bezier(0.16, 1, 0.7, 1) easing approximation
-      // This is a simplified approximation - for exact easing, we'd need a bezier solver
       const easedProgress = 1 - Math.pow(1 - rawProgress, 3);
 
-      // Vibration intensity increases with expansion progress
+      // Scale vibration intensity by expansion progress
       const intensity = easedProgress * CUBE_VIBRATION_MAX_INTENSITY_PX;
 
-      // Generate vibration using sine waves with different phases for x, y, z
-      const time = now * 0.001; // Convert to seconds
+      // Generate 3D oscillation using sine waves with different phases for each axis
+      const time = now * 0.001;
       const frequency = CUBE_VIBRATION_FREQUENCY_HZ;
       const x = Math.sin(time * frequency * 2 * Math.PI) * intensity;
       const y = Math.cos(time * frequency * 2 * Math.PI * 1.3) * intensity;

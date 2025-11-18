@@ -7,27 +7,63 @@
  * All animation logic is handled by cubeAnimation.ts module.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/constants';
-import { createCubeAnimation, quat_create, type CubeAnimationState } from './animations/cube';
+import dynamic from 'next/dynamic';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { INITIAL_CUBE_ROTATION_X, INITIAL_CUBE_ROTATION_Y, LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/constants';
+import { createCubeAnimation, quat_create, quat_fromAxisAngle, quat_multiply, quat_toMatrix3d, type CubeAnimationState } from './animations/cube';
 import { createLightGradient } from './animations/light';
 import { PulseEffect } from './animations/pulse';
 import Cube3D from './components/Cube3D';
-import GuideOverlay from './components/GuideOverlay';
 import PulseOverlay from './components/PulseOverlay';
 import { useGuideLines } from './hooks/useGuideLines';
 import { useInnerCubeExpansion } from './hooks/useInnerCubeExpansion';
 import { usePulseEffects } from './hooks/usePulseEffects';
+import {
+  CUBE_ANIMATION_START_DELAY_MS,
+  CUBE_ENTRANCE_INITIAL_DELAY_MS,
+  STAGE1_INNER_CUBE_DELAY_MS,
+  STAGE1_INNER_CUBE_FADE_DURATION_MS,
+  STAGE1_ROTATION_DELAY_MS,
+  STAGE1_ROTATION_DURATION_MS,
+  STAGE2_START_AFTER_STAGE1_MS,
+  STAGE2_TOTAL_DURATION_MS,
+  STAGE3_START_AFTER_STAGE2_MS,
+  STAGE3_TOTAL_DURATION_MS,
+} from './page.constants';
 import styles from './page.module.css';
-import { TOTAL_ENTRANCE_DURATION_MS } from './utils/entranceDelays';
 
+const GuideOverlay = dynamic(() => import('./components/GuideOverlay'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const ENABLE_STAGE2 = true;
+const ENABLE_STAGE3 = true;
+const ENABLE_FINAL_ANIMATION = true;
 export default function LandingPage() {
   const innerRef = useRef<HTMLDivElement | null>(null);
   const cubeRef = useRef<HTMLDivElement | null>(null);
   const [lightGradient] = useState(createLightGradient({ x: LIGHT_INITIAL_X, y: LIGHT_INITIAL_Y }));
   const [isEntranceComplete, setIsEntranceComplete] = useState(false);
+  // Stage tracking - will be set to true when respective stages start
+  const [isStage2Active, setIsStage2Active] = useState(false);
+  const [isStage3Active, setIsStage3Active] = useState(false);
+  // Track when cube animation starts (pulse and rotation can begin)
+  const [isCubeAnimationStarted, setIsCubeAnimationStarted] = useState(false);
+  // Track when all entrance animations are complete (cursor can be shown and animations enabled)
+  const [areAnimationsComplete, setAreAnimationsComplete] = useState(false);
+  const [isCursorInitialized, setIsCursorInitialized] = useState(false);
 
-  // Animation state
+  // Calculate initial perspective rotation quaternion (combines Y and X axis rotations)
+  const perspectiveRotationQuat = useMemo(
+    () =>
+      quat_multiply(
+        quat_fromAxisAngle([0, 1, 0], INITIAL_CUBE_ROTATION_Y),
+        quat_fromAxisAngle([1, 0, 0], INITIAL_CUBE_ROTATION_X)
+      ),
+    []
+  );
+
   const animationStateRef = useRef<CubeAnimationState>({
     currentQuat: quat_create(),
     targetQuat: quat_create(),
@@ -55,45 +91,138 @@ export default function LandingPage() {
   const { pulses, cursorPositionRef, checkAndTriggerPulse, handlePulseComplete } =
     usePulseEffects(isInnerCubeExpanded);
 
-  // Guide lines
+  // Guide lines (only update cursor guide lines after animations complete)
   const { cornerRefs, innerCornerRefs, lineRefs, tesseractLineRefs, gradientRefs } =
-    useGuideLines(cursorPositionRef);
+    useGuideLines(cursorPositionRef, isStage3Active, areAnimationsComplete);
 
-  // Mark entrance as complete after animation duration
+  // Orchestrate entrance animation timeline: Stage 1 → Stage 2 → Stage 3 → Interactive animations
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsEntranceComplete(true);
-    }, TOTAL_ENTRANCE_DURATION_MS);
+    // Calculate stage timing milestones
+    const stage1EndTime =
+      CUBE_ENTRANCE_INITIAL_DELAY_MS + STAGE1_INNER_CUBE_DELAY_MS + STAGE1_INNER_CUBE_FADE_DURATION_MS;
+    const rotationStartTime = stage1EndTime + STAGE1_ROTATION_DELAY_MS;
+    const rotationEndTime = rotationStartTime + STAGE1_ROTATION_DURATION_MS;
+    const cubeAnimationStartTime = rotationEndTime + CUBE_ANIMATION_START_DELAY_MS;
+    const stage2StartTime = rotationEndTime + STAGE2_START_AFTER_STAGE1_MS;
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []);
-
-  // Start cube animation after entrance completes
-  useEffect(() => {
-    if (!isEntranceComplete) {
-      return;
+    const timers: NodeJS.Timeout[] = [];
+    
+    // Mark entrance complete after inner cube fade-in
+    timers.push(
+      setTimeout(() => {
+        setIsEntranceComplete(true);
+      }, stage1EndTime),
+    );
+    
+    // Start Stage 1 rotation: apply perspective transform with bouncy easing
+    timers.push(
+      setTimeout(() => {
+        const node = innerRef.current;
+        if (!node) {
+          return;
+        }
+        // Apply rotation transition
+        node.style.transition = `transform ${STAGE1_ROTATION_DURATION_MS}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+        node.style.transform = quat_toMatrix3d(perspectiveRotationQuat);
+        // Update animation state after rotation completes
+        const rotationCompleteTimer = setTimeout(() => {
+          node.style.transition = '';
+          animationStateRef.current.currentQuat = perspectiveRotationQuat;
+          animationStateRef.current.targetQuat = perspectiveRotationQuat;
+        }, STAGE1_ROTATION_DURATION_MS);
+        timers.push(rotationCompleteTimer);
+      }, rotationStartTime),
+    );
+    // Start interactive cube rotation (cursor-following) after entrance completes
+    if (ENABLE_FINAL_ANIMATION) {
+      timers.push(
+        setTimeout(() => {
+          createCubeAnimation(innerRef, animationStateRef);
+        }, cubeAnimationStartTime),
+      );
+    }
+    
+    // Stage 2: Outer face assembly with crash animations
+    if (ENABLE_STAGE2) {
+      timers.push(
+        setTimeout(() => {
+          setIsStage2Active(true);
+          if (ENABLE_STAGE3) {
+            // Stage 3: Connecting line growth after Stage 2 completes
+            const stage2EndTime = STAGE2_TOTAL_DURATION_MS;
+            const stage3StartDelay = stage2EndTime + STAGE3_START_AFTER_STAGE2_MS;
+            timers.push(
+              setTimeout(() => {
+                setIsStage3Active(true);
+                // Mark all animations complete and enable pulse after Stage 3 finishes
+                const stage3EndTime = STAGE3_TOTAL_DURATION_MS;
+                timers.push(
+                  setTimeout(() => {
+                    setAreAnimationsComplete(true);
+                    if (ENABLE_FINAL_ANIMATION) {
+                      setIsCubeAnimationStarted(true);
+                    }
+                  }, stage3EndTime),
+                );
+              }, stage3StartDelay),
+            );
+          } else {
+            // Mark complete and enable pulse when Stage 2 finishes (Stage 3 disabled)
+            timers.push(
+              setTimeout(() => {
+                setAreAnimationsComplete(true);
+                if (ENABLE_FINAL_ANIMATION) {
+                  setIsCubeAnimationStarted(true);
+                }
+              }, STAGE2_TOTAL_DURATION_MS),
+            );
+          }
+        }, stage2StartTime),
+      );
+    } else {
+      // Mark complete and enable pulse when Stage 1 finishes (Stage 2 disabled)
+      const stage1EndTime =
+        CUBE_ENTRANCE_INITIAL_DELAY_MS + STAGE1_INNER_CUBE_DELAY_MS + STAGE1_INNER_CUBE_FADE_DURATION_MS;
+      const rotationEndTime = stage1EndTime + STAGE1_ROTATION_DELAY_MS + STAGE1_ROTATION_DURATION_MS;
+      timers.push(
+        setTimeout(() => {
+          setAreAnimationsComplete(true);
+          if (ENABLE_FINAL_ANIMATION) {
+            setIsCubeAnimationStarted(true);
+          }
+        }, rotationEndTime),
+      );
     }
 
-    // Create and start the animation loop
-    const cleanup = createCubeAnimation(innerRef, animationStateRef);
-
     return () => {
-      cleanup();
-    };
-  }, [isEntranceComplete]);
+      timers.forEach(clearTimeout);
+  };
+  }, [perspectiveRotationQuat]);
 
-  // Handle mouse move for pulse generation
+
+  // Track cursor position and trigger pulses after animations complete
   const handleMouseMove = (event: React.MouseEvent) => {
-    checkAndTriggerPulse(event.clientX, event.clientY);
+    // Always update cursor position for guide lines
+    cursorPositionRef.current = { x: event.clientX, y: event.clientY };
+    // Mark cursor as initialized on first movement
+    if (!isCursorInitialized) {
+      setIsCursorInitialized(true);
+    }
+    // Only generate pulses after all entrance animations complete
+    if (areAnimationsComplete) {
+      checkAndTriggerPulse(event.clientX, event.clientY);
+    }
   };
 
   return (
     <main
       className={`LandingPage ${styles['landingPage']} min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-700`}
       data-testid="landing-root"
-      style={{ background: lightGradient, position: 'relative' }}
+      style={{
+        background: lightGradient,
+        position: 'relative',
+        cursor: areAnimationsComplete ? undefined : 'none', // Hide cursor until animations complete
+      }}
     >
       {/* Render pulse effects behind cube */}
       {pulses.map(pulse => (
@@ -118,17 +247,25 @@ export default function LandingPage() {
             cornerRefs={cornerRefs}
             innerCornerRefs={innerCornerRefs}
             cubeRef={cubeRef}
+          isStage2Active={isStage2Active}
+          isStage3Active={isStage3Active}
+          enablePulse={ENABLE_FINAL_ANIMATION && isCubeAnimationStarted}
           />
         </div>
       </div>
 
-      <GuideOverlay
-        cornerRefs={cornerRefs}
-        innerCornerRefs={innerCornerRefs}
-        lineRefs={lineRefs}
-        tesseractLineRefs={tesseractLineRefs}
-        gradientRefs={gradientRefs}
-      />
+      {/* Render GuideOverlay only when Stage 3 starts */}
+      {isStage3Active && (
+        <GuideOverlay
+          lineRefs={lineRefs}
+          tesseractLineRefs={tesseractLineRefs}
+          gradientRefs={gradientRefs}
+          innerCornerRefs={innerCornerRefs}
+          cornerRefs={cornerRefs}
+          isCursorInitialized={isCursorInitialized}
+          isStage3Active={isStage3Active}
+        />
+      )}
 
       {/* Interactive overlay for pulse effects - must be last to capture cursor movement */}
       <PulseOverlay onMouseMove={handleMouseMove} />

@@ -40,19 +40,20 @@ export function usePulseEffects(
   const lastPulsePositionRef = useRef<{ x: number; y: number } | null>(null);
   const lastPulseTimeRef = useRef<number>(0);
 
+  // Generate unique ID for each pulse
   const generatePulseId = () => {
     idCounterRef.current += 1;
     return idCounterRef.current;
   };
 
-  // Cursor movement pulse generator - triggers based on distance (25px) or time (300ms min, 150ms max rate)
+  // Check cursor movement and trigger pulse if thresholds are met
+  // Triggers on: distance moved (25px) OR time elapsed (300ms min interval, 150ms max rate)
   const checkAndTriggerPulse = (cursorX: number, cursorY: number) => {
-    // Update cursor position
     cursorPositionRef.current = { x: cursorX, y: cursorY };
     const now = Date.now();
     lastCursorMoveTimeRef.current = now;
 
-    // Don't pulse if inner cube is expanded
+    // Skip if inner cube is expanded
     if (isInnerCubeExpanded) {
       return;
     }
@@ -60,12 +61,12 @@ export function usePulseEffects(
     const timeSinceLastPulse = now - lastPulseTimeRef.current;
     const timeSinceLastMove = now - lastCursorMoveTimeRef.current;
 
-    // Don't pulse if cursor has stopped moving
+    // Skip if cursor has stopped moving
     if (timeSinceLastMove >= CURSOR_STOP_THRESHOLD_MS) {
       return;
     }
 
-    // Rate limit: never pulse faster than max rate
+    // Skip if rate limit not met
     if (timeSinceLastPulse < CURSOR_MOVE_PULSE_MAX_RATE_MS) {
       return;
     }
@@ -73,7 +74,7 @@ export function usePulseEffects(
     let shouldTrigger = false;
 
     if (lastPulsePositionRef.current === null) {
-      // First pulse - trigger immediately
+      // First pulse: trigger immediately
       shouldTrigger = true;
     } else {
       // Calculate distance moved since last pulse
@@ -81,16 +82,15 @@ export function usePulseEffects(
       const dy = cursorY - lastPulsePositionRef.current.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      // Trigger if moved 25px or more
+      // Trigger if moved enough distance OR minimum interval elapsed
       if (distance >= CURSOR_MOVE_PULSE_DISTANCE_PX) {
         shouldTrigger = true;
-      }
-      // Or trigger if minimum interval has passed (slow movement)
-      else if (timeSinceLastPulse >= CURSOR_MOVE_PULSE_MIN_INTERVAL_MS) {
+      } else if (timeSinceLastPulse >= CURSOR_MOVE_PULSE_MIN_INTERVAL_MS) {
         shouldTrigger = true;
       }
     }
 
+    // Create and add new pulse
     if (shouldTrigger) {
       const newPulse: PulseWithConfig = {
         id: generatePulseId(),
@@ -105,26 +105,25 @@ export function usePulseEffects(
     }
   };
 
-  // Reset pulse tracking when cursor stops moving
+  // Reset pulse position when cursor stops moving (enables immediate trigger on next movement)
   useEffect(() => {
     const checkCursorStopped = () => {
       const now = Date.now();
       const timeSinceLastMove = now - lastCursorMoveTimeRef.current;
 
       if (timeSinceLastMove >= CURSOR_STOP_THRESHOLD_MS) {
-        // Cursor has stopped - reset pulse position so next movement triggers immediately
         lastPulsePositionRef.current = null;
       }
     };
 
-    const interval = setInterval(checkCursorStopped, 50); // Check every 50ms
+    const interval = setInterval(checkCursorStopped, 50);
 
     return () => {
       clearInterval(interval);
     };
   }, []);
 
-  // Initialize cursor position
+  // Initialize cursor position to screen center
   useEffect(() => {
     if (typeof window !== 'undefined') {
       cursorPositionRef.current = {
@@ -134,6 +133,7 @@ export function usePulseEffects(
     }
   }, []);
 
+  // Remove pulse from list when animation completes
   const handlePulseComplete = (id: number) => {
     setPulses(prev => prev.filter(pulse => pulse.id !== id));
   };

@@ -23,6 +23,22 @@
   }
 }
 
+/* Stage 1: Inner cube sharp fade-in animation */
+.innerCubeStage1 {
+  opacity: 0;
+  animation-name: innerCubeStage1FadeIn;
+  animation-fill-mode: forwards;
+}
+
+@keyframes innerCubeStage1FadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Prevent animations until entrance completes */
 .cubeEntrancePending .cubePulseFace,
 .cubeEntrancePending .innerCube {
@@ -30,6 +46,169 @@
   opacity: 0;
 }
 
+.stage2SimulatedFaces {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.stage2Face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  will-change: opacity;
+  opacity: 0;
+}
+
+.stage2FaceCrash {
+  /* Animation properties are set via CSS variables to support dual animations (fade-in + crash) */
+  will-change: transform, opacity;
+  animation-name: stage2FaceFadeIn, stage2FaceCrash;
+  animation-duration: var(--stage2-fade-duration, 300ms), var(--stage2-crash-duration, 400ms);
+  animation-delay: var(--stage2-fade-delay, 0ms), var(--stage2-crash-delay, 0ms);
+  /* Ease-out for fade-in, custom timing for crash (ease-out for backstep, then strong ease-in for crash) */
+  animation-timing-function:
+    cubic-bezier(0.16, 1, 0.3, 1), var(--stage2-crash-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94));
+  /* forwards for fade-in (keep opacity: 1 after), forwards for crash (don't apply initial state before delay) */
+  animation-fill-mode: forwards, forwards;
+}
+
+.stage2SimulatedFacesImpact {
+  animation: stage2ImpactJiggle var(--stage2-jiggle-duration, 500ms) ease-out;
+}
+
+/* Impact bounce applied to the entire cube */
+.cubeImpact {
+  animation: stage2ImpactJiggle var(--stage2-jiggle-duration, 500ms) ease-out;
+}
+
+@keyframes stage2FaceFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes stage2FaceCrash {
+  0% {
+    opacity: 1;
+    transform: var(--stage2-transform-start);
+  }
+  15% {
+    opacity: 1;
+    transform: var(--stage2-transform-start); /* brief hold */
+  }
+  /* Backstep phase: ease-out movement from start to backstep position (15% to 35%)
+   * Keyframes spaced to create ease-out effect: faster at start, slower at end
+   * We interpolate between start and backstep transforms */
+  20% {
+    opacity: 1;
+    transform: var(--stage2-transform-start); /* still at start, beginning of backstep */
+  }
+  28% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep); /* quickly move to backstep (ease-out: fast start) */
+  }
+  35% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep); /* hold at backstep position */
+  }
+  /* Jiggle during backstep: oscillate around backstep position (35% to 70%) */
+  38% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) rotateX(5deg) translateZ(5px);
+  }
+  42% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) rotateX(-5deg) translateZ(-4px);
+  }
+  46% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) translateY(-8px) translateZ(3px);
+  }
+  50% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) rotateZ(5deg) translateZ(-2.5px);
+  }
+  54% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) translateZ(2px);
+  }
+  58% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) translateZ(-1.5px);
+  }
+  62% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) translateZ(1px);
+  }
+  66% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep) translateZ(-0.5px);
+  }
+  70% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep); /* jiggle settles, ready for crash */
+  }
+  /* Crash phase: smooth acceleration to final position (70% to 100%) */
+  100% {
+    transform: var(--stage2-transform-end);
+    opacity: 1;
+  }
+}
+
+/* Combined animation: fade-in followed by crash motion
+ * Total duration: 300ms (fade) + 400ms (crash) = 700ms
+ * Fade: 0% to 42.86% (300/700)
+ * Crash hold: 42.86% to 51.43% (60ms = 15% of 400ms crash phase)
+ * Crash backstep: 51.43% to 57.14% (100ms = 25% of 400ms crash phase)
+ * Crash accelerate: 57.14% to 100%
+ */
+@keyframes stage2FaceFadeInAndCrash {
+  /* Fade-in phase: 0% to 42.86% */
+  0% {
+    opacity: 0;
+    transform: var(--stage2-transform-start);
+  }
+  42.86% {
+    opacity: 1;
+    transform: var(--stage2-transform-start);
+  }
+  /* Hold phase: 42.86% to 51.43% */
+  51.43% {
+    opacity: 1;
+    transform: var(--stage2-transform-start); /* brief hold */
+  }
+  /* Backstep phase: 51.43% to 57.14% */
+  57.14% {
+    opacity: 1;
+    transform: var(--stage2-transform-backstep); /* slight backward move to gain momentum */
+  }
+  /* Crash phase: 57.14% to 100% */
+  100% {
+    transform: var(--stage2-transform-end);
+    opacity: 1;
+  }
+}
+
+@keyframes stage2ImpactJiggle {
+  0% {
+    transform: translateZ(0);
+  }
+  35% {
+    transform: translateZ(12px);
+  }
+  65% {
+    transform: translateZ(-8px);
+  }
+  100% {
+    transform: translateZ(0);
+  }
+}
 .followWrapper {
   transform-style: preserve-3d;
   transition: transform 0.1s ease-out; /* Smooth transition for mouse follow */
@@ -220,28 +399,48 @@
   transition: opacity 0.2s ease;
 }
 
+.cursorGuideLine {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cursorGuideVisible {
+  opacity: 1;
+}
+
 .guideOverlay line[data-testid='tesseract-connecting-line'] {
   stroke-width: var(--tesseract-line-stroke-width, 1px);
   stroke: var(--tesseract-line-color, rgba(26, 28, 32, 0.4));
-}
-
-.guideOverlay line[data-testid='tesseract-connecting-line'].cubeEntrance {
+  /* Initial state: line is hidden (stroke-dashoffset equals line length, opacity 0) */
+  stroke-dasharray: var(--line-length, 0);
+  stroke-dashoffset: var(--line-length, 0);
   opacity: 0;
-  stroke-opacity: 0;
-  animation-name: cubeEntranceLine;
-  animation-duration: 400ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  animation-fill-mode: forwards;
 }
 
-@keyframes cubeEntranceLine {
+.guideOverlay line[data-testid='tesseract-connecting-line'].stage3LineGrowth {
+  /* Dual animation: fade in + grow from inner to outer */
+  animation-name: stage3LineFadeIn, stage3LineGrowth;
+  animation-duration: var(--stage3-fade-duration, 300ms), var(--stage3-growth-duration, 600ms);
+  animation-delay: var(--stage3-growth-delay, 0ms), var(--stage3-growth-delay, 0ms);
+  animation-timing-function: ease-out, var(--stage3-growth-easing, cubic-bezier(0.16, 1, 0.3, 1));
+  animation-fill-mode: forwards, forwards;
+}
+
+@keyframes stage3LineFadeIn {
   from {
     opacity: 0;
-    stroke-opacity: 0;
   }
   to {
     opacity: 1;
-    stroke-opacity: 1;
+  }
+}
+
+@keyframes stage3LineGrowth {
+  from {
+    stroke-dashoffset: var(--line-length, 0);
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
