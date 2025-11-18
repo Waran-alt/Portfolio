@@ -19,7 +19,6 @@ import { useGuideLines } from './hooks/useGuideLines';
 import { useInnerCubeExpansion } from './hooks/useInnerCubeExpansion';
 import { usePulseEffects } from './hooks/usePulseEffects';
 import {
-  CUBE_ANIMATION_START_DELAY_MS,
   CUBE_ENTRANCE_INITIAL_DELAY_MS,
   STAGE1_INNER_CUBE_DELAY_MS,
   STAGE1_INNER_CUBE_FADE_DURATION_MS,
@@ -102,7 +101,6 @@ export default function LandingPage() {
       CUBE_ENTRANCE_INITIAL_DELAY_MS + STAGE1_INNER_CUBE_DELAY_MS + STAGE1_INNER_CUBE_FADE_DURATION_MS;
     const rotationStartTime = stage1EndTime + STAGE1_ROTATION_DELAY_MS;
     const rotationEndTime = rotationStartTime + STAGE1_ROTATION_DURATION_MS;
-    const cubeAnimationStartTime = rotationEndTime + CUBE_ANIMATION_START_DELAY_MS;
     const stage2StartTime = rotationEndTime + STAGE2_START_AFTER_STAGE1_MS;
 
     const timers: NodeJS.Timeout[] = [];
@@ -133,14 +131,6 @@ export default function LandingPage() {
         timers.push(rotationCompleteTimer);
       }, rotationStartTime),
     );
-    // Start interactive cube rotation (cursor-following) after entrance completes
-    if (ENABLE_FINAL_ANIMATION) {
-      timers.push(
-        setTimeout(() => {
-          createCubeAnimation(innerRef, animationStateRef);
-        }, cubeAnimationStartTime),
-      );
-    }
     
     // Stage 2: Outer face assembly with crash animations
     if (ENABLE_STAGE2) {
@@ -154,12 +144,14 @@ export default function LandingPage() {
             timers.push(
               setTimeout(() => {
                 setIsStage3Active(true);
-                // Mark all animations complete and enable pulse after Stage 3 finishes
+                // Mark all animations complete and enable interactive features after Stage 3 finishes
                 const stage3EndTime = STAGE3_TOTAL_DURATION_MS;
                 timers.push(
                   setTimeout(() => {
                     setAreAnimationsComplete(true);
+                    // Start interactive cube rotation (cursor-following) after all entrance animations complete
                     if (ENABLE_FINAL_ANIMATION) {
+                      createCubeAnimation(innerRef, animationStateRef);
                       setIsCubeAnimationStarted(true);
                     }
                   }, stage3EndTime),
@@ -167,11 +159,13 @@ export default function LandingPage() {
               }, stage3StartDelay),
             );
           } else {
-            // Mark complete and enable pulse when Stage 2 finishes (Stage 3 disabled)
+            // Mark complete and enable interactive features when Stage 2 finishes (Stage 3 disabled)
             timers.push(
               setTimeout(() => {
                 setAreAnimationsComplete(true);
+                // Start interactive cube rotation (cursor-following) after all entrance animations complete
                 if (ENABLE_FINAL_ANIMATION) {
+                  createCubeAnimation(innerRef, animationStateRef);
                   setIsCubeAnimationStarted(true);
                 }
               }, STAGE2_TOTAL_DURATION_MS),
@@ -180,14 +174,16 @@ export default function LandingPage() {
         }, stage2StartTime),
       );
     } else {
-      // Mark complete and enable pulse when Stage 1 finishes (Stage 2 disabled)
+      // Mark complete and enable interactive features when Stage 1 finishes (Stage 2 disabled)
       const stage1EndTime =
         CUBE_ENTRANCE_INITIAL_DELAY_MS + STAGE1_INNER_CUBE_DELAY_MS + STAGE1_INNER_CUBE_FADE_DURATION_MS;
       const rotationEndTime = stage1EndTime + STAGE1_ROTATION_DELAY_MS + STAGE1_ROTATION_DURATION_MS;
       timers.push(
         setTimeout(() => {
           setAreAnimationsComplete(true);
+          // Start interactive cube rotation (cursor-following) after all entrance animations complete
           if (ENABLE_FINAL_ANIMATION) {
+            createCubeAnimation(innerRef, animationStateRef);
             setIsCubeAnimationStarted(true);
           }
         }, rotationEndTime),
