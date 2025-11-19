@@ -13,6 +13,7 @@ interface LoadingCircleProps {
   x: number;
   y: number;
   isExpanding: boolean;
+  onLoadingComplete?: () => void;
 }
 
 /**
@@ -21,7 +22,7 @@ interface LoadingCircleProps {
  * The circle starts when expansion begins and closes over the expansion duration.
  * If expansion stops early, the circle falls back quickly.
  */
-export default function LoadingCircle({ x, y, isExpanding }: LoadingCircleProps) {
+export default function LoadingCircle({ x, y, isExpanding, onLoadingComplete }: LoadingCircleProps) {
   const [shouldShow, setShouldShow] = useState(false);
   const [animationState, setAnimationState] = useState<'expanding' | 'completed' | 'fallback'>('expanding');
   const [fallbackStartClipPath, setFallbackStartClipPath] = useState<string>('');
@@ -52,10 +53,14 @@ export default function LoadingCircle({ x, y, isExpanding }: LoadingCircleProps)
           setAnimationState('completed');
           expandTimerRef.current = null;
           // Don't clear expandStartTimeRef here - we need it to check if expansion stopped early
+          // Notify parent that loading is complete
+          if (onLoadingComplete) {
+            onLoadingComplete();
+          }
         }, INNER_CUBE_EXPAND_DURATION_MS);
       });
     }
-  }, [isExpanding, shouldShow]);
+  }, [isExpanding, shouldShow, onLoadingComplete]);
 
   // Handle expansion stop: fall back quickly only if not completed
   useEffect(() => {

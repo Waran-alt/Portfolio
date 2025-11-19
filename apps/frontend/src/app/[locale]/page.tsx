@@ -8,7 +8,7 @@
  */
 
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { INITIAL_CUBE_ROTATION_X, INITIAL_CUBE_ROTATION_Y, LIGHT_INITIAL_X, LIGHT_INITIAL_Y, PERSPECTIVE_PX } from './animations/constants';
 import { createCubeAnimation, quat_create, quat_fromAxisAngle, quat_multiply, quat_toMatrix3d, type CubeAnimationState } from './animations/cube';
 import { createLightGradient } from './animations/light';
@@ -21,6 +21,7 @@ import { useInnerCubeExpansion } from './hooks/useInnerCubeExpansion';
 import { usePulseEffects } from './hooks/usePulseEffects';
 import {
   CUBE_ENTRANCE_INITIAL_DELAY_MS,
+  CUBE_IMPLOSION_DURATION_MS,
   STAGE1_INNER_CUBE_DELAY_MS,
   STAGE1_INNER_CUBE_FADE_DURATION_MS,
   STAGE1_ROTATION_DELAY_MS,
@@ -60,6 +61,13 @@ export default function LandingPage() {
     }
     return { x: 0, y: 0 };
   });
+  // Track when loading completes to trigger cube implosion
+  const [shouldImplode, setShouldImplode] = useState(false);
+  
+  // Callback for when loading circle completes
+  const handleLoadingComplete = useCallback(() => {
+    setShouldImplode(true);
+  }, []);
 
   // Calculate initial perspective rotation quaternion (combines Y and X axis rotations)
   const perspectiveRotationQuat = useMemo(
@@ -245,7 +253,17 @@ export default function LandingPage() {
       ))}
 
       <div className="relative z-10" style={{ perspective: `${PERSPECTIVE_PX}px` }} data-testid="cube-wrapper">
-        <div className={styles['followWrapper']} ref={innerRef}>
+        <div
+          className={`${styles['followWrapper']} ${shouldImplode ? styles['cubeImplode'] : ''}`}
+          ref={innerRef}
+          style={
+            shouldImplode
+              ? ({
+                  '--implosion-duration': `${CUBE_IMPLOSION_DURATION_MS}ms`,
+                } as React.CSSProperties)
+              : undefined
+          }
+        >
           <Cube3D
             isEntranceComplete={isEntranceComplete}
             isPulsePaused={isPulsePaused}
@@ -276,7 +294,12 @@ export default function LandingPage() {
       )}
 
       {/* Loading circle indicator around cursor during inner cube expansion */}
-      <LoadingCircle x={cursorPosition.x} y={cursorPosition.y} isExpanding={isInnerCubeExpanded} />
+      <LoadingCircle
+        x={cursorPosition.x}
+        y={cursorPosition.y}
+        isExpanding={isInnerCubeExpanded}
+        onLoadingComplete={handleLoadingComplete}
+      />
 
       {/* Interactive overlay for pulse effects - must be last to capture cursor movement */}
       <PulseOverlay onMouseMove={handleMouseMove} />

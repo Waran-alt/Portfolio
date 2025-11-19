@@ -418,6 +418,14 @@ export const INNER_CUBE_EXPAND_DURATION_MS = 2000;
  */
 export const INNER_CUBE_CONTRACT_DURATION_MS = 300;
 
+/**
+ * Cube implosion duration in milliseconds (swift shrink and rotate)
+ * 
+ * When loading animation completes, the cube implodes by shrinking to a point while rotating.
+ * Swift animation for a dramatic effect.
+ */
+export const CUBE_IMPLOSION_DURATION_MS = 600;
+
 // ============================================================================
 // Cube Pulse Animation
 // ============================================================================

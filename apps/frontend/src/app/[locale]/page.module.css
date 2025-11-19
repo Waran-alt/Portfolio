@@ -214,6 +214,23 @@
   transition: transform 0.1s ease-out; /* Smooth transition for mouse follow */
 }
 
+/* Cube implosion animation: shrink to point while rotating */
+.cubeImplode {
+  animation: cubeImplode var(--implosion-duration, 600ms) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0ms;
+  /* Disable transition during implosion to allow animation to take precedence */
+  transition: none;
+}
+
+@keyframes cubeImplode {
+  0% {
+    transform: scale(1) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: scale(0) rotateX(720deg) rotateY(720deg) rotateZ(720deg);
+  }
+}
+
 .cubeFace {
   position: absolute;
   width: 100%;
