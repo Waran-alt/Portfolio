@@ -176,16 +176,21 @@ export default function LoadingCircle({ x, y, isExpanding }: LoadingCircleProps)
 
   // Cleanup timers on unmount
   useEffect(() => {
+    // Capture ref values to avoid stale closures
+    const expandTimer = expandTimerRef.current;
+    const fallbackTimer = fallbackTimerRef.current;
+    const circleElement = circleRef.current;
+    
     return () => {
-      if (expandTimerRef.current) {
-        clearTimeout(expandTimerRef.current);
+      if (expandTimer) {
+        clearTimeout(expandTimer);
       }
-      if (fallbackTimerRef.current) {
-        clearTimeout(fallbackTimerRef.current);
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer);
       }
       // Stop any ongoing fallback animation
-      if (circleRef.current) {
-        circleRef.current.style.animation = 'none';
+      if (circleElement) {
+        circleElement.style.animation = 'none';
       }
     };
   }, []);
