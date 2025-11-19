@@ -63,10 +63,23 @@ export default function LandingPage() {
   });
   // Track when loading completes to trigger cube implosion
   const [shouldImplode, setShouldImplode] = useState(false);
+  // Track when implosion completes to hide cube
+  const [isCubeHidden, setIsCubeHidden] = useState(false);
+  // Store cleanup function for cube animation
+  const cubeAnimationCleanupRef = useRef<(() => void) | null>(null);
   
   // Callback for when loading circle completes
   const handleLoadingComplete = useCallback(() => {
     setShouldImplode(true);
+    // Hide cube after implosion animation completes and clean up
+    setTimeout(() => {
+      setIsCubeHidden(true);
+      // Clean up cube animation listeners and intervals
+      if (cubeAnimationCleanupRef.current) {
+        cubeAnimationCleanupRef.current();
+        cubeAnimationCleanupRef.current = null;
+      }
+    }, CUBE_IMPLOSION_DURATION_MS);
   }, []);
 
   // Calculate initial perspective rotation quaternion (combines Y and X axis rotations)
@@ -167,7 +180,8 @@ export default function LandingPage() {
                     setAreAnimationsComplete(true);
                     // Start interactive cube rotation (cursor-following) after all entrance animations complete
                     if (ENABLE_FINAL_ANIMATION) {
-                      createCubeAnimation(innerRef, animationStateRef);
+                      const cleanup = createCubeAnimation(innerRef, animationStateRef);
+                      cubeAnimationCleanupRef.current = cleanup;
                       setIsCubeAnimationStarted(true);
                     }
                   }, stage3EndTime),
@@ -181,7 +195,8 @@ export default function LandingPage() {
                 setAreAnimationsComplete(true);
                 // Start interactive cube rotation (cursor-following) after all entrance animations complete
                 if (ENABLE_FINAL_ANIMATION) {
-                  createCubeAnimation(innerRef, animationStateRef);
+                  const cleanup = createCubeAnimation(innerRef, animationStateRef);
+                  cubeAnimationCleanupRef.current = cleanup;
                   setIsCubeAnimationStarted(true);
                 }
               }, STAGE2_TOTAL_DURATION_MS),
@@ -199,7 +214,8 @@ export default function LandingPage() {
           setAreAnimationsComplete(true);
           // Start interactive cube rotation (cursor-following) after all entrance animations complete
           if (ENABLE_FINAL_ANIMATION) {
-            createCubeAnimation(innerRef, animationStateRef);
+            const cleanup = createCubeAnimation(innerRef, animationStateRef);
+            cubeAnimationCleanupRef.current = cleanup;
             setIsCubeAnimationStarted(true);
           }
         }, rotationEndTime),
@@ -214,6 +230,11 @@ export default function LandingPage() {
 
   // Track cursor position and trigger pulses after animations complete
   const handleMouseMove = (event: React.MouseEvent) => {
+    // Don't process mouse movement if cube is hidden
+    if (isCubeHidden) {
+      return;
+    }
+    
     const x = event.clientX;
     const y = event.clientY;
     // Always update cursor position for guide lines
@@ -252,19 +273,20 @@ export default function LandingPage() {
         />
       ))}
 
-      <div className="relative z-10" style={{ perspective: `${PERSPECTIVE_PX}px` }} data-testid="cube-wrapper">
-        <div
-          className={`${styles['followWrapper']} ${shouldImplode ? styles['cubeImplode'] : ''}`}
-          ref={innerRef}
-          style={
-            shouldImplode
-              ? ({
-                  '--implosion-duration': `${CUBE_IMPLOSION_DURATION_MS}ms`,
-                } as React.CSSProperties)
-              : undefined
-          }
-        >
-          <Cube3D
+      {!isCubeHidden && (
+        <div className="relative z-10" style={{ perspective: `${PERSPECTIVE_PX}px` }} data-testid="cube-wrapper">
+          <div
+            className={`${styles['followWrapper']} ${shouldImplode ? styles['cubeImplode'] : ''}`}
+            ref={innerRef}
+            style={
+              shouldImplode
+                ? ({
+                    '--implosion-duration': `${CUBE_IMPLOSION_DURATION_MS}ms`,
+                  } as React.CSSProperties)
+                : undefined
+            }
+          >
+            <Cube3D
             isEntranceComplete={isEntranceComplete}
             isPulsePaused={isPulsePaused}
             isInnerCubeExpanded={isInnerCubeExpanded}
@@ -277,11 +299,12 @@ export default function LandingPage() {
           isStage3Active={isStage3Active}
           enablePulse={ENABLE_FINAL_ANIMATION && isCubeAnimationStarted}
           />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Render GuideOverlay only when Stage 3 starts */}
-      {isStage3Active && (
+      {/* Render GuideOverlay only when Stage 3 starts and cube is visible */}
+      {!isCubeHidden && isStage3Active && (
         <GuideOverlay
           lineRefs={lineRefs}
           tesseractLineRefs={tesseractLineRefs}
@@ -294,15 +317,17 @@ export default function LandingPage() {
       )}
 
       {/* Loading circle indicator around cursor during inner cube expansion */}
-      <LoadingCircle
-        x={cursorPosition.x}
-        y={cursorPosition.y}
-        isExpanding={isInnerCubeExpanded}
-        onLoadingComplete={handleLoadingComplete}
-      />
+      {!isCubeHidden && (
+        <LoadingCircle
+          x={cursorPosition.x}
+          y={cursorPosition.y}
+          isExpanding={isInnerCubeExpanded}
+          onLoadingComplete={handleLoadingComplete}
+        />
+      )}
 
       {/* Interactive overlay for pulse effects - must be last to capture cursor movement */}
-      <PulseOverlay onMouseMove={handleMouseMove} />
+      {!isCubeHidden && <PulseOverlay onMouseMove={handleMouseMove} />}
     </main>
   );
 }
