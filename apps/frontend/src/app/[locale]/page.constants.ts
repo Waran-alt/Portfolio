@@ -427,6 +427,46 @@ export const INNER_CUBE_CONTRACT_DURATION_MS = 300;
 export const CUBE_IMPLOSION_DURATION_MS = 600;
 
 // ============================================================================
+// Square Grid Background
+// ============================================================================
+
+/**
+ * Square grid background configuration
+ * 
+ * Appears when cube disappears, filling the background with identical squares.
+ */
+
+/**
+ * Size of each square in pixels
+ */
+export const SQUARE_GRID_SIZE_PX = 40;
+
+/**
+ * Gap between squares in pixels
+ */
+export const SQUARE_GRID_GAP_PX = 3;
+
+/**
+ * Square border width in pixels
+ */
+export const SQUARE_GRID_BORDER_WIDTH_PX = 1;
+
+/**
+ * Square border color (using cursor color for consistency)
+ */
+export const SQUARE_GRID_BORDER_COLOR = rgb(COLORS.darkGray);
+
+/**
+ * Square background color (transparent or subtle fill)
+ */
+export const SQUARE_GRID_BACKGROUND_COLOR = rgba(COLORS.darkGrayLighter, 0.95);
+
+/**
+ * Maximum rotation angle in degrees for squares (Z-axis)
+ */
+export const SQUARE_GRID_MAX_ROTATION_DEG = 5;
+
+// ============================================================================
 // Cube Pulse Animation
 // ============================================================================
 

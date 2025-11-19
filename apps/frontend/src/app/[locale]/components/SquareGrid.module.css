@@ -1,0 +1,31 @@
+/**
+ * @file Square Grid Styles
+ *
+ * Styles for the square grid background.
+ */
+
+.squareGrid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 20), var(--square-size, 40px));
+  grid-template-rows: repeat(var(--grid-rows, 20), var(--square-size, 40px));
+  gap: var(--square-gap, 8px);
+  padding: var(--square-gap, 8px);
+  justify-content: center;
+  align-content: center;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.square {
+  width: var(--square-size, 40px);
+  height: var(--square-size, 40px);
+  border: var(--square-border-width, 1px) solid var(--square-border-color, rgb(34, 42, 55));
+  background-color: var(--square-background-color, rgba(34, 42, 55, 0.05));
+}
+
