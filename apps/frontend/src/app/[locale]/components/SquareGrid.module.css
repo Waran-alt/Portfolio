@@ -27,5 +27,68 @@
   height: var(--square-size, 40px);
   border: var(--square-border-width, 1px) solid var(--square-border-color, rgb(34, 42, 55));
   background-color: var(--square-background-color, rgba(34, 42, 55, 0.05));
+  opacity: 0;
+  transform: translate(0, 0) rotate(0deg);
+  visibility: hidden;
+  animation: 
+    squareFadeIn var(--fade-in-duration, 300ms) ease-out var(--fade-in-delay, 0ms) forwards,
+    squareJiggle var(--jiggle-duration, 400ms) ease-in-out var(--jiggle-delay, 0ms) forwards,
+    squareTransform var(--transform-duration, 300ms) ease-out var(--transform-delay, 0ms) forwards;
+}
+
+@keyframes squareFadeIn {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+  }
+  0.01% {
+    visibility: visible;
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@keyframes squareJiggle {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * 0.5), calc(var(--jiggle-intensity, 2px) * -0.3)) rotate(0deg);
+  }
+  20% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * -0.4), calc(var(--jiggle-intensity, 2px) * 0.2)) rotate(0deg);
+  }
+  30% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * 0.3), calc(var(--jiggle-intensity, 2px) * 0.4)) rotate(0deg);
+  }
+  40% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * -0.2), calc(var(--jiggle-intensity, 2px) * -0.3)) rotate(0deg);
+  }
+  50% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * 0.1), calc(var(--jiggle-intensity, 2px) * 0.2)) rotate(0deg);
+  }
+  60% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * -0.3), calc(var(--jiggle-intensity, 2px) * -0.1)) rotate(0deg);
+  }
+  70% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * 0.2), calc(var(--jiggle-intensity, 2px) * 0.3)) rotate(0deg);
+  }
+  80% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * -0.1), calc(var(--jiggle-intensity, 2px) * -0.2)) rotate(0deg);
+  }
+  90% {
+    transform: translate(calc(var(--jiggle-intensity, 2px) * 0.15), calc(var(--jiggle-intensity, 2px) * 0.1)) rotate(0deg);
+  }
+}
+
+@keyframes squareTransform {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate(var(--translate-x, 0px), var(--translate-y, 0px)) rotate(var(--rotate, 0deg));
+  }
 }
 

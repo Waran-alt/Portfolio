@@ -466,6 +466,31 @@ export const SQUARE_GRID_BACKGROUND_COLOR = rgba(COLORS.darkGrayLighter, 0.95);
  */
 export const SQUARE_GRID_MAX_ROTATION_DEG = 5;
 
+/**
+ * Maximum delay in milliseconds for square appearance animation based on distance from center
+ */
+export const SQUARE_GRID_MAX_APPEAR_DELAY_MS = 2000;
+
+/**
+ * Duration of square fade-in animation in milliseconds
+ */
+export const SQUARE_GRID_FADE_IN_DURATION_MS = 300;
+
+/**
+ * Delay in milliseconds before applying square transformations after fade-in
+ */
+export const SQUARE_GRID_TRANSFORM_DELAY_MS = 500;
+
+/**
+ * Duration of square jiggle animation in milliseconds
+ */
+export const SQUARE_GRID_JIGGLE_DURATION_MS = 400;
+
+/**
+ * Intensity of square jiggle animation in pixels
+ */
+export const SQUARE_GRID_JIGGLE_INTENSITY_PX = 2;
+
 // ============================================================================
 // Cube Pulse Animation
 // ============================================================================

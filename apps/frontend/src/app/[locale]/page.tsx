@@ -16,12 +16,15 @@ import { PulseEffect } from './animations/pulse';
 import Cube3D from './components/Cube3D';
 import LoadingCircle from './components/LoadingCircle';
 import PulseOverlay from './components/PulseOverlay';
+import SquareGrid from './components/SquareGrid';
 import { useGuideLines } from './hooks/useGuideLines';
 import { useInnerCubeExpansion } from './hooks/useInnerCubeExpansion';
 import { usePulseEffects } from './hooks/usePulseEffects';
 import {
+  COLORS,
   CUBE_ENTRANCE_INITIAL_DELAY_MS,
   CUBE_IMPLOSION_DURATION_MS,
+  rgb,
   STAGE1_INNER_CUBE_DELAY_MS,
   STAGE1_INNER_CUBE_FADE_DURATION_MS,
   STAGE1_ROTATION_DELAY_MS,
@@ -65,6 +68,8 @@ export default function LandingPage() {
   const [shouldImplode, setShouldImplode] = useState(false);
   // Track when implosion completes to hide cube
   const [isCubeHidden, setIsCubeHidden] = useState(false);
+  // Track when background transition is complete to show squares
+  const [isBackgroundTransitionComplete, setIsBackgroundTransitionComplete] = useState(false);
   // Store cleanup function for cube animation
   const cubeAnimationCleanupRef = useRef<(() => void) | null>(null);
   
@@ -79,6 +84,10 @@ export default function LandingPage() {
         cubeAnimationCleanupRef.current();
         cubeAnimationCleanupRef.current = null;
       }
+      // Show squares after background transition completes (300ms)
+      setTimeout(() => {
+        setIsBackgroundTransitionComplete(true);
+      }, 300);
     }, CUBE_IMPLOSION_DURATION_MS);
   }, []);
 
@@ -253,14 +262,19 @@ export default function LandingPage() {
 
   return (
     <main
-      className={`LandingPage ${styles['landingPage']} min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-700`}
+      className={`LandingPage ${styles['landingPage']} min-h-screen flex items-center justify-center`}
       data-testid="landing-root"
       style={{
-        background: lightGradient,
+        background: isCubeHidden ? rgb(COLORS.darkGray) : lightGradient,
         position: 'relative',
         cursor: areAnimationsComplete ? undefined : 'none', // Hide cursor until animations complete
+        transition: 'background 0.3s ease-out', // Always enable transition for smooth background change
       }}
     >
+      {/* Square grid background - preload in DOM but keep hidden until reveal */}
+      {areAnimationsComplete && (
+        <SquareGrid isVisible={isCubeHidden && isBackgroundTransitionComplete} />
+      )}
       {/* Render pulse effects behind cube */}
       {pulses.map(pulse => (
         <PulseEffect
