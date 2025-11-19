@@ -14,6 +14,7 @@ import { createCubeAnimation, quat_create, quat_fromAxisAngle, quat_multiply, qu
 import { createLightGradient } from './animations/light';
 import { PulseEffect } from './animations/pulse';
 import Cube3D from './components/Cube3D';
+import LoadingCircle from './components/LoadingCircle';
 import PulseOverlay from './components/PulseOverlay';
 import { useGuideLines } from './hooks/useGuideLines';
 import { useInnerCubeExpansion } from './hooks/useInnerCubeExpansion';
@@ -52,6 +53,13 @@ export default function LandingPage() {
   // Track when all entrance animations are complete (cursor can be shown and animations enabled)
   const [areAnimationsComplete, setAreAnimationsComplete] = useState(false);
   const [isCursorInitialized, setIsCursorInitialized] = useState(false);
+  // Track cursor position for loading circle (initialize to center of viewport)
+  const [cursorPosition, setCursorPosition] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    }
+    return { x: 0, y: 0 };
+  });
 
   // Calculate initial perspective rotation quaternion (combines Y and X axis rotations)
   const perspectiveRotationQuat = useMemo(
@@ -198,15 +206,19 @@ export default function LandingPage() {
 
   // Track cursor position and trigger pulses after animations complete
   const handleMouseMove = (event: React.MouseEvent) => {
+    const x = event.clientX;
+    const y = event.clientY;
     // Always update cursor position for guide lines
-    cursorPositionRef.current = { x: event.clientX, y: event.clientY };
+    cursorPositionRef.current = { x, y };
+    // Update cursor position state for loading circle
+    setCursorPosition({ x, y });
     // Mark cursor as initialized on first movement
     if (!isCursorInitialized) {
       setIsCursorInitialized(true);
     }
     // Only generate pulses after all entrance animations complete
     if (areAnimationsComplete) {
-      checkAndTriggerPulse(event.clientX, event.clientY);
+      checkAndTriggerPulse(x, y);
     }
   };
 
@@ -262,6 +274,9 @@ export default function LandingPage() {
           isStage3Active={isStage3Active}
         />
       )}
+
+      {/* Loading circle indicator around cursor during inner cube expansion */}
+      <LoadingCircle x={cursorPosition.x} y={cursorPosition.y} isExpanding={isInnerCubeExpanded} />
 
       {/* Interactive overlay for pulse effects - must be last to capture cursor movement */}
       <PulseOverlay onMouseMove={handleMouseMove} />

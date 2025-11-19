@@ -408,7 +408,7 @@ export const STAGE3_TOTAL_DURATION_MS = STAGE3_LAST_LINE_START_MS + STAGE3_LINE_
  * Uses a slow, smooth ease-out curve for a dramatic effect.
  * During expansion, the outer cube vibrates with increasing intensity.
  */
-export const INNER_CUBE_EXPAND_DURATION_MS = 3000;
+export const INNER_CUBE_EXPAND_DURATION_MS = 2000;
 
 /**
  * Inner cube contraction duration in milliseconds (swift return)

@@ -1,0 +1,67 @@
+/**
+ * @file Loading Circle Styles
+ *
+ * Styles for the loading circle indicator that appears around the cursor.
+ */
+
+.loadingCircle {
+  width: 40px;
+  aspect-ratio: 1;
+  border: 5px solid var(--loading-circle-color, rgb(34, 42, 55));
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Expanding animation: circle closes from 0% to 100% over expansion duration */
+.expanding {
+  animation: loadingCircleClose var(--expand-duration, 3000ms) linear forwards;
+}
+
+/* Completed state: circle stays fully closed (no animation) */
+.completed {
+  clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+}
+
+/* Fallback animation: circle closes quickly when expansion stops */
+.fallback {
+  animation: loadingCircleFallback var(--contract-duration, 300ms) linear forwards;
+}
+
+@keyframes loadingCircleClose {
+  0% {
+    clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
+  }
+  25% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
+  }
+  50% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
+  }
+  75% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+  }
+}
+
+@keyframes loadingCircleFallback {
+  0% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
+  }
+  25% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 100%);
+  }
+  50% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
+  }
+  75% {
+    clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
+  }
+  100% {
+    clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
+  }
+}
