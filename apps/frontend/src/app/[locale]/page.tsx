@@ -262,7 +262,7 @@ export default function LandingPage() {
 
   return (
     <main
-      className={`LandingPage ${styles['landingPage']} min-h-screen flex items-center justify-center`}
+      className={`LandingPage ${styles['landingPage']} ${isCubeHidden ? styles['landingPageBrightCursor'] : ''} min-h-screen flex items-center justify-center`}
       data-testid="landing-root"
       style={{
         background: isCubeHidden ? rgb(COLORS.darkGray) : lightGradient,

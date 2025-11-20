@@ -473,6 +473,14 @@
     auto;
 }
 
+/* Bright cursor for dark background */
+.landingPageBrightCursor {
+  cursor:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><defs><radialGradient id="cursorGradientBright" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgb(255, 255, 255)" stop-opacity="0.2"/><stop offset="100%" stop-color="rgb(255, 255, 255)" stop-opacity="0.6"/></radialGradient></defs><circle cx="12" cy="12" r="6" fill="url(%23cursorGradientBright)"/></svg>')
+      12 12,
+    auto;
+}
+
 @keyframes cubePulseFace {
   0% {
     transform: var(--cube-pulse-transform-start);
