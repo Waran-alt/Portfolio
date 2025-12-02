@@ -207,6 +207,42 @@ code duplication across pages.
 ❌ FEAT: ADD NEW FEATURE (wrong capitalization)
 ❌ feat: Added new feature. (wrong mood, has period)
 ❌ chore: stuff (#001) (too vague, even with task ID)
+❌ docs: consolidate 8 files into one (mentions files not in git)
+❌ docs: remove old docs and add new (vague, doesn't reflect actual changes)
+```
+
+### Good vs Bad: External Perspective Examples
+
+**Bad** (mentions files that don't exist in git):
+```
+docs(docs): consolidate multi-client hosting docs
+
+Replace 8 separate documentation files with unified guide.
+Files removed: MULTI_CLIENT_FAQ.md, MULTI_DOMAIN_SETUP.md, etc.
+```
+
+**Good** (focuses on actual committed files):
+```
+docs(docs): add multi-client hosting guide
+
+Add comprehensive guide for hosting multiple client
+applications with separate databases and subdomains.
+```
+
+**Bad** (internal development context):
+```
+refactor(api): restructure after team discussion
+
+We discussed this in the meeting and decided to move things.
+```
+
+**Good** (external reviewer perspective):
+```
+refactor(api): extract validation logic to middleware
+
+Move request validation from route handlers to dedicated
+middleware to improve code reusability and separation of
+concerns.
 ```
 
 ### Simple Changes
@@ -272,22 +308,65 @@ refactor(<scope>): <action> <component/functionality> (#XXX)
 <benefits achieved>
 ```
 
+## Commit Message Perspective
+
+### Balanced Professional Perspective
+
+**Write commit messages with a balanced approach** - describe changes objectively while including relevant context that helps future maintainers understand the codebase.
+
+**Key Principles:**
+- **Focus on actual changes**: Only mention files that exist in git (staged files, modified files, deleted files from previous commits)
+- **Present imperative tense**: Use "add", "update", "remove" not "added", "updated", "removed"
+- **Describe WHAT changed**: Objective description of code changes (what an external reviewer would see)
+- **Include WHY when relevant**: Code-relevant reasoning, technical tradeoffs, or important context that helps understand the change
+- **Avoid HOW it was developed**: Skip process details, meetings, conversations, or work-in-progress discussions
+
+**What to Include:**
+- ✅ Files being added, modified, or deleted (that exist in git)
+- ✅ What changed (objective description from diff perspective)
+- ✅ Why it changed (technical reasoning, tradeoffs, or code-relevant context)
+- ✅ Important architectural decisions or constraints
+- ✅ Breaking changes or migration needs
+
+**What to Avoid:**
+- ❌ Mentioning files that don't exist in git history or were never committed
+- ❌ Internal process details ("we discussed in meeting", "after team review")
+- ❌ Work-in-progress details not reflected in actual code
+- ❌ Lists of files that were never committed
+- ❌ Assuming context without explaining it in the message itself
+
+### Balancing Context vs Clarity
+
+**Include Context When:**
+- Technical tradeoff or constraint affects future work
+- Architectural decision impacts how code should be used
+- Bug fix reasoning helps prevent similar issues
+- Performance optimization explains non-obvious changes
+
+**Skip Context When:**
+- It's about internal process ("after meeting", "team decided")
+- It references conversations or discussions
+- It's work-in-progress not reflected in code
+- The "why" is obvious from the code change itself
+
 ## AI Assistant Instructions
 
 When helping with commit messages:
 
 1. **ALWAYS check git status first**: Before any commit, run `git status` to see what's staged vs modified
-2. **Analyze staged changes**: Review actual staged files and their diffs (`git diff --staged`) to understand what changed. Write commit messages based on the staged changes, not from memory or assumptions. Act like an external professional reviewing the code changes.
-3. **Stage missing changes logically**: If files are modified but not staged, review them and stage them logically. Consider splitting into multiple commits if changes are unrelated.
-4. **Identify task ID**: Check if work relates to a project board task (simple #XXX format)
-5. **Suggest appropriate type**: Based on the nature of changes observed in the diffs
-6. **Recommend scope**: Based on affected files/functionality from the staged changes
-7. **Craft clear subject**: Imperative present tense, under 50 characters (including task ID)
-8. **Add concise body**: For complex changes, explain what and why, not exhaustive lists. Keep it focused and descriptive without being overly detailed.
-9. **Include footers**: For breaking changes or issue references
-10. **Validate format**: Ensure compliance with conventional commits
-11. **Check spelling**: Ensure professional appearance
-12. **Keep it simple**: Use #XXX format for easy reference, not categorization
+2. **Analyze staged changes**: Review actual staged files and their diffs (`git diff --staged`) to understand what changed. Write commit messages based ONLY on the staged changes visible in git, not from memory, assumptions, or conversations. Describe changes objectively while including technical context that helps understand the code.
+3. **Verify file existence**: Only mention files that actually exist in the git repository (check with `git ls-files` if needed). Never reference files that were never committed or don't exist in git history.
+4. **Stage missing changes logically**: If files are modified but not staged, review them and stage them logically. Consider splitting into multiple commits if changes are unrelated.
+5. **Identify task ID**: Check if work relates to a project board task (simple #XXX format)
+6. **Suggest appropriate type**: Based on the nature of changes observed in the diffs
+7. **Recommend scope**: Based on affected files/functionality from the staged changes
+8. **Craft clear subject**: Imperative present tense, under 50 characters (including task ID)
+9. **Add concise body**: For complex changes, explain what and why from the code's perspective, not exhaustive lists. Keep it focused and descriptive - describe what an external reviewer would see.
+10. **Include footers**: For breaking changes or issue references
+11. **Validate format**: Ensure compliance with conventional commits
+12. **Check spelling**: Ensure professional appearance
+13. **Keep it simple**: Use #XXX format for easy reference, not categorization
+14. **Balanced perspective**: Describe what changed objectively (like reviewing code), but include relevant technical context about why. Avoid process details but include code-relevant reasoning that helps future maintainers.
 
 ### **Pre-Commit Checklist**
 Before every commit:
