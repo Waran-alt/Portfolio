@@ -1,0 +1,20 @@
+{
+  "$schema": "../scripts/client-config.schema.json",
+  "id": "client-name",
+  "name": "Client Display Name",
+  "description": "Brief description of the client application",
+  "subdomain": "client-name",
+  "ports": {
+    "frontend": 3001,
+    "backend": 4001
+  },
+  "database": {
+    "name": "client_name_db",
+    "user": "postgres"
+  },
+  "enabled": true,
+  "metadata": {
+    "created": "2025-01-01",
+    "version": "1.0.0"
+  }
+}

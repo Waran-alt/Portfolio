@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Client Configuration Schema",
+  "description": "Schema for client application configuration files",
+  "type": "object",
+  "required": ["id", "name", "subdomain", "ports", "database"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique client identifier (kebab-case, used for folder names and service names)",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name for the client"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the client application"
+    },
+    "subdomain": {
+      "type": "string",
+      "description": "Subdomain where the client will be hosted",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "ports": {
+      "type": "object",
+      "required": ["frontend", "backend"],
+      "properties": {
+        "frontend": {
+          "type": "number",
+          "description": "Frontend service port",
+          "minimum": 3000,
+          "maximum": 9999
+        },
+        "backend": {
+          "type": "number",
+          "description": "Backend service port",
+          "minimum": 4000,
+          "maximum": 9999
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Database name (snake_case)",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "user": {
+          "type": "string",
+          "description": "Database user (defaults to postgres)",
+          "default": "postgres"
+        }
+      }
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this client is enabled (disabled clients are ignored)",
+      "default": true
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata about the client",
+      "properties": {
+        "created": {
+          "type": "string",
+          "format": "date"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+
