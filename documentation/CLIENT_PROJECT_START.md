@@ -27,7 +27,21 @@ mkdir -p clients/${CLIENT_ID}/{frontend,backend,migrations/changesets}
 cp clients/client.config.json.example clients/${CLIENT_ID}/client.config.json
 ```
 
-### 2. Configure Client Metadata
+### 2. Check Available Ports and Names
+
+Before configuring your client, check what's already in use:
+
+```bash
+yarn check:clients
+```
+
+This shows:
+- All used client IDs and subdomains
+- All used ports (frontend and backend)
+- All used database names
+- Recommended ports for your new client
+
+### 3. Configure Client Metadata
 
 Edit `clients/${CLIENT_ID}/client.config.json`:
 
@@ -55,12 +69,14 @@ Edit `clients/${CLIENT_ID}/client.config.json`:
 ```
 
 **Important considerations:**
-- **Ports**: Ensure they don't conflict with existing clients (check `clients/` directory)
-- **Subdomain**: Will be accessible at `{subdomain}.{BASE_DOMAIN}` (e.g., `my-new-client.owndom.com`)
-- **Database name**: Must be unique, follows PostgreSQL naming conventions
-- **ID**: Should match directory name and be kebab-case
+- **Ports**: Use the recommended ports from `yarn check:clients` or ensure they're unique
+- **Subdomain**: Must be unique (check with `yarn check:clients`). Will be accessible at `{subdomain}.{BASE_DOMAIN}` (e.g., `my-new-client.owndom.com`)
+- **Database name**: Must be unique (check with `yarn check:clients`), follows PostgreSQL naming conventions
+- **ID**: Should match directory name and be kebab-case, must be unique
 
-### 3. Initialize Frontend Application
+**Note:** The discovery script will automatically validate all these fields and prevent conflicts.
+
+### 4. Initialize Frontend Application
 
 ```bash
 cd clients/${CLIENT_ID}/frontend
@@ -78,7 +94,7 @@ npx create-next-app@latest . --typescript --tailwind --app --no-git --import-ali
 - Source code in `src/` or root (framework-dependent)
 - `.env.example` if needed
 
-### 4. Initialize Backend Application
+### 5. Initialize Backend Application
 
 ```bash
 cd ../backend
@@ -97,7 +113,7 @@ touch src/index.ts
 - `tsconfig.json`
 - Source code in `src/`
 
-### 5. Set Up Database Migrations
+### 6. Set Up Database Migrations
 
 ```bash
 cd ../migrations
@@ -147,7 +163,7 @@ EOF
 
 See `tools/database/liquibase-setup.md` for detailed Liquibase documentation.
 
-### 6. Discover and Generate Configurations
+### 7. Discover and Generate Configurations
 
 ```bash
 # Return to project root
@@ -166,7 +182,7 @@ This generates:
 - `.generated/clients.json` - Client metadata registry
 - `.generated/database-names.txt` - List of all database names
 
-### 7. Integrate Configurations
+### 8. Integrate Configurations
 
 ```bash
 # Integrate client configs into main project
@@ -175,10 +191,9 @@ This generates:
 # This script:
 # - Updates .env with new database names
 # - Prepares Nginx configuration
-# - Validates port conflicts
 ```
 
-### 8. Run Database Migrations
+### 9. Run Database Migrations
 
 ```bash
 # Run migrations for all clients (including your new one)
@@ -188,7 +203,7 @@ yarn migrate:clients
 yarn migrate:client my-new-client
 ```
 
-### 9. Test Local Development
+### 10. Test Local Development
 
 ```bash
 # Start all services (portfolio + all clients)
@@ -205,7 +220,7 @@ docker-compose logs -f my-new-client-frontend
 docker-compose logs -f my-new-client-backend
 ```
 
-### 10. Verify Access
+### 11. Verify Access
 
 - **Frontend**: `http://localhost:3001` (or configured port)
 - **Backend API**: `http://localhost:4001` (or configured port)
@@ -357,19 +372,28 @@ git submodule update --init --recursive
 
 ## Troubleshooting
 
-### Port Conflicts
+### Port and Name Conflicts
 
 ```bash
-# Check used ports across all clients
-yarn discover:clients
-cat .generated/clients.json | jq '.[].ports'
+# Check all used ports, IDs, subdomains, and database names
+yarn check:clients
+
+# This shows:
+# - All used client IDs and subdomains
+# - All used ports (with which client uses them)
+# - All used database names
+# - Recommended ports for a new client
 ```
 
-### Database Name Conflicts
+**The discovery script automatically validates for conflicts**, so if you get validation errors:
 
 ```bash
-# Check existing database names
-cat .generated/database-names.txt
+yarn discover:clients
+# ❌ Validation errors found:
+#   - Duplicate frontend port 3002: clients/client1 and clients/client2
+#   - Duplicate subdomain "my-app": clients/client1 and clients/client3
+
+# Fix the conflicts in client.config.json files and run again
 ```
 
 ### Discovery Script Errors

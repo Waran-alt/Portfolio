@@ -341,11 +341,38 @@ CLIENT_NAME_DB_NAME=client_name_db
 
 ## Scripts Reference
 
-### `yarn discover:clients`
+### `yarn check:clients`
 
-Discovers all clients and generates configuration files.
+Checks for available ports, subdomains, and database names to help when adding a new client.
+
+**Usage:**
+```bash
+yarn check:clients
+```
 
 **Output:**
+- Lists all used client IDs, subdomains, ports, and database names
+- Shows which client uses each port
+- Recommends available ports for a new client
+
+**Use this before creating a new client** to avoid conflicts.
+
+### `yarn discover:clients`
+
+Discovers all clients and generates configuration files. **Automatically validates for conflicts** before generating configs.
+
+**Validation checks:**
+- Duplicate client IDs
+- Duplicate subdomains
+- Duplicate frontend/backend ports
+- Duplicate database names
+
+**If conflicts are found:**
+- Script exits with error messages listing all conflicts
+- No configuration files are generated
+- Fix conflicts and run again
+
+**Output (if validation passes):**
 - `.generated/docker-compose.clients.yml`
 - `.generated/nginx.clients.conf`
 - `.generated/clients.json`
@@ -367,12 +394,14 @@ Integrates generated configs into the main project:
 
 ## Best Practices
 
-1. **Client IDs**: Use kebab-case (e.g., `my-client`, not `myClient` or `my_client`)
-2. **Ports**: Use sequential ports starting from 3001/4001
-3. **Database Names**: Use snake_case (e.g., `my_client_db`)
-4. **Migrations**: One logical change per changeset
-5. **Config Validation**: Always validate `client.config.json` before committing
-6. **Version Control**: Commit `client.config.json` and migrations, but not `.generated/` files
+1. **Client IDs**: Use kebab-case (e.g., `my-client`, not `myClient` or `my_client`), must be unique
+2. **Ports**: Use sequential ports starting from 3001/4001, must be unique (check with `yarn check:clients`)
+3. **Database Names**: Use snake_case (e.g., `my_client_db`), must be unique
+4. **Subdomains**: Use kebab-case, must be unique across all clients
+5. **Check Before Adding**: Always run `yarn check:clients` before creating a new client to see what's available
+6. **Migrations**: One logical change per changeset
+7. **Config Validation**: The discovery script automatically validates for conflicts - no manual validation needed
+8. **Version Control**: Commit `client.config.json` and migrations, but not `.generated/` files
 
 ## Troubleshooting
 
