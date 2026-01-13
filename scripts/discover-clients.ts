@@ -105,6 +105,60 @@ async function discoverClients(): Promise<DiscoveredClient[]> {
 }
 
 /**
+ * Validate clients for conflicts (duplicate IDs, subdomains, ports, database names)
+ */
+function validateClients(clients: DiscoveredClient[]): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  const ids = new Map<string, string>(); // id -> client path
+  const subdomains = new Map<string, string>(); // subdomain -> client path
+  const frontendPorts = new Map<number, string>(); // port -> client path
+  const backendPorts = new Map<number, string>(); // port -> client path
+  const databaseNames = new Map<string, string>(); // db name -> client path
+
+  for (const client of clients) {
+    // Check for duplicate IDs
+    if (ids.has(client.id)) {
+      errors.push(`Duplicate client ID "${client.id}": ${ids.get(client.id)} and ${client.path}`);
+    } else {
+      ids.set(client.id, client.path);
+    }
+
+    // Check for duplicate subdomains
+    if (subdomains.has(client.subdomain)) {
+      errors.push(`Duplicate subdomain "${client.subdomain}": ${subdomains.get(client.subdomain)} and ${client.path}`);
+    } else {
+      subdomains.set(client.subdomain, client.path);
+    }
+
+    // Check for duplicate frontend ports
+    if (frontendPorts.has(client.ports.frontend)) {
+      errors.push(`Duplicate frontend port ${client.ports.frontend}: ${frontendPorts.get(client.ports.frontend)} and ${client.path}`);
+    } else {
+      frontendPorts.set(client.ports.frontend, client.path);
+    }
+
+    // Check for duplicate backend ports
+    if (backendPorts.has(client.ports.backend)) {
+      errors.push(`Duplicate backend port ${client.ports.backend}: ${backendPorts.get(client.ports.backend)} and ${client.path}`);
+    } else {
+      backendPorts.set(client.ports.backend, client.path);
+    }
+
+    // Check for duplicate database names
+    if (databaseNames.has(client.database.name)) {
+      errors.push(`Duplicate database name "${client.database.name}": ${databaseNames.get(client.database.name)} and ${client.path}`);
+    } else {
+      databaseNames.set(client.database.name, client.path);
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
+/**
  * Generate Docker Compose service definitions for clients
  */
 function generateDockerComposeServices(clients: DiscoveredClient[]): { services: string; volumes: string } {
@@ -357,6 +411,15 @@ async function main() {
   if (clients.length === 0) {
     console.log('No clients found.');
     return;
+  }
+
+  // Validate for conflicts
+  const validation = validateClients(clients);
+  if (!validation.valid) {
+    console.error('\n❌ Validation errors found:');
+    validation.errors.forEach(error => console.error(`  - ${error}`));
+    console.error('\nPlease fix these conflicts before continuing.');
+    process.exit(1);
   }
 
   console.log(`Found ${clients.length} client(s):`);

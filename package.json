@@ -72,6 +72,7 @@
     "debug:frontend": "yarn workspace @portfolio/frontend debug",
     "debug:backend": "yarn workspace @portfolio/backend debug",
     "discover:clients": "tsx scripts/discover-clients.ts",
+    "check:clients": "tsx scripts/check-client-conflicts.ts",
     "migrate:clients": "tsx scripts/run-migrations.ts",
     "migrate:client": "tsx scripts/run-migrations.ts"
   },
