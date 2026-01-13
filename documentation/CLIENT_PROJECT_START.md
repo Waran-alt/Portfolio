@@ -1,0 +1,401 @@
+# Starting a New Client Project
+
+This guide covers how to start a new client project in the Portfolio monorepo, including setup steps and Git workflow recommendations.
+
+## Quick Start Overview
+
+1. **Create client structure** → Initialize frontend/backend → Configure metadata
+2. **Run discovery** → Auto-generate Docker/Nginx configs
+3. **Set up migrations** → Initialize database schema
+4. **Commit to Git** → Follow monorepo workflow
+5. **Deploy** → Integrate and start services
+
+---
+
+## Step-by-Step Setup
+
+### 1. Create Client Directory Structure
+
+```bash
+# Choose a unique client identifier (kebab-case)
+CLIENT_ID="my-new-client"
+
+# Create directory structure
+mkdir -p clients/${CLIENT_ID}/{frontend,backend,migrations/changesets}
+
+# Copy example configuration
+cp clients/client.config.json.example clients/${CLIENT_ID}/client.config.json
+```
+
+### 2. Configure Client Metadata
+
+Edit `clients/${CLIENT_ID}/client.config.json`:
+
+```json
+{
+  "$schema": "../../scripts/client-config.schema.json",
+  "id": "my-new-client",
+  "name": "My New Client",
+  "description": "Description of what this client application does",
+  "subdomain": "my-new-client",
+  "ports": {
+    "frontend": 3001,
+    "backend": 4001
+  },
+  "database": {
+    "name": "my_new_client_db",
+    "user": "postgres"
+  },
+  "enabled": true,
+  "metadata": {
+    "created": "2025-01-15",
+    "version": "1.0.0"
+  }
+}
+```
+
+**Important considerations:**
+- **Ports**: Ensure they don't conflict with existing clients (check `clients/` directory)
+- **Subdomain**: Will be accessible at `{subdomain}.{BASE_DOMAIN}` (e.g., `my-new-client.owndom.com`)
+- **Database name**: Must be unique, follows PostgreSQL naming conventions
+- **ID**: Should match directory name and be kebab-case
+
+### 3. Initialize Frontend Application
+
+```bash
+cd clients/${CLIENT_ID}/frontend
+
+# For Next.js (recommended, matches portfolio stack)
+npx create-next-app@latest . --typescript --tailwind --app --no-git --import-alias "@/*"
+
+# Or initialize manually with your preferred framework
+# Make sure to create package.json, Dockerfile, etc.
+```
+
+**Required files:**
+- `package.json` (with proper dependencies)
+- `Dockerfile` (multi-stage build for dev/prod)
+- Source code in `src/` or root (framework-dependent)
+- `.env.example` if needed
+
+### 4. Initialize Backend Application
+
+```bash
+cd ../backend
+
+# Initialize Express with TypeScript (recommended, matches portfolio stack)
+# Create package.json, tsconfig.json, Dockerfile, etc.
+
+# Example structure:
+mkdir -p src/{routes,controllers,middleware,services,types}
+touch src/index.ts
+```
+
+**Required files:**
+- `package.json` (with Express, TypeScript, etc.)
+- `Dockerfile` (multi-stage build)
+- `tsconfig.json`
+- Source code in `src/`
+
+### 5. Set Up Database Migrations
+
+```bash
+cd ../migrations
+
+# Create main changelog
+cat > changelog.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <include file="changesets/001-initial-schema.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
+EOF
+
+# Create initial schema changeset
+cat > changesets/001-initial-schema.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-initial-schema" author="developer">
+        <comment>Initial database schema</comment>
+        
+        <createTable tableName="users">
+            <column name="id" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
+EOF
+```
+
+See `tools/database/liquibase-setup.md` for detailed Liquibase documentation.
+
+### 6. Discover and Generate Configurations
+
+```bash
+# Return to project root
+cd ../../..
+
+# Discover all clients and generate Docker/Nginx configs
+yarn discover:clients
+
+# Verify generated files
+ls -la .generated/
+```
+
+This generates:
+- `.generated/docker-compose.clients.yml` - Docker services for all clients
+- `.generated/nginx.clients.conf` - Nginx routing configuration
+- `.generated/clients.json` - Client metadata registry
+- `.generated/database-names.txt` - List of all database names
+
+### 7. Integrate Configurations
+
+```bash
+# Integrate client configs into main project
+./scripts/integrate-clients.sh
+
+# This script:
+# - Updates .env with new database names
+# - Prepares Nginx configuration
+# - Validates port conflicts
+```
+
+### 8. Run Database Migrations
+
+```bash
+# Run migrations for all clients (including your new one)
+yarn migrate:clients
+
+# Or run for specific client only
+yarn migrate:client my-new-client
+```
+
+### 9. Test Local Development
+
+```bash
+# Start all services (portfolio + all clients)
+docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml up -d
+
+# Or if using merged configs:
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs for your client
+docker-compose logs -f my-new-client-frontend
+docker-compose logs -f my-new-client-backend
+```
+
+### 10. Verify Access
+
+- **Frontend**: `http://localhost:3001` (or configured port)
+- **Backend API**: `http://localhost:4001` (or configured port)
+- **Via Nginx** (if configured): `https://my-new-client.owndom.com`
+
+---
+
+## Git Workflow
+
+### Recommended Approach: Monorepo (Current Setup)
+
+**All client projects live in the same repository** with centralized management.
+
+#### Advantages
+✅ **Shared infrastructure**: Single Docker setup, shared Nginx, shared PostgreSQL instance  
+✅ **Code reuse**: Easy to share packages from `packages/shared/`  
+✅ **Unified tooling**: One CI/CD, one set of scripts, one deployment process  
+✅ **Atomic deployments**: Deploy portfolio + all clients together  
+✅ **Simplified development**: One `yarn install`, one `docker-compose up`  
+✅ **Cross-client features**: Build features that span multiple clients easily  
+
+#### Disadvantages
+❌ **Larger repository**: Git history includes all clients  
+❌ **Shared access**: All developers have access to all client code  
+❌ **Deployment coupling**: One client issue can affect others  
+❌ **Branch management**: Feature branches include all client changes  
+
+#### Git Workflow for Monorepo
+
+```bash
+# 1. Create feature branch for new client
+git checkout -b feat/clients/add-my-new-client
+
+# 2. Add client structure (following steps above)
+mkdir -p clients/my-new-client/...
+# ... setup client ...
+
+# 3. Stage client files
+git add clients/my-new-client/
+
+# 4. Commit with conventional commit message
+git commit -m "feat(clients): add my-new-client application
+
+Add new client application with frontend, backend, and initial
+database schema.
+
+- Initialize Next.js frontend with TypeScript and Tailwind
+- Set up Express backend API
+- Create Liquibase migration for initial schema
+- Configure client metadata and ports"
+
+# 5. Generate and commit integration configs
+yarn discover:clients
+git add .generated/ package.json .env
+git commit -m "chore(infra): integrate my-new-client into Docker and Nginx
+
+Auto-generate Docker Compose and Nginx configurations for
+new client application."
+
+# 6. Push and create PR
+git push origin feat/clients/add-my-new-client
+# Create pull request on GitHub/GitLab
+```
+
+#### Branch Naming Convention
+
+- `feat/clients/add-{client-id}` - Adding new client
+- `feat/{client-id}/add-{feature}` - Client-specific feature
+- `fix/{client-id}/fix-{issue}` - Client-specific bug fix
+- `refactor(clients)/{change}` - Refactoring across clients
+
+### Alternative Approach: Separate Repositories
+
+**Each client has its own Git repository**, linked via Git submodules or separate deployments.
+
+#### When to Consider This Approach
+
+- **Client isolation required**: Sensitive client data/code separation
+- **Different deployment schedules**: Clients deploy independently
+- **Different teams**: Separate teams per client
+- **Different hosting**: Clients hosted on different infrastructure
+
+#### Setup (If Needed)
+
+```bash
+# In a separate repository
+git init my-new-client-repo
+cd my-new-client-repo
+
+# Initialize as standalone project with:
+# - Docker Compose for client only
+# - Environment variables
+# - CI/CD pipeline
+# - Documentation
+
+# Then in Portfolio repo, add as submodule
+git submodule add <repo-url> clients/my-new-client
+git submodule update --init --recursive
+```
+
+**Note**: Git submodules are fully supported by the centralized discovery system. Submodules work seamlessly with auto-discovery as long as they contain a valid `client.config.json` file. This approach provides independent version control while maintaining all benefits of centralized management. See `clients/README.md` for more details on working with submodules.
+
+---
+
+## Best Practices
+
+### Client Isolation
+
+- **Separate databases**: Each client has its own PostgreSQL database
+- **Isolated ports**: Unique frontend/backend ports per client
+- **Independent migrations**: Each client manages its own schema
+- **Separate environment variables**: Client-specific `.env` files
+
+### Code Organization
+
+- **Client-specific code**: All code in `clients/{client-id}/`
+- **Shared utilities**: Use `packages/shared/` for reusable code
+- **No cross-client dependencies**: Clients shouldn't import from each other
+- **Consistent structure**: Follow the same structure for all clients
+
+### Version Control
+
+- **Atomic commits**: Each commit should be complete and working
+- **Conventional commits**: Follow commit message guide (`.cursor/rules/commit-message-guide.mdc`)
+- **Small PRs**: Keep pull requests focused and reviewable
+- **Feature flags**: Use `enabled` in `client.config.json` to disable clients
+
+### Development Workflow
+
+1. **Work in feature branch**: Never commit directly to `main`
+2. **Test locally**: Ensure client works before committing
+3. **Run discovery**: Regenerate configs after client changes
+4. **Run migrations**: Test database migrations locally
+5. **Check conflicts**: Verify port/database name uniqueness
+
+### Deployment Checklist
+
+- [ ] Client structure follows standard layout
+- [ ] `client.config.json` is valid (check against schema)
+- [ ] Frontend and backend have Dockerfiles
+- [ ] Database migrations are tested
+- [ ] Ports don't conflict with existing clients
+- [ ] Subdomain is unique and DNS is configured
+- [ ] Environment variables are documented
+- [ ] Integration configs are generated and committed
+- [ ] Services start successfully with `docker-compose up`
+
+---
+
+## Troubleshooting
+
+### Port Conflicts
+
+```bash
+# Check used ports across all clients
+yarn discover:clients
+cat .generated/clients.json | jq '.[].ports'
+```
+
+### Database Name Conflicts
+
+```bash
+# Check existing database names
+cat .generated/database-names.txt
+```
+
+### Discovery Script Errors
+
+```bash
+# Validate client config against schema
+npx ajv-cli validate -s scripts/client-config.schema.json -d clients/my-client/client.config.json
+```
+
+### Migration Failures
+
+```bash
+# Check Liquibase changelog syntax
+# Review tools/database/liquibase-setup.md for troubleshooting
+```
+
+---
+
+## Next Steps
+
+After setting up your client:
+
+1. **Set up CI/CD**: Add client to deployment pipeline
+2. **Configure DNS**: Point subdomain to your server
+3. **Set up SSL**: Configure certificates for subdomain
+4. **Monitor**: Add logging and monitoring for client services
+5. **Document**: Add client-specific documentation if needed
+
+See `documentation/CENTRALIZED_CLIENT_ARCHITECTURE.md` for more details on the architecture.

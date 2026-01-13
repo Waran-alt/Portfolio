@@ -87,6 +87,15 @@ Portfolio/
 │       ├── package.json         # Shared dependencies
 │       └── tsconfig.json        # TypeScript config
 │
+├── 🏢 Client Applications
+│   └── clients/                 # Client applications directory
+│       ├── client-name/         # Individual client applications
+│       │   ├── client.config.json  # Client metadata
+│       │   ├── frontend/        # Client frontend
+│       │   ├── backend/         # Client backend
+│       │   └── migrations/      # Database migrations
+│       └── README.md            # Client directory documentation
+│
 ├── 🌐 Nginx Configuration
 │   └── tools/nginx/
 │       ├── Dockerfile           # Nginx container

@@ -112,6 +112,8 @@ See `clients/client.config.json.example` for the full schema.
 
 ## Workflow
 
+> **📖 Detailed Guide**: For a complete step-by-step guide on starting a new client project, including Git workflow recommendations and best practices, see [`CLIENT_PROJECT_START.md`](./CLIENT_PROJECT_START.md).
+
 ### 1. Add a New Client
 
 ```bash
@@ -229,6 +231,52 @@ if [ -f "/app/.generated/nginx.clients.conf" ]; then
   cp /app/.generated/nginx.clients.conf /etc/nginx/conf.d/clients.conf
 fi
 ```
+
+## Git Submodules
+
+Clients can be managed as **Git submodules** for independent version control. This is useful when:
+
+- Clients are maintained in separate repositories
+- Different teams work on different clients
+- Clients need independent release cycles
+- Clients should be deployable separately
+
+### Setting Up a Client as a Submodule
+
+```bash
+# From Portfolio root
+git submodule add <repository-url> clients/client-name
+
+# Initialize submodules (first time or after cloning)
+git submodule update --init --recursive
+
+# Update submodules
+git submodule update --remote
+```
+
+### Working with Submodules
+
+```bash
+# Update all submodules to latest commits
+git submodule update --remote
+
+# Update a specific submodule
+cd clients/client-name
+git pull origin main
+cd ../..
+git add clients/client-name
+git commit -m "chore: update client-name submodule"
+```
+
+**Important:** Submodules must still have a valid `client.config.json` file to be discovered by the auto-discovery system. The discovery system works seamlessly with both regular directories and Git submodules.
+
+### Benefits of Using Submodules
+
+- **Independent Version Control**: Each client maintains its own Git history
+- **Separate Release Cycles**: Clients can be versioned and released independently
+- **Team Isolation**: Different teams can work on different client repositories
+- **Flexible Deployment**: Clients can be deployed separately if needed
+- **Full Discovery Support**: Auto-discovery works with submodules just like regular directories
 
 ## Database Migrations with Liquibase
 
