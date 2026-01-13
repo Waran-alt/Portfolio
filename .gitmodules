@@ -1,0 +1,3 @@
+[submodule "clients/memoon-card"]
+	path = clients/memoon-card
+	url = https://github.com/Waran-alt/memoon-card.git
