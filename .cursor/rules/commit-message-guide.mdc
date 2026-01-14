@@ -354,14 +354,20 @@ refactor(<scope>): <action> <component/functionality> (#XXX)
 When helping with commit messages:
 
 1. **ALWAYS check git status first**: Before any commit, run `git status` to see what's staged vs modified
-2. **Analyze staged changes**: Review actual staged files and their diffs (`git diff --staged`) to understand what changed. Write commit messages based ONLY on the staged changes visible in git, not from memory, assumptions, or conversations. Describe changes objectively while including technical context that helps understand the code.
+2. **Analyze ALL staged changes comprehensively**: 
+   - Start with `git diff --cached --stat` to see the scope and size of changes across ALL files
+   - Review ALL staged files and their diffs (`git diff --staged`) to understand the full change
+   - Identify the main/overall change across all files, not just one file
+   - Write commit messages based ONLY on the staged changes visible in git, not from memory, assumptions, or conversations
+   - Describe the overall functionality/behavior change, not individual file changes
+   - Avoid file-by-file lists - instead describe what the codebase does differently after the change
 3. **Verify file existence**: Only mention files that actually exist in the git repository (check with `git ls-files` if needed). Never reference files that were never committed or don't exist in git history.
 4. **Stage missing changes logically**: If files are modified but not staged, review them and stage them logically. Consider splitting into multiple commits if changes are unrelated.
 5. **Identify task ID**: Check if work relates to a project board task (simple #XXX format)
 6. **Suggest appropriate type**: Based on the nature of changes observed in the diffs
 7. **Recommend scope**: Based on affected files/functionality from the staged changes
 8. **Craft clear subject**: Imperative present tense, under 50 characters (including task ID)
-9. **Add concise body**: For complex changes, explain what and why from the code's perspective, not exhaustive lists. Keep it focused and descriptive - describe what an external reviewer would see.
+9. **Add concise body**: For complex changes, explain what and why from the code's perspective, not exhaustive lists. Describe the overall change in functionality/behavior, not individual file modifications. Keep it focused and descriptive - describe what an external reviewer would see. Avoid file-by-file bullet lists - instead summarize the main change(s) across all affected files.
 10. **Include footers**: For breaking changes or issue references
 11. **Validate format**: Ensure compliance with conventional commits
 12. **Check spelling**: Ensure professional appearance
@@ -371,11 +377,15 @@ When helping with commit messages:
 ### **Pre-Commit Checklist**
 Before every commit:
 ```bash
-git status  # Check what's staged vs modified
-git add .   # Stage any missing changes (if appropriate)
-git status  # Verify everything is staged correctly
-git commit  # Now safe to commit
+git status                    # Check what's staged vs modified
+git diff --cached --stat      # Review scope of ALL staged changes
+git diff --cached             # Review detailed changes across ALL files
+git add .                     # Stage any missing changes (if appropriate)
+git status                    # Verify everything is staged correctly
+git commit                    # Now safe to commit
 ```
+
+**Key reminder**: When writing the commit message, describe the overall change in functionality/behavior across ALL staged files, not individual file modifications. An external reviewer should understand what the codebase does differently, not which specific files changed.
 
 ## Breaking Change Format
 
