@@ -3441,6 +3441,7 @@ __metadata:
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.1.2"
     prettier: "npm:^3.6.2"
+    tsx: "npm:^4.19.2"
     typescript: "npm:^5.9.3"
     typescript-eslint: "npm:^7.18.0"
   languageName: unknown

@@ -214,9 +214,10 @@ docker-compose up -d
 
 - **`yarn check:clients`** - Check available ports, subdomains, and database names (use before adding a new client)
 - **`yarn discover:clients`** - Discover all clients and generate configurations (automatically validates for conflicts)
+- **`yarn generate:client-setup`** - Generate `SETUP.md` files for all clients with setup instructions and environment variable templates
 - **`yarn migrate:clients`** - Run database migrations for all clients
 - **`yarn migrate:client <client-id>`** - Run migrations for a specific client
-- **`./scripts/integrate-clients.sh`** - Integrate generated configs into main project
+- **`./scripts/integrate-clients.sh`** - Integrate generated configs into main project (includes environment file generation and verification)
 
 ## Best Practices
 
