@@ -70,7 +70,7 @@ Edit `clients/${CLIENT_ID}/client.config.json`:
 
 **Important considerations:**
 - **Ports**: Use the recommended ports from `yarn check:clients` or ensure they're unique
-- **Subdomain**: Must be unique (check with `yarn check:clients`). Will be accessible at `{subdomain}.{BASE_DOMAIN}` (e.g., `my-new-client.owndom.com`)
+- **Subdomain**: Must be unique (check with `yarn check:clients`). Will be accessible at `{subdomain}.{BASE_DOMAIN}` (e.g., `my-new-client.yourdomain.com`)
 - **Database name**: Must be unique (check with `yarn check:clients`), follows PostgreSQL naming conventions
 - **ID**: Should match directory name and be kebab-case, must be unique
 
@@ -229,7 +229,7 @@ docker-compose logs -f my-new-client-backend
 
 - **Frontend**: `http://localhost:3001` (or configured port)
 - **Backend API**: `http://localhost:4001` (or configured port)
-- **Via Nginx** (if configured): `https://my-new-client.owndom.com`
+- **Via Nginx** (if configured): `https://my-new-client.yourdomain.com`
 
 ---
 

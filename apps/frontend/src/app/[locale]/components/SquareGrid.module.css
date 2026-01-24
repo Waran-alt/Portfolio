@@ -20,6 +20,21 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  perspective: 1000px; /* Enable 3D transforms */
+  transform-style: preserve-3d;
+}
+
+.squareWrapper {
+  position: relative;
+  transform-style: preserve-3d;
+  /* Combined transform: base (entrance) + gravity (single source of truth) */
+  transform: 
+    translate(var(--base-translate-x, 0px), var(--base-translate-y, 0px))
+    translateZ(var(--gravity-translate-z, 0px))
+    rotateZ(var(--base-rotate, 0deg))
+    rotateX(var(--gravity-rotate-x, 0deg))
+    rotateY(var(--gravity-rotate-y, 0deg));
+  transition: transform 0.1s ease-out; /* Smooth transitions */
 }
 
 .square {
@@ -30,10 +45,10 @@
   opacity: 0;
   transform: translate(0, 0) rotate(0deg);
   visibility: hidden;
+  transform-style: preserve-3d;
   animation: 
     squareFadeIn var(--fade-in-duration, 300ms) ease-out var(--fade-in-delay, 0ms) forwards,
-    squareJiggle var(--jiggle-duration, 400ms) ease-in-out var(--jiggle-delay, 0ms) forwards,
-    squareTransform var(--transform-duration, 300ms) ease-out var(--transform-delay, 0ms) forwards;
+    squareJiggle var(--jiggle-duration, 400ms) ease-in-out var(--jiggle-delay, 0ms) forwards;
 }
 
 @keyframes squareFadeIn {
@@ -83,12 +98,4 @@
   }
 }
 
-@keyframes squareTransform {
-  from {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  to {
-    transform: translate(var(--translate-x, 0px), var(--translate-y, 0px)) rotate(var(--rotate, 0deg));
-  }
-}
 

@@ -2,27 +2,177 @@
 
 This repository contains a comprehensive Docker setup for a Next.js portfolio application with a multi-service architecture including frontend, backend, database, and reverse proxy.
 
+## 📖 TL;DR - Most Used Commands
+
+### 🚀 Quick Start
+```bash
+# 1. Discover and integrate clients
+yarn discover:clients
+./scripts/integrate-clients.sh
+
+# 2. Start all services (Portfolio + Clients)
+docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml up -d
+
+# 3. View logs
+docker-compose logs -f
+```
+
+### 🐳 Docker Commands
+```bash
+# Start all services
+docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml up -d
+
+# Stop all services
+docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml down
+
+# View logs (all services)
+docker-compose logs -f
+
+# View logs (specific service)
+docker-compose logs -f frontend
+docker-compose logs -f memoon-card-frontend
+
+# Restart services
+docker-compose restart
+
+# Check service status
+docker-compose ps
+
+# Rebuild containers
+docker-compose build --no-cache
+```
+
+### 🧶 Yarn Commands
+```bash
+# Client Management
+yarn discover:clients              # Discover clients and generate configs
+yarn check:clients                 # Check for client conflicts
+yarn generate:client-setup        # Generate SETUP.md for clients
+yarn migrate:clients               # Run database migrations for all clients
+
+# Development
+yarn dev                           # Start all workspaces in dev mode
+yarn dev:frontend                  # Start Portfolio frontend only
+yarn dev:backend                  # Start Portfolio backend only
+
+# Building
+yarn build                         # Build all workspaces
+yarn build:frontend               # Build Portfolio frontend
+yarn build:backend                # Build Portfolio backend
+
+# Code Quality
+yarn lint                         # Lint all workspaces
+yarn lint:fix                     # Fix linting issues
+yarn type-check                   # TypeScript validation
+yarn format                      # Format code with Prettier
+
+# Testing
+yarn test                         # Run all tests
+yarn test:frontend               # Test Portfolio frontend
+yarn test:backend                # Test Portfolio backend
+yarn test:e2e                    # End-to-end tests
+```
+
+### 🔧 Client Management
+```bash
+# Discover and integrate new clients
+yarn discover:clients
+./scripts/integrate-clients.sh
+
+# Check for conflicts (ports, subdomains, databases)
+yarn check:clients
+
+# Generate setup documentation
+yarn generate:client-setup
+
+# Run database migrations
+yarn migrate:clients
+```
+
+### 📊 Monitoring
+```bash
+# Check all services status
+docker-compose ps
+
+# View health status
+docker inspect --format='{{.State.Health.Status}}' portfolio_frontend_dev
+
+# Health check endpoints
+curl http://localhost/health                    # Nginx
+curl http://localhost:${FRONTEND_PORT}/health   # Portfolio Frontend
+curl http://localhost:${BACKEND_PORT}/api/health # Portfolio Backend
+```
+
+### 🗄️ Database
+```bash
+# Access PostgreSQL
+docker-compose exec postgres psql -U postgres -d portfolio_db
+
+# Backup database
+docker-compose exec postgres pg_dump -U postgres portfolio_db > backup.sql
+
+# Restore database
+cat backup.sql | docker-compose exec -T postgres psql -U postgres -d portfolio_db
+```
+
+---
+
 ## 🏗️ Architecture Overview
 
-The application consists of four main services:
+The application consists of **Portfolio services** and **Client services** (auto-discovered):
 
+### Portfolio Services
 - **Frontend**: Next.js application with TypeScript
 - **Backend**: Node.js/Express API server with TypeScript
 - **Database**: PostgreSQL with initialization scripts
 - **Reverse Proxy**: Nginx for routing and SSL termination
 
+### Client Services (Auto-Discovered)
+- Each client in `clients/` directory gets:
+  - **Client Frontend**: Next.js application
+  - **Client Backend**: Express API server
+  - **Client Database**: Separate database in shared PostgreSQL instance
+
+### Architecture Diagram
+
 ```
-┌─────────────────┐    ┌─────────────────┐
-│     Nginx       │    │    Frontend     │
-│  (Port 80/443)  │◄──►│   (Next.js)     │
-└─────────┬───────┘    └─────────────────┘
-          │
-          ▼
-┌─────────────────┐    ┌─────────────────┐
-│     Backend     │    │   PostgreSQL    │
-│(Node.js/Express)│◄──►│   Database      │
-└─────────────────┘    └─────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                     NGINX (Port 80/443)                        │
+│                   (Routes by server_name)                      │
+└──────────────┬──────────────────────────────┬──────────────────┘
+               │                              │
+       ┌───────┴────────┐           ┌─────────┴──────────┐
+       │                │           │                    │
+       ▼                ▼           ▼                    ▼
+┌──────────────┐  ┌──────────┐   ┌──────────┐      ┌──────────┐
+│  Portfolio   │  │ Client 1 │   │ Client 2 │ ...  │ Client N │
+│  Frontend    │  │ Frontend │   │ Frontend │      │ Frontend │
+└──────┬───────┘  └────┬─────┘   └────┬─────┘      └─────┬────┘
+       │               │              │                  │
+       ▼               ▼              ▼                  ▼
+┌──────────────┐  ┌──────────┐   ┌──────────┐      ┌──────────┐
+│  Portfolio   │  │ Client 1 │   │ Client 2 │ ...  │ Client N │
+│  Backend     │  │ Backend  │   │ Backend  │      │ Backend  │
+└──────┬───────┘  └────┬─────┘   └─────┬────┘      └─────┬────┘
+       │               │               │                 │
+       └───────────────┼───────────────┼─────────────────┘
+                       │               │
+                       ▼               ▼
+                  ┌─────────────────────────┐
+                  │   PostgreSQL (Shared)   │
+                  │  - portfolio_db         │
+                  │  - client1_db           │
+                  │  - client2_db           │
+                  │  - ...                  │
+                  └─────────────────────────┘
 ```
+
+**Key Points:**
+- All services run on the same Docker network (`portfolio_network`)
+- Nginx routes traffic based on domain/subdomain (`server_name`)
+- Each client has its own frontend and backend containers
+- All services share the same PostgreSQL instance (different databases)
+- Client services are auto-generated from `clients/` directory
 
 ## 📋 Prerequisites
 
@@ -47,31 +197,70 @@ cp documentation/env-templates/env.example .env
 # Edit .env with your configuration
 ```
 
-### 2. Development Setup
+### 2. Discover and Integrate Clients
 
 ```bash
-# Start all services in development mode
+# Discover all clients and generate configurations
+yarn discover:clients
+
+# Full integration (discovery + setup + verification)
+./scripts/integrate-clients.sh
+
+# This generates:
+# - .generated/docker-compose.clients.yml (client services)
+# - .generated/nginx.clients.conf (client routing)
+# - .generated/clients.json (client metadata)
+# - .generated/database-names.txt (database list)
+```
+
+### 3. Development Setup
+
+```bash
+# Start all services (Portfolio + Clients)
+docker-compose \
+  -f docker-compose.yml \
+  -f .generated/docker-compose.clients.yml \
+  up -d
+
+# Or if you've merged the files manually:
 docker-compose up -d
 
 # View logs
 docker-compose logs -f
 
+# View logs for specific service
+docker-compose logs -f frontend
+docker-compose logs -f memoon-card-frontend
+
 # Access the application
-# Frontend (via proxy): ${NGINX_URL}
-# Backend API (via proxy): ${NGINX_URL}/api
-# Direct Frontend (dev only): ${NGINX_URL}:${FRONTEND_PORT}
-# Direct Backend (dev only): ${NGINX_URL}:${BACKEND_PORT}
-# Nginx: ${NGINX_URL}
+# Portfolio Frontend (via proxy): ${NGINX_URL}
+# Portfolio Backend API (via proxy): ${NGINX_URL}/api
+# Client Frontend (via proxy): https://${client.subdomain}.${BASE_DOMAIN}
+# Client Backend API (via proxy): https://${client.subdomain}.${BASE_DOMAIN}/api
+# Direct Portfolio Frontend (dev only): localhost:${FRONTEND_PORT}
+# Direct Portfolio Backend (dev only): localhost:${BACKEND_PORT}
+# Direct Client Frontend (dev only): localhost:${client.ports.frontend}
+# Direct Client Backend (dev only): localhost:${client.ports.backend}
 ```
 
-### 3. Production Setup
+### 4. Production Setup
 
 ```bash
-# Build and start production services
-docker-compose -f docker-compose.prod.yml up -d
+# Ensure clients are discovered and integrated
+yarn discover:clients
+./scripts/integrate-clients.sh
+
+# Build and start production services (Portfolio + Clients)
+docker-compose \
+  -f docker-compose.prod.yml \
+  -f .generated/docker-compose.clients.yml \
+  up -d
 
 # View production logs
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose \
+  -f docker-compose.prod.yml \
+  -f .generated/docker-compose.clients.yml \
+  logs -f
 ```
 
 ## 🔧 Environment Configuration
@@ -104,13 +293,21 @@ See `env.example` for complete configuration options.
 ### Starting Development Environment
 
 ```bash
-# Start all services
-docker-compose up -d
+# Start all services (Portfolio + Clients)
+docker-compose \
+  -f docker-compose.yml \
+  -f .generated/docker-compose.clients.yml \
+  up -d
 
-# Start specific service
+# Start specific Portfolio service
 docker-compose up -d frontend
 docker-compose up -d backend
 docker-compose up -d postgres
+docker-compose up -d nginx
+
+# Start specific client service
+docker-compose -f .generated/docker-compose.clients.yml up -d memoon-card-frontend
+docker-compose -f .generated/docker-compose.clients.yml up -d memoon-card-backend
 ```
 
 ### Working with Individual Services
@@ -154,11 +351,14 @@ cat backup.sql | docker-compose exec -T postgres psql -U postgres -d portfolio_d
 
 ### Hot Reloading
 
-Both frontend and backend support hot reloading in development:
+Both Portfolio and Client services support hot reloading in development:
 
-- **Frontend**: Next.js hot reloading via webpack-dev-server
-- **Backend**: tsx watches for TypeScript changes with hot reload
-- **File watching**: Uses polling for cross-platform compatibility
+- **Portfolio Frontend**: Next.js hot reloading via webpack-dev-server
+- **Portfolio Backend**: tsx watches for TypeScript changes with hot reload
+- **Client Frontends**: Same Next.js hot reloading
+- **Client Backends**: Same tsx hot reloading
+- **File watching**: Uses polling for cross-platform compatibility (CHOKIDAR_USEPOLLING=1)
+- **Volume mounts**: Source code mounted for live updates
 
 ### Debugging
 
@@ -224,27 +424,45 @@ FRONTEND_URL=${NGINX_URL}
 
 ### Health Checks
 
-All services include health checks:
+All services (Portfolio and Clients) include health checks:
 
 ```bash
-# Check service health
-docker-compose ps
+# Check all service health
+docker-compose \
+  -f docker-compose.yml \
+  -f .generated/docker-compose.clients.yml \
+  ps
 
-# View health status
-docker inspect --format='{{.State.Health.Status}}' container_name
+# View health status for specific service
+docker inspect --format='{{.State.Health.Status}}' portfolio_frontend_dev
+docker inspect --format='{{.State.Health.Status}}' portfolio_memoon-card_frontend_dev
+
+# Check health endpoints
+curl http://localhost/health                    # Nginx
+curl http://localhost:${FRONTEND_PORT}/health   # Portfolio Frontend
+curl http://localhost:${BACKEND_PORT}/api/health # Portfolio Backend
+curl http://localhost:3002/health               # Client Frontend (example)
+curl http://localhost:4002/api/health           # Client Backend (example)
 ```
 
 ### Logging
 
 ```bash
-# View all logs
-docker-compose logs -f
+# View all logs (Portfolio + Clients)
+docker-compose \
+  -f docker-compose.yml \
+  -f .generated/docker-compose.clients.yml \
+  logs -f
 
-# View specific service logs
+# View specific Portfolio service logs
 docker-compose logs -f frontend
 docker-compose logs -f backend
 docker-compose logs -f postgres
 docker-compose logs -f nginx
+
+# View specific client service logs
+docker-compose -f .generated/docker-compose.clients.yml logs -f memoon-card-frontend
+docker-compose -f .generated/docker-compose.clients.yml logs -f memoon-card-backend
 
 # Follow logs with timestamps
 docker-compose logs -f -t
@@ -291,9 +509,87 @@ docker-compose up -d postgres
 #### 3. Port Conflicts
 
 ```bash
-# Check what's using ports
+# Check what's using Portfolio ports
 netstat -tulpn | grep :${FRONTEND_PORT}
 netstat -tulpn | grep :${BACKEND_PORT}
 
-# Change ports in docker-compose.yml if needed
+# Check client ports (example for memoon-card)
+netstat -tulpn | grep :3002  # Client frontend port
+netstat -tulpn | grep :4002  # Client backend port
+
+# Validate client configurations for conflicts
+yarn check:client-conflicts
+
+# Change ports in client.config.json if needed
+# Then regenerate: yarn discover:clients
 ```
+
+#### 4. Client Services Not Starting
+
+```bash
+# Check if clients were discovered
+cat .generated/clients.json
+
+# Verify client configuration
+yarn check:client-conflicts
+
+# Regenerate client configurations
+yarn discover:clients
+
+# Check client service logs
+docker-compose -f .generated/docker-compose.clients.yml logs memoon-card-frontend
+docker-compose -f .generated/docker-compose.clients.yml logs memoon-card-backend
+
+# Verify Nginx includes client configs
+docker-compose exec nginx ls -la /etc/nginx/conf.d/
+```
+
+## 🏢 Client Management
+
+### Adding a New Client
+
+1. **Create client directory structure:**
+   ```bash
+   mkdir -p clients/my-client/{frontend,backend,migrations/changesets}
+   ```
+
+2. **Create `client.config.json`:**
+   ```json
+   {
+     "id": "my-client",
+     "name": "My Client",
+     "subdomain": "my-client",
+     "ports": {
+       "frontend": 3003,
+       "backend": 4003
+     },
+     "database": {
+       "name": "my_client_db"
+     },
+     "enabled": true
+   }
+   ```
+
+3. **Discover and integrate:**
+   ```bash
+   yarn discover:clients
+   ./scripts/integrate-clients.sh
+   ```
+
+4. **Start client services:**
+   ```bash
+   docker-compose \
+     -f docker-compose.yml \
+     -f .generated/docker-compose.clients.yml \
+     up -d
+   ```
+
+### Client Configuration
+
+Each client requires:
+- `client.config.json` with metadata (ports, subdomain, database name)
+- `frontend/Dockerfile` for frontend container
+- `backend/Dockerfile` for backend container
+- `migrations/changelog.xml` for database migrations
+
+See [`CENTRALIZED_CLIENT_ARCHITECTURE.md`](./CENTRALIZED_CLIENT_ARCHITECTURE.md) for detailed client setup instructions.

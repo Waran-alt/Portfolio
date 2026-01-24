@@ -1,0 +1,15 @@
+{
+  "id": "test-client",
+  "name": "Test Client",
+  "description": "Simple test client for development and integration testing",
+  "subdomain": "test-client",
+  "ports": {
+    "frontend": 3010,
+    "backend": 4010
+  },
+  "database": {
+    "name": "test_client_db",
+    "user": "postgres"
+  },
+  "enabled": true
+}

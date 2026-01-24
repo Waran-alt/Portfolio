@@ -1,43 +1,100 @@
 # Portfolio Project Architecture
 
-## 🏗️ System Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              PORTFOLIO MONOREPO                             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│      ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐      │
-│      │   DEVELOPMENT   │    │   PRODUCTION    │    │   SHARED CODE   │      │
-│      │   ENVIRONMENT   │    │   ENVIRONMENT   │    │                 │      │
-│      └─────────────────┘    └─────────────────┘    └─────────────────┘      │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
 ## 🐳 Docker Services Architecture
 
+### Portfolio Services
+
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                              DOCKER COMPOSE                                │
-├────────────────────────────────────────────────────────────────────────────┤
-│                                                                            │
-│     ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐      │
-│     │     NGINX       │    │    FRONTEND     │    │     BACKEND     │      │
-│     │ (Reverse Proxy) │◄──►│   (Next.js)     │◄──►│  (Express API)  │      │
-│     │                 │    │                 │    │                 │      │
-│     └───────┬─────────┘    └─────────────────┘    └────────┬────────┘      │
-│             │                                              │               │
-│             │                                              │               │
-│             ▼                                              ▼               │
-│     ┌─────────────────┐                           ┌─────────────────┐      │
-│     │   POSTGRESQL    │                           │     REDIS       │      │
-│     │   DATABASE      │                           │   (Optional)    │      │
-│     │                 │                           │                 │      │
-│     └─────────────────┘                           └─────────────────┘      │
-│                                                                            │
-└────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│                         PORTFOLIO DOCKER SERVICES                         │
+├───────────────────────────────────────────────────────────────────────────┤
+│                                                                           │
+│     ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐     │
+│     │     NGINX       │    │    FRONTEND     │    │     BACKEND     │     │
+│     │ (Reverse Proxy) │◄──►│   (Next.js)     │◄──►│  (Express API)  │     │
+│     │  Port 80/443    │    │  Portfolio App  │    │  Portfolio API  │     │
+│     └───────┬─────────┘    └─────────────────┘    └────────┬────────┘     │
+│             │                                              │              │
+│             │                                              │              │
+│             ▼                                              ▼              │
+│     ┌─────────────────┐                           ┌─────────────────┐     │
+│     │   POSTGRESQL    │                           │     REDIS       │     │
+│     │   DATABASE      │                           │   (Optional)    │     │
+│     │  (Shared DB)    │                           │                 │     │
+│     └─────────────────┘                           └─────────────────┘     │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Client Services (Auto-Discovered)
+
+```
+┌────────────────────────────────────────────────────┐
+│               CLIENT DOCKER SERVICES               │
+├────────────────────────────────────────────────────┤
+│                                                    │
+│  For each client in clients/ directory:            │
+│                                                    │
+│     ┌─────────────────┐    ┌─────────────────┐     │
+│     │  CLIENT-FRONTEND│    │  CLIENT-BACKEND │     │
+│     │   (Next.js)     │    │  (Express API)  │     │
+│     │  Port: 300X     │    │  Port: 400X     │     │
+│     └─────────────────┘    └────────┬────────┘     │
+│                                     │              │
+│                                     ▼              │
+│                            ┌─────────────────┐     │
+│                            │   POSTGRESQL    │     │
+│                            │  (Shared DB)    │     │
+│                            │  Client DB: XXX │     │
+│                            └─────────────────┘     │
+│                                                    │
+└────────────────────────────────────────────────────┘
+```
+
+### Complete Architecture with Clients
+
+```
+┌─────────────────────────────────────────────────────┐
+│                COMPLETE DOCKER STACK                │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│                  ┌────────────────┐                 │
+│                  │     NGINX      │                 │
+│                  │ (Reverse Proxy)│                 │
+│                  │  Port 80/443   │                 │
+│                  └──────┬─────────┘                 │
+│                         │                           │
+│        ┌────────────────┼─────────────────┐         │
+│        │                │                 │         │
+│        ▼                ▼                 ▼         │
+│  ┌──────────┐      ┌──────────┐      ┌──────────┐   │
+│  │Portfolio │      │ Client 1 │      │ Client N │   │
+│  │ Frontend │      │ Frontend │      │ Frontend │   │
+│  └────┬─────┘      └────┬─────┘      └────┬─────┘   │
+│       │                 │                 │         │
+│       ▼                 ▼                 ▼         │
+│  ┌──────────┐      ┌──────────┐      ┌──────────┐   │
+│  │Portfolio │      │ Client 1 │      │ Client N │   │
+│  │ Backend  │      │ Backend  │      │ Backend  │   │
+│  └────┬─────┘      └────┬─────┘      └────┬─────┘   │
+│       │                 │                 │         │
+│       └─────────────────┼─────────────────┘         │
+│                         │                           │
+│                         ▼                           │
+│                    ┌──────────┐                     │
+│                    │PostgreSQL│                     │
+│                    │(Shared)  │                     │
+│                    └──────────┘                     │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+**Key Points:**
+- All services run on the same Docker network (`portfolio_network`)
+- Nginx routes traffic based on `server_name` (domain/subdomain)
+- Each client gets its own frontend and backend containers
+- All services share the same PostgreSQL instance (different databases)
+- Client services are auto-generated from `clients/` directory
 
 ## 📁 Monorepo Structure
 
@@ -52,8 +109,13 @@ Portfolio/
 │   └── commitlint.config.js     # Git commit message rules
 │
 ├── 🐳 Docker & Deployment
-│   ├── docker-compose.yml       # Development environment
+│   ├── docker-compose.yml       # Portfolio services (dev)
 │   ├── docker-compose.prod.yml  # Production environment
+│   ├── .generated/              # Auto-generated configs (gitignored)
+│   │   ├── docker-compose.clients.yml  # Client services
+│   │   ├── nginx.clients.conf          # Client Nginx config
+│   │   ├── clients.json                # Client metadata
+│   │   └── database-names.txt          # Database names list
 │   ├── Makefile                 # Convenient commands
 │   ├── env.example              # Environment template
 │   └── DOCKER_README.md         # Docker documentation
@@ -90,11 +152,24 @@ Portfolio/
 ├── 🏢 Client Applications
 │   └── clients/                 # Client applications directory
 │       ├── client-name/         # Individual client applications
-│       │   ├── client.config.json  # Client metadata
-│       │   ├── frontend/        # Client frontend
-│       │   ├── backend/         # Client backend
-│       │   └── migrations/      # Database migrations
+│       │   ├── client.config.json  # Client metadata (required)
+│       │   ├── frontend/        # Client frontend (Next.js)
+│       │   │   ├── Dockerfile   # Client frontend container
+│       │   │   └── package.json
+│       │   ├── backend/         # Client backend (Express)
+│       │   │   ├── Dockerfile   # Client backend container
+│       │   │   └── package.json
+│       │   ├── migrations/      # Liquibase database migrations
+│       │   └── SETUP.md         # Auto-generated setup guide
 │       └── README.md            # Client directory documentation
+│
+├── 🔧 Scripts & Automation
+│   └── scripts/
+│       ├── discover-clients.ts      # Auto-discovers clients
+│       ├── generate-client-setup.ts # Generates SETUP.md files
+│       ├── check-client-conflicts.ts # Validates client configs
+│       ├── run-migrations.ts        # Runs Liquibase migrations
+│       └── integrate-clients.sh     # Integration orchestration
 │
 ├── 🌐 Nginx Configuration
 │   └── tools/nginx/
@@ -149,21 +224,42 @@ Portfolio/
 
 ### Quick Start Commands
 ```bash
+# Discover and integrate clients
+yarn discover:clients        # Auto-discover clients and generate configs
+./scripts/integrate-clients.sh  # Full integration (discovery + setup)
+
+# Start all services (Portfolio + Clients)
+docker-compose \
+  -f docker-compose.yml \
+  -f .generated/docker-compose.clients.yml \
+  up -d
+
+# Or use Makefile shortcuts
 make dev                    # Start development environment
 make logs                   # View logs
 make down                   # Stop services
-make shell-frontend         # Frontend container
-make shell-backend          # Backend container
+make shell-frontend         # Portfolio frontend container
+make shell-backend          # Portfolio backend container
 make shell-database         # Database shell
 ```
 
 ### Service URLs
+
+**Portfolio Services:**
 - **Frontend (via proxy)**: ${NGINX_URL}
 - **Backend API (via proxy)**: ${NGINX_URL}/api
-- **Direct Frontend (dev only)**: ${NGINX_URL}:${FRONTEND_PORT}
-- **Direct Backend (dev only)**: ${NGINX_URL}:${BACKEND_PORT}
-- **Nginx Proxy**: ${NGINX_URL}
-- **Database**: ${NGINX_URL}:${POSTGRES_PORT}
+- **Direct Frontend (dev only)**: localhost:${FRONTEND_PORT}
+- **Direct Backend (dev only)**: localhost:${BACKEND_PORT}
+
+**Client Services (per client):**
+- **Client Frontend (via proxy)**: https://${client.subdomain}.${BASE_DOMAIN}
+- **Client Backend API (via proxy)**: https://${client.subdomain}.${BASE_DOMAIN}/api
+- **Direct Client Frontend (dev only)**: localhost:${client.ports.frontend}
+- **Direct Client Backend (dev only)**: localhost:${client.ports.backend}
+
+**Shared Services:**
+- **Nginx Proxy**: ${NGINX_URL} (Portfolio) or client subdomains
+- **Database**: localhost:${POSTGRES_PORT}
 
 ### Code Quality Commands
 ```bash
@@ -178,19 +274,41 @@ make test-e2e              # End-to-end tests
 
 ## 🔄 Data Flow
 
+### Portfolio Request Flow
 ```
-1. User Request
+1. User Request → https://${NGINX_URL}
    ↓
-2. Nginx (Port 80/443)
+2. Nginx (Port 443) matches server_name
    ↓
-3. Route to Frontend (Port ${FRONTEND_PORT}) or Backend (Port ${BACKEND_PORT})
+3. Route to Portfolio Frontend (Port ${FRONTEND_PORT}) or Backend (Port ${BACKEND_PORT})
    ↓
-4. Frontend makes API calls to Backend
+4. Frontend makes API calls to Portfolio Backend
    ↓
-5. Backend processes request and queries PostgreSQL
+5. Backend processes request and queries PostgreSQL (portfolio_db)
    ↓
 6. Response flows back through the chain
 ```
+
+### Client Request Flow
+```
+1. User Request → https://${client.subdomain}.${BASE_DOMAIN}
+   ↓
+2. Nginx (Port 443) matches client server_name
+   ↓
+3. Route to Client Frontend (Port ${client.ports.frontend}) or Backend (Port ${client.ports.backend})
+   ↓
+4. Client Frontend makes API calls to Client Backend
+   ↓
+5. Client Backend processes request and queries PostgreSQL (${client.database.name})
+   ↓
+6. Response flows back through the chain
+```
+
+### Nginx Routing Logic
+- **Portfolio**: Routes based on main domain (`server_name ${NGINX_URL}`)
+- **Clients**: Routes based on subdomain (`server_name ${client.subdomain}.${BASE_DOMAIN}`)
+- **Service Discovery**: Docker DNS resolves service names (e.g., `memoon-card-backend`)
+- **All services**: Share the same `portfolio_network` bridge network
 
 ## 🏭 Production Features
 
@@ -236,3 +354,14 @@ make test-e2e              # End-to-end tests
 - **Commit Standards**: Conventional commit messages
 - **Documentation**: Comprehensive setup guides
 - **Environment Management**: Flexible configuration
+
+### Client Management
+- **Auto-Discovery**: Clients automatically detected from `clients/` directory
+- **Zero Configuration**: Add `client.config.json` → automatically integrated
+- **Docker Integration**: Client services auto-generated in `.generated/docker-compose.clients.yml`
+- **Nginx Integration**: Client routing auto-generated in `.generated/nginx.clients.conf`
+- **Database Management**: Each client gets its own database (shared PostgreSQL instance)
+- **Migration System**: Liquibase migrations per client
+- **Validation**: Conflict checking (ports, subdomains, database names)
+
+See [`CENTRALIZED_CLIENT_ARCHITECTURE.md`](./CENTRALIZED_CLIENT_ARCHITECTURE.md) for detailed client architecture documentation.

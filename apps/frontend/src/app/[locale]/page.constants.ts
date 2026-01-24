@@ -492,6 +492,72 @@ export const SQUARE_GRID_JIGGLE_DURATION_MS = 400;
 export const SQUARE_GRID_JIGGLE_INTENSITY_PX = 2;
 
 // ============================================================================
+// Square Grid Gravity Effect
+// ============================================================================
+
+/**
+ * Maximum Z-axis translation limit in pixels (capped for display)
+ * Squares can calculate higher values for propagation, but display is capped here
+ */
+export const SQUARE_GRID_GRAVITY_MAX_Z_LIMIT_PX = 50;
+
+/**
+ * Full strength calculation in pixels (used for propagation)
+ * This is the maximum influence strength before capping for display
+ */
+export const SQUARE_GRID_GRAVITY_FULL_STRENGTH_PX = 500;
+
+/**
+ * Propagation decay factor per neighbor (0.0 to 1.0)
+ * Each neighbor receives influence strength multiplied by this factor
+ */
+export const SQUARE_GRID_GRAVITY_PROPAGATION_DECAY = 0.3;
+
+/**
+ * Minimum influence threshold
+ * Propagation stops when strength falls below this value
+ */
+export const SQUARE_GRID_GRAVITY_MIN_INFLUENCE_THRESHOLD = 0.5;
+
+/**
+ * Rotation scale multiplier for rotateZ (cursor-facing rotation)
+ * Controls how much squares rotate to face the cursor
+ */
+export const SQUARE_GRID_GRAVITY_ROTATION_Z_SCALE = 0.15;
+
+/**
+ * Rotation scale multiplier for rotateX/Y (neighbor tilt effect)
+ * Controls how much squares tilt toward their influenced neighbors
+ */
+export const SQUARE_GRID_GRAVITY_ROTATION_XY_SCALE = 0.3;
+
+/**
+ * Update throttle in frames
+ * Update gravity calculations every N frames (1 = every frame, 2 = every other frame)
+ */
+export const SQUARE_GRID_GRAVITY_UPDATE_THROTTLE_FRAMES = 2;
+
+/**
+ * Cursor movement threshold in pixels
+ * Only recalculate gravity if cursor moved more than this distance
+ * Lower value = more frequent updates (better responsiveness, more CPU)
+ */
+export const SQUARE_GRID_GRAVITY_CURSOR_MOVE_THRESHOLD_PX = 0.5;
+
+/**
+ * Whether gravity effect is inverted
+ * false = pressed (translateZ negative, rotate toward cursor)
+ * true = pulled (translateZ positive, rotate away from cursor)
+ */
+export const SQUARE_GRID_GRAVITY_IS_INVERTED = false;
+
+/**
+ * Decimal places for gravity transform values
+ * Used for rounding to improve performance and reduce DOM update overhead
+ */
+export const SQUARE_GRID_GRAVITY_DECIMAL_PLACES = 2;
+
+// ============================================================================
 // Cube Pulse Animation
 // ============================================================================
 

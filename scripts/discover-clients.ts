@@ -273,17 +273,7 @@ function generateNginxConfig(clients: DiscoveredClient[], baseDomain: string = '
     const domain = client.domain || baseDomain;
     const serverName = `${client.subdomain}.${domain}`;
 
-    // Upstream definitions
-    upstreams.push(`
-upstream ${client.id}-frontend {
-    server ${client.id}-frontend:${client.ports.frontend};
-}
-
-upstream ${client.id}-backend {
-    server ${client.id}-backend:${client.ports.backend};
-}`);
-
-    // Server block
+    // Server block with dynamic upstream resolution
     serverBlocks.push(`
 # ============================================================================
 # CLIENT: ${client.name} (${client.id})
@@ -299,6 +289,15 @@ server {
 server {
     listen 443 ssl http2;
     server_name ${serverName};
+
+    # DNS resolver for dynamic service discovery
+    # Docker's internal DNS (127.0.0.11) allows resolving service names
+    resolver 127.0.0.11 valid=30s;
+
+    # Upstream variables for dynamic resolution
+    # Using variables with resolver allows nginx to start even if services don't exist yet
+    set $backend_upstream "${client.id}-backend:${client.ports.backend}";
+    set $frontend_upstream "${client.id}-frontend:${client.ports.frontend}";
 
     # SSL configuration
     ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt;
@@ -323,9 +322,10 @@ server {
     }
 
     # API routes
+    # Using variable in proxy_pass with resolver enables dynamic upstream resolution
     location /api/ {
         limit_req zone=api burst=20 nodelay;
-        proxy_pass http://${client.id}-backend;
+        proxy_pass http://$backend_upstream;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -341,7 +341,7 @@ server {
 
     # WebSocket support for Next.js HMR
     location /_next/webpack-hmr {
-        proxy_pass http://${client.id}-frontend;
+        proxy_pass http://$frontend_upstream;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -353,7 +353,7 @@ server {
 
     # Static files
     location /_next/static/ {
-        proxy_pass http://${client.id}-frontend;
+        proxy_pass http://$frontend_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -365,7 +365,7 @@ server {
     # Frontend routes
     location / {
         limit_req zone=web burst=50 nodelay;
-        proxy_pass http://${client.id}-frontend;
+        proxy_pass http://$frontend_upstream;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -424,7 +424,7 @@ async function main() {
 
   console.log(`Found ${clients.length} client(s):`);
   clients.forEach(client => {
-    console.log(`  - ${client.name} (${client.id}) at ${client.subdomain}.${client.domain || 'owndom.com'}`);
+    console.log(`  - ${client.name} (${client.id}) at ${client.subdomain}.${client.domain || 'yourdomain.com'}`);
   });
 
   // Generate outputs

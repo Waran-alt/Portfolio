@@ -19,9 +19,9 @@ const envSchema = z.object({
   POSTGRES_DB: z.string().default('portfolio_db'),
   POSTGRES_USER: z.string().default('postgres'),
   POSTGRES_PASSWORD: z.string(),
-  POSTGRES_PORT: z.string().transform(Number).default('5432'),
-  POSTGRES_POOL_MIN: z.string().transform(Number).default('2'),
-  POSTGRES_POOL_MAX: z.string().transform(Number).default('10'),
+  POSTGRES_PORT: z.string().default('5432').transform(Number),
+  POSTGRES_POOL_MIN: z.string().default('2').transform(Number),
+  POSTGRES_POOL_MAX: z.string().default('10').transform(Number),
 
   // Authentication
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
@@ -29,12 +29,12 @@ const envSchema = z.object({
 
   // Session Configuration
   SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 characters'),
-  SESSION_COOKIE_SECURE: z.string().transform(val => val === 'true').default('false'),
-  SESSION_COOKIE_HTTPONLY: z.string().transform(val => val === 'true').default('true'),
+  SESSION_COOKIE_SECURE: z.string().default('false').transform(val => val === 'true'),
+  SESSION_COOKIE_HTTPONLY: z.string().default('true').transform(val => val === 'true'),
 
   // CORS
   CORS_ORIGIN: z.string().url(),
-  CORS_CREDENTIALS: z.string().transform(val => val === 'true').default('true'),
+  CORS_CREDENTIALS: z.string().default('true').transform(val => val === 'true'),
 
   // Development
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

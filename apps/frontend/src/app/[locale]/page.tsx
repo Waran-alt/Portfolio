@@ -239,23 +239,18 @@ export default function LandingPage() {
 
   // Track cursor position and trigger pulses after animations complete
   const handleMouseMove = (event: React.MouseEvent) => {
-    // Don't process mouse movement if cube is hidden
-    if (isCubeHidden) {
-      return;
-    }
-    
     const x = event.clientX;
     const y = event.clientY;
-    // Always update cursor position for guide lines
+    // Always update cursor position for guide lines and square grid
     cursorPositionRef.current = { x, y };
-    // Update cursor position state for loading circle
+    // Update cursor position state for loading circle and square grid
     setCursorPosition({ x, y });
     // Mark cursor as initialized on first movement
     if (!isCursorInitialized) {
       setIsCursorInitialized(true);
     }
-    // Only generate pulses after all entrance animations complete
-    if (areAnimationsComplete) {
+    // Only generate pulses after all entrance animations complete and cube is visible
+    if (areAnimationsComplete && !isCubeHidden) {
       checkAndTriggerPulse(x, y);
     }
   };
@@ -273,7 +268,9 @@ export default function LandingPage() {
     >
       {/* Square grid background - preload in DOM but keep hidden until reveal */}
       {areAnimationsComplete && (
-        <SquareGrid isVisible={isCubeHidden && isBackgroundTransitionComplete} />
+        <SquareGrid 
+          isVisible={isCubeHidden && isBackgroundTransitionComplete}
+        />
       )}
       {/* Render pulse effects behind cube */}
       {pulses.map(pulse => (

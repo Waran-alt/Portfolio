@@ -139,7 +139,7 @@ export async function generateClientSetup(): Promise<{
   const results: Array<{ clientId: string; status: 'created' | 'updated' | 'error' }> = [];
   
   // Read BASE_DOMAIN at call time, not definition time
-  const baseDomain = process.env['BASE_DOMAIN'] || 'owndom.com';
+  const baseDomain = process.env['BASE_DOMAIN'] || 'yourdomain.com';
   
   try {
     const clients = await discoverClients();

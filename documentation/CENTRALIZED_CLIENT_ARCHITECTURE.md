@@ -107,7 +107,7 @@ Each client must have a `client.config.json` file:
 - `database.user`: Database user (defaults to postgres)
 - `enabled`: Enable/disable client (defaults to true)
 
-**Note:** The base domain is configured globally in `.env` as `BASE_DOMAIN` (e.g., `BASE_DOMAIN=owndom.com`). Full URLs are automatically constructed as `{subdomain}.{BASE_DOMAIN}`.
+**Note:** The base domain is configured globally in `.env` as `BASE_DOMAIN` (e.g., `BASE_DOMAIN=yourdomain.com`). Full URLs are automatically constructed as `{subdomain}.{BASE_DOMAIN}`.
 
 See `clients/client.config.json.example` for the full schema.
 
@@ -328,10 +328,10 @@ The base domain is defined globally in `.env`:
 
 ```bash
 # Base domain for all clients (shared across project)
-BASE_DOMAIN=owndom.com
+BASE_DOMAIN=yourdomain.com
 ```
 
-Client full URLs are automatically constructed as `{subdomain}.{BASE_DOMAIN}`. For example, if a client has `subdomain: "my-client"` and `BASE_DOMAIN=owndom.com`, the full URL will be `my-client.owndom.com`.
+Client full URLs are automatically constructed as `{subdomain}.{BASE_DOMAIN}`. For example, if a client has `subdomain: "my-client"` and `BASE_DOMAIN=yourdomain.com`, the full URL will be `my-client.yourdomain.com`.
 
 Client-specific environment variables can be added to `.env` (optional):
 
@@ -403,7 +403,7 @@ Integrates generated configs into the main project:
 Generates setup documentation for all clients:
 - Creates `SETUP.md` file in each client directory with setup instructions
 - Includes environment variable template with correct ports from `client.config.json`
-- Uses `BASE_DOMAIN` environment variable (defaults to `owndom.com`)
+- Uses `BASE_DOMAIN` environment variable (defaults to `yourdomain.com`)
 - Shows progress and summary of generated files
 
 **Note:** This script is automatically called by `integrate-clients.sh`, but can also be run standalone.
@@ -470,7 +470,7 @@ Each backend should explicitly allow only its own frontend:
 
 ```typescript
 // Use BASE_DOMAIN from environment variables
-const BASE_DOMAIN = process.env['BASE_DOMAIN'] || 'owndom.com';
+const BASE_DOMAIN = process.env['BASE_DOMAIN'] || 'yourdomain.com';
 const corsOptions = {
   origin: [
     `https://client-name.${BASE_DOMAIN}`,
