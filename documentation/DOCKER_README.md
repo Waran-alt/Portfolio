@@ -19,12 +19,13 @@ yarn logs
 ```
 
 ### 📦 Stack Commands (daily use)
-| Command       | Description                               |
-|---------------|-------------------------------------------|
-| `yarn start`  | Start all services (Portfolio + clients)  |
-| `yarn stop`   | Stop all services                         |
-| `yarn logs`   | Stream logs from all services             |
-| `yarn status` | Show container status                     |
+| Command               | Description                              |
+|-----------------------|------------------------------------------|
+| `yarn start`          | Start all services (Portfolio + clients) |
+| `yarn start:pgadmin`  | Start with pgAdmin (DB web UI)           |
+| `yarn stop`           | Stop all services                        |
+| `yarn logs`           | Stream logs from all services            |
+| `yarn status`         | Show container status                    |
 
 ### 🔧 Setup Commands
 | Command                                   | Description                                                   |
@@ -65,11 +66,28 @@ yarn db:reset             # Portfolio reset
 
 ### 🗄️ Database Access
 ```bash
+# psql shell
 ./scripts/docker-stack.sh exec postgres psql -U postgres -d portfolio_db
 
 # Backup
 ./scripts/docker-stack.sh exec postgres pg_dump -U postgres portfolio_db > backup.sql
 ```
+
+### 🛠️ pgAdmin (optional)
+Start the stack with pgAdmin for a web UI to manage all databases (portfolio_db, client DBs):
+
+```bash
+yarn start:pgadmin
+# or: make dev-pgadmin
+```
+
+- **URL**: http://localhost:5050 (or `PGADMIN_PORT` from `.env`)
+- **Login**: `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` (default: admin@portfolio.local / admin)
+- **Add server** in pgAdmin:
+  - **Host**: `postgres` (Docker service name)
+  - **Port**: 5432
+  - **Username** / **Password**: from root `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`)
+  - **Databases**: portfolio_db, memoon_card_db, test_client_db, etc.
 
 > **Note:** `start`, `stop`, `logs`, `status` and `docker:*` use `scripts/docker-stack.sh`, which automatically includes client services when `.generated/docker-compose.clients.yml` exists (created by `yarn integrate`).
 

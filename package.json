@@ -34,6 +34,7 @@
     "changeset:publish": "changeset publish",
 
     "start": "./scripts/docker-stack.sh up -d",
+    "start:pgadmin": "./scripts/docker-stack.sh --profile pgadmin up -d",
     "stop": "./scripts/docker-stack.sh down",
     "logs": "./scripts/docker-stack.sh logs -f",
     "status": "./scripts/docker-stack.sh ps",

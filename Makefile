@@ -18,6 +18,10 @@ help: ## Show this help message
 dev: ## Start development environment (Portfolio + clients)
 	@echo "Starting development environment..."
 	./scripts/docker-stack.sh up -d
+
+dev-pgadmin: ## Start development environment with pgAdmin
+	@echo "Starting development environment with pgAdmin..."
+	./scripts/docker-stack.sh --profile pgadmin up -d
 	@echo "Development environment started!"
 	@echo "Frontend: ${NGINX_URL}:${FRONTEND_PORT}"
 	@echo "Backend: ${NGINX_URL}:${BACKEND_PORT}"

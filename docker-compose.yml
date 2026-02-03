@@ -168,6 +168,37 @@ services:
       - nginx_ssl:/etc/nginx/ssl
       - ./.generated:/app/.generated:ro
 
+  # ============================================================================
+  # PGADMIN (optional - use --profile pgadmin to enable)
+  # ============================================================================
+  # Web UI for PostgreSQL - manages all databases (portfolio_db, client DBs)
+  # Start with: ./scripts/docker-stack.sh --profile pgadmin up -d
+  pgadmin:
+    profiles:
+      - pgadmin
+    image: dpage/pgadmin4:latest
+    container_name: portfolio_pgadmin_dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - portfolio_network
+    labels:
+      - "com.portfolio.service=pgadmin"
+      - "com.portfolio.environment=development"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
 # ============================================================================
 # VOLUMES
 # ============================================================================

@@ -7,9 +7,14 @@
  * Used by integrate-clients.sh
  */
 
+import { existsSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { discoverClients, type DiscoveredClient } from './discover-clients';
+
+function hasMigrations(config: DiscoveredClient): boolean {
+  return existsSync(join(config.migrationsPath, 'changelog.xml'));
+}
 
 /**
  * Generate SETUP.md content with environment variable instructions
@@ -133,6 +138,17 @@ When you work inside this client directory (e.g. \`clients/${config.id}/\`) but 
 - **Frontend**: http://localhost:${config.ports.frontend}
 - **Backend API**: http://localhost:${config.ports.backend}
 - **Production URL**: ${fullUrl}
+${hasMigrations(config) ? `
+
+### Database (pgAdmin) when integrated with Portfolio
+
+1. From Portfolio root, run \`yarn start:pgadmin\`.
+2. Open http://localhost:5050 and log in (\`PGADMIN_EMAIL\` / \`PGADMIN_PASSWORD\` from root \`.env\`).
+3. **Register server**: Right-click **Servers** → **Register** → **Server**
+   - **General** → Name: e.g. \`Portfolio\`
+   - **Connection** → Host: \`postgres\`, Port: \`5432\`, Username/Password: from root \`.env\` (\`POSTGRES_USER\`, \`POSTGRES_PASSWORD\`)
+4. **Find database**: Expand **Servers** → your server → **Databases** → \`${config.database.name}\` → **Schemas** → **public** → **Tables**
+` : ''}
 
 ## Notes
 
