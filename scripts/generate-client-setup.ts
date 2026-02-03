@@ -20,6 +20,9 @@ import { discoverClients, type DiscoveredClient } from './discover-clients';
 function generateSetupMd(config: DiscoveredClient, baseDomain: string): string {
   const fullUrl = `https://${config.subdomain}.${baseDomain}`;
   const dbUser = config.database.user || 'postgres';
+
+  const blankStr = "".padStart(String(config.id).length, ' ');
+  const tiretStr = "".padStart(String(config.id).length, '-');
   
   return `# ${config.name} - Setup Guide
 
@@ -95,22 +98,35 @@ cd frontend && yarn dev
 
 ### Integrated with Portfolio
 
-When integrated with the Portfolio monorepo:
+When integrated with the Portfolio monorepo, run these **from the Portfolio root**:
 
-1. **Run discovery** (from Portfolio root):
+1. **Integrate** (first time or after adding/updating clients):
    \`\`\`bash
-   yarn discover:clients
+   yarn integrate
    \`\`\`
 
-2. **Run migrations**:
+2. **Run migrations** (if the client has a database):
    \`\`\`bash
-   yarn migrate:client ${config.id}
+   yarn migrate:clients
    \`\`\`
 
-3. **Start services**:
+3. **Start all services**:
    \`\`\`bash
-   docker-compose up -d
+   yarn start
    \`\`\`
+
+### Managing Docker When Working from Client Folder
+
+When you work inside this client directory (e.g. \`clients/${config.id}/\`) but the stack runs from the Portfolio root:
+
+| Task                                        | From client folder                                          ${blankStr}${blankStr}| From Portfolio root                                                ${blankStr}|
+|---------------------------------------------|-------------------------------------------------------------${tiretStr}${tiretStr}|--------------------------------------------------------------------${tiretStr}|
+| **Rebuild** (after Dockerfile/deps changes) | \`../../scripts/rebuild-client.sh\` (auto-detects client)     ${blankStr}${blankStr}| \`yarn clients:rebuild ${config.id}\`                                            |
+| **Rebuild + restart**                       | \`../../scripts/rebuild-client.sh --restart\`                 ${blankStr}${blankStr}| \`yarn clients:rebuild ${config.id} -- --restart\`                               |
+| **Restart** (no rebuild)                    | \`../../scripts/docker-stack.sh restart ${config.id}-backend ${config.id}-frontend\`  | \`./scripts/docker-stack.sh restart ${config.id}-backend ${config.id}-frontend\`  |
+| **Logs**                                    | \`../../scripts/docker-stack.sh logs -f ${config.id}-frontend\`           ${blankStr}| \`./scripts/docker-stack.sh logs -f ${config.id}-frontend\`                      |
+
+**Note:** Source code changes use hot reload via volume mounts—no rebuild. Rebuild only when changing \`Dockerfile\`, \`package.json\` dependencies, or other build-time config.
 
 ## Access
 

@@ -211,19 +211,20 @@ yarn migrate:client my-new-client
 ### 10. Test Local Development
 
 ```bash
-# Start all services (portfolio + all clients)
-docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml up -d
+# From Portfolio root: start all services (portfolio + all clients)
+yarn start
 
-# Or if using merged configs:
-docker-compose up -d
+# Or: make dev
 
 # Check service status
-docker-compose ps
+yarn status
 
 # View logs for your client
-docker-compose logs -f my-new-client-frontend
-docker-compose logs -f my-new-client-backend
+./scripts/docker-stack.sh logs -f my-new-client-frontend
+./scripts/docker-stack.sh logs -f my-new-client-backend
 ```
+
+See "Managing Docker When Working from Client Folder" below for commands when working inside a client directory.
 
 ### 11. Verify Access
 
@@ -337,7 +338,13 @@ git submodule update --init --recursive
 - **Separate databases**: Each client has its own PostgreSQL database
 - **Isolated ports**: Unique frontend/backend ports per client
 - **Independent migrations**: Each client manages its own schema
-- **Separate environment variables**: Client-specific `.env` files
+- **Client environment variables**: Each client uses its own `clients/{id}/.env` (overrides root `.env` when present)
+
+### Environment Configuration (Integrated vs Standalone)
+
+- **Integrated (Portfolio)**: Client containers load root `.env` first, then `clients/{id}/.env` (if it exists). Only `POSTGRES_HOST` and `POSTGRES_DB` are overridden to point to the shared Portfolio Postgres. All other vars (POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET, etc.) come from the client's `.env`—same behavior as standalone.
+- **Standalone**: Client uses only its own `.env` (e.g. when running `docker compose up` from `clients/memoon-card/`).
+- **Migrations**: `yarn migrate:clients` loads each client's `.env` for credentials. Use credentials that match the target Postgres (standalone = client's own DB, integrated = Portfolio's shared DB).
 
 ### Code Organization
 
@@ -352,6 +359,20 @@ git submodule update --init --recursive
 - **Conventional commits**: Follow commit message guide (`.cursor/rules/commit-message-guide.mdc`)
 - **Small PRs**: Keep pull requests focused and reviewable
 - **Feature flags**: Use `enabled` in `client.config.json` to disable clients
+
+### Managing Docker When Working from Client Folder
+
+When you work inside a client directory (e.g. `clients/memoon-card/`) but the stack is started from the Portfolio root:
+
+| Task | From client folder | From Portfolio root |
+|------|--------------------|---------------------|
+| **Rebuild** (after Dockerfile/deps changes) | `../../scripts/rebuild-client.sh` (auto-detects client) | `yarn clients:rebuild memoon-card` |
+| **Rebuild + restart** | `../../scripts/rebuild-client.sh --restart` | `yarn clients:rebuild memoon-card -- --restart` |
+| **Restart** (source changes, no rebuild) | `../../scripts/docker-stack.sh restart memoon-card-backend memoon-card-frontend` | `./scripts/docker-stack.sh restart memoon-card-backend memoon-card-frontend` |
+| **Logs** | `../../scripts/docker-stack.sh logs -f memoon-card-frontend` | `yarn logs` or `./scripts/docker-stack.sh logs -f memoon-card-frontend` |
+| **Status** | `../../scripts/docker-stack.sh ps` | `yarn status` |
+
+**Note:** Source code changes (TS/JS, config, etc.) are picked up via volume mounts—no rebuild needed. Rebuild only when changing `Dockerfile`, `package.json` dependencies, or other build-time config.
 
 ### Development Workflow
 

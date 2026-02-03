@@ -14,10 +14,10 @@ help: ## Show this help message
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-# Development commands
-dev: ## Start development environment
+# Development commands (uses docker-stack.sh = Portfolio + Clients)
+dev: ## Start development environment (Portfolio + clients)
 	@echo "Starting development environment..."
-	docker-compose up -d
+	./scripts/docker-stack.sh up -d
 	@echo "Development environment started!"
 	@echo "Frontend: ${NGINX_URL}:${FRONTEND_PORT}"
 	@echo "Backend: ${NGINX_URL}:${BACKEND_PORT}"
@@ -25,10 +25,10 @@ dev: ## Start development environment
 
 dev-build: ## Build and start development environment
 	@echo "Building and starting development environment..."
-	docker-compose up -d --build
+	./scripts/docker-stack.sh up -d --build
 
 dev-logs: ## Follow development logs
-	docker-compose logs -f
+	./scripts/docker-stack.sh logs -f
 
 # Production commands
 prod: ## Start production environment
@@ -44,143 +44,143 @@ prod-build: ## Build and start production environment
 prod-logs: ## Follow production logs
 	docker-compose -f docker-compose.prod.yml logs -f
 
-# General Docker commands
+# General Docker commands (full stack = Portfolio + clients)
 build: ## Build all Docker images
-	docker-compose build
+	./scripts/docker-stack.sh build
 
 up: ## Start all services (development)
-	docker-compose up -d
+	./scripts/docker-stack.sh up -d
 
 down: ## Stop all services
-	docker-compose down
+	./scripts/docker-stack.sh down
 
 down-volumes: ## Stop all services and remove volumes (WARNING: Data loss!)
-	docker-compose down -v
+	./scripts/docker-stack.sh down -v
 	docker-compose -f docker-compose.prod.yml down -v
 
 restart: ## Restart all services
-	docker-compose restart
+	./scripts/docker-stack.sh restart
 
 stop: ## Stop all services
-	docker-compose stop
+	./scripts/docker-stack.sh stop
 
 # Service-specific commands
 frontend: ## Start only frontend service
-	docker-compose up -d frontend
+	./scripts/docker-stack.sh up -d frontend
 
 backend: ## Start only backend service
-	docker-compose up -d backend postgres
+	./scripts/docker-stack.sh up -d backend postgres
 
 database: ## Start only database service
-	docker-compose up -d postgres
+	./scripts/docker-stack.sh up -d postgres
 
 nginx: ## Start only nginx service
-	docker-compose up -d nginx
+	./scripts/docker-stack.sh up -d nginx
 
 # Logging commands
 logs: ## Show logs for all services
-	docker-compose logs
+	./scripts/docker-stack.sh logs
 
 logs-frontend: ## Show frontend logs
-	docker-compose logs frontend
+	./scripts/docker-stack.sh logs frontend
 
 logs-backend: ## Show backend logs
-	docker-compose logs backend
+	./scripts/docker-stack.sh logs backend
 
 logs-database: ## Show database logs
-	docker-compose logs postgres
+	./scripts/docker-stack.sh logs postgres
 
 logs-nginx: ## Show nginx logs
-	docker-compose logs nginx
+	./scripts/docker-stack.sh logs nginx
 
 # Database commands
 db-shell: ## Access PostgreSQL shell
-	docker-compose exec postgres psql -U postgres -d portfolio_db
+	./scripts/docker-stack.sh exec postgres psql -U postgres -d portfolio_db
 
 db-backup: ## Create database backup
 	@echo "Creating database backup..."
-	docker-compose exec postgres pg_dump -U postgres portfolio_db > backup_$(shell date +%Y%m%d_%H%M%S).sql
+	./scripts/docker-stack.sh exec postgres pg_dump -U postgres portfolio_db > backup_$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "Backup created: backup_$(shell date +%Y%m%d_%H%M%S).sql"
 
 db-restore: ## Restore database from backup (Usage: make db-restore FILE=backup.sql)
 	@if [ -z "$(FILE)" ]; then echo "Usage: make db-restore FILE=backup.sql"; exit 1; fi
 	@echo "Restoring database from $(FILE)..."
-	cat $(FILE) | docker-compose exec -T postgres psql -U postgres -d portfolio_db
+	cat $(FILE) | ./scripts/docker-stack.sh exec -T postgres psql -U postgres -d portfolio_db
 	@echo "Database restored!"
 
 db-reset: ## Reset database (WARNING: Data loss!)
 	@echo "Resetting database..."
-	docker-compose down postgres
-	docker volume rm portfolio_postgres_data
-	docker-compose up -d postgres
+	./scripts/docker-stack.sh down postgres
+	docker volume rm portfolio_postgres_data 2>/dev/null || true
+	./scripts/docker-stack.sh up -d postgres
 	@echo "Database reset complete!"
 
 # Development utilities
 install: ## Install dependencies in containers
 	@echo "Installing frontend dependencies..."
-	docker-compose exec frontend yarn install
+	./scripts/docker-stack.sh exec frontend yarn install
 	@echo "Installing backend dependencies..."
-	docker-compose exec backend yarn install
+	./scripts/docker-stack.sh exec backend yarn install
 
 install-frontend: ## Install frontend dependencies
-	docker-compose exec frontend yarn install
+	./scripts/docker-stack.sh exec frontend yarn install
 
 install-backend: ## Install backend dependencies
-	docker-compose exec backend yarn install
+	./scripts/docker-stack.sh exec backend yarn install
 
 # Shell access
 shell-frontend: ## Access frontend container shell
-	docker-compose exec frontend sh
+	./scripts/docker-stack.sh exec frontend sh
 
 shell-backend: ## Access backend container shell
-	docker-compose exec backend sh
+	./scripts/docker-stack.sh exec backend sh
 
 shell-database: ## Access database container shell
-	docker-compose exec postgres sh
+	./scripts/docker-stack.sh exec postgres sh
 
 shell-nginx: ## Access nginx container shell
-	docker-compose exec nginx sh
+	./scripts/docker-stack.sh exec nginx sh
 
 # Testing commands
 test: ## Run all tests
 	@echo "Running frontend tests..."
-	docker-compose exec frontend yarn test
+	./scripts/docker-stack.sh exec frontend yarn test
 	@echo "Running backend tests..."
-	docker-compose exec backend yarn test
+	./scripts/docker-stack.sh exec backend yarn test
 
 test-frontend: ## Run frontend tests
-	docker-compose exec frontend yarn test
+	./scripts/docker-stack.sh exec frontend yarn test
 
 test-backend: ## Run backend tests
-	docker-compose exec backend yarn test
+	./scripts/docker-stack.sh exec backend yarn test
 
 test-e2e: ## Run end-to-end tests
-	docker-compose exec frontend yarn test:e2e
+	./scripts/docker-stack.sh exec frontend yarn test:e2e
 
 # Code quality commands
 lint: ## Run linting for all services
 	@echo "Linting frontend..."
-	docker-compose exec frontend yarn lint
+	./scripts/docker-stack.sh exec frontend yarn lint
 	@echo "Linting backend..."
-	docker-compose exec backend yarn lint
+	./scripts/docker-stack.sh exec backend yarn lint
 
 lint-fix: ## Fix linting issues
 	@echo "Fixing frontend linting issues..."
-	docker-compose exec frontend yarn lint:fix
+	./scripts/docker-stack.sh exec frontend yarn lint:fix
 	@echo "Fixing backend linting issues..."
-	docker-compose exec backend yarn lint:fix
+	./scripts/docker-stack.sh exec backend yarn lint:fix
 
 format: ## Format code
 	@echo "Formatting frontend code..."
-	docker-compose exec frontend npx prettier --write .
+	./scripts/docker-stack.sh exec frontend npx prettier --write .
 	@echo "Formatting backend code..."
-	docker-compose exec backend npx prettier --write .
+	./scripts/docker-stack.sh exec backend npx prettier --write .
 
 type-check: ## Run TypeScript type checking
 	@echo "Type checking frontend..."
-	docker-compose exec frontend yarn type-check
+	./scripts/docker-stack.sh exec frontend yarn type-check
 	@echo "Type checking backend..."
-	docker-compose exec backend yarn type-check
+	./scripts/docker-stack.sh exec backend yarn type-check
 
 # Cleanup commands
 clean: ## Clean up Docker system
@@ -202,13 +202,29 @@ clean-all: ## Clean up everything (WARNING: Removes all Docker data!)
 
 # Health and status commands
 status: ## Show status of all services
-	docker-compose ps
+	./scripts/docker-stack.sh ps
 
 health: ## Check health of all services
 	@echo "Checking service health..."
 	@for service in frontend backend postgres nginx; do \
 		echo "$$service: $$(docker inspect --format='{{.State.Health.Status}}' portfolio_$${service}_dev 2>/dev/null || echo 'not running')"; \
 	done
+
+# Client integration
+integrate: ## Discover and integrate client projects
+	@echo "Discovering and integrating clients..."
+	yarn integrate
+	@echo "Run 'yarn migrate:clients' if clients have database migrations"
+
+# Rebuild a specific client (Usage: make rebuild-client CLIENT=memoon-card)
+rebuild-client: ## Rebuild client containers (CLIENT=memoon-card)
+	@if [ -z "$(CLIENT)" ]; then echo "Usage: make rebuild-client CLIENT=memoon-card"; exit 1; fi
+	./scripts/rebuild-client.sh $(CLIENT)
+
+# Rebuild and restart a specific client
+rebuild-client-restart: ## Rebuild and restart client (CLIENT=memoon-card)
+	@if [ -z "$(CLIENT)" ]; then echo "Usage: make rebuild-client-restart CLIENT=memoon-card"; exit 1; fi
+	./scripts/rebuild-client.sh $(CLIENT) --restart
 
 # Environment setup
 setup: ## Initial setup - create env files and start development
@@ -290,7 +306,7 @@ quick-prod: ## Quick production start (setup + prod)
 	$(MAKE) prod-build 
 
 rebuild: ## Rebuild all Docker images without cache
-	docker-compose build --no-cache
+	./scripts/docker-stack.sh build --no-cache
 
 prod-rebuild: ## Rebuild production Docker images without cache
 	docker-compose -f docker-compose.prod.yml build --no-cache 

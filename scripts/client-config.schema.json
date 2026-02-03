@@ -57,6 +57,17 @@
         }
       }
     },
+    "backend": {
+      "type": "object",
+      "description": "Backend-specific configuration",
+      "properties": {
+        "healthPath": {
+          "type": "string",
+          "description": "Health check path (default: /api/health)",
+          "default": "/api/health"
+        }
+      }
+    },
     "enabled": {
       "type": "boolean",
       "description": "Whether this client is enabled (disabled clients are ignored)",

@@ -75,25 +75,33 @@ make setup-env
 ### 2. Start Development Environment
 
 ```bash
-# Using Makefile (recommended)
-make dev
+# Integrate clients (first time or after adding a client)
+yarn integrate
+yarn migrate:clients
 
-# Or using Docker Compose directly
-docker-compose up -d
+# Start all services (Portfolio + clients via Docker)
+yarn start
+# or: make dev
 
-# Or using Yarn
-yarn dev
+# Stop: yarn stop  |  Logs: yarn logs  |  Status: yarn status
 ```
 
 ### Development
 ```bash
-# Start all services
-docker-compose up
+# Docker (Portfolio + clients)
+yarn start          # Start containers
+yarn stop           # Stop containers
+yarn logs           # Stream logs
+yarn status         # Container status
+
+# Without Docker (local dev servers)
+yarn dev            # All workspaces
+yarn dev:frontend   # Portfolio frontend only
+yarn dev:backend    # Portfolio backend only
 
 # Access services
 - **Frontend**: ${NGINX_URL}:${FRONTEND_PORT}
 - **Backend API**: ${NGINX_URL}:${BACKEND_PORT}
-- **Database**: ${NGINX_URL}:${POSTGRES_PORT}
 ```
 
 ## 📁 Project Structure
@@ -102,35 +110,35 @@ docker-compose up
 Portfolio/
 ├── 🎨 Frontend (Next.js 15)
 │   └── apps/frontend/
-│       ├── src/app/           # App Router (Next.js 15)
-│       ├── components/        # React components
-│       ├── styles/           # Tailwind CSS styles
-│       └── Dockerfile        # Multi-stage build
+│       ├── src/app/            # App Router (Next.js 15)
+│       ├── components/         # React components
+│       ├── styles/             # Tailwind CSS styles
+│       └── Dockerfile          # Multi-stage build
 │
 ├── 🔧 Backend (Express API)
 │   └── apps/backend/
-│       ├── src/              # Express server code
-│       ├── config/           # Configuration files
-│       └── Dockerfile        # Multi-stage build
+│       ├── src/                # Express server code
+│       ├── config/             # Configuration files
+│       └── Dockerfile          # Multi-stage build
 │
 ├── 📚 Shared Code
 │   └── packages/shared/
-│       ├── src/              # Shared utilities and types
-│       └── constants.ts      # Application constants
+│       ├── src/                # Shared utilities and types
+│       └── constants.ts        # Application constants
 │
 ├── 🌐 Infrastructure
-│   ├── tools/nginx/          # Nginx configuration
-│   └── tools/database/       # Database setup
+│   ├── tools/nginx/            # Nginx configuration
+│   └── tools/database/         # Database setup
 │
 ├── 📖 Documentation
-│   ├── SETUP_GUIDE.md        # Detailed setup instructions
-│   ├── DOCKER_README.md      # Docker deployment guide
-│   └── ENVIRONMENT_SETUP.md  # Environment configuration
+│   ├── SETUP_GUIDE.md          # Detailed setup instructions
+│   ├── DOCKER_README.md        # Docker deployment guide
+│   └── ENVIRONMENT_SETUP.md    # Environment configuration
 │
 └── 🐳 Docker & Deployment
-    ├── docker-compose.yml    # Development environment
+    ├── docker-compose.yml      # Development environment
     ├── docker-compose.prod.yml # Production environment
-    └── Makefile              # Convenient commands
+    └── Makefile                # Convenient commands
 ```
 
 ## 🛠️ Development Commands

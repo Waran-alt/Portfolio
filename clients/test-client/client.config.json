@@ -7,6 +7,9 @@
     "frontend": 3010,
     "backend": 4010
   },
+  "backend": {
+    "healthPath": "/health"
+  },
   "database": {
     "name": "test_client_db",
     "user": "postgres"

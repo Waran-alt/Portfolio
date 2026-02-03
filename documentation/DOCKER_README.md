@@ -6,114 +6,72 @@ This repository contains a comprehensive Docker setup for a Next.js portfolio ap
 
 ### 🚀 Quick Start
 ```bash
-# 1. Discover and integrate clients
-yarn discover:clients
-./scripts/integrate-clients.sh
+# 1. Integrate clients (first time or after adding a client)
+yarn integrate
+yarn migrate:clients
 
-# 2. Start all services (Portfolio + Clients)
-docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml up -d
+# 2. Start everything (Portfolio + Clients)
+yarn start
 
-# 3. View logs
-docker-compose logs -f
+# 3. Check status / view logs
+yarn status
+yarn logs
 ```
+
+### 📦 Stack Commands (daily use)
+| Command       | Description                               |
+|---------------|-------------------------------------------|
+| `yarn start`  | Start all services (Portfolio + clients)  |
+| `yarn stop`   | Stop all services                         |
+| `yarn logs`   | Stream logs from all services             |
+| `yarn status` | Show container status                     |
+
+### 🔧 Setup Commands
+| Command                                   | Description                                                   |
+|-------------------------------------------|---------------------------------------------------------------|
+| `yarn integrate`                          | Discover clients + run integration (generates `.generated/`)  |
+| `yarn migrate:clients`                    | Run database migrations for all clients                       |
+| `yarn discover:clients`                   | Discover clients only (generates compose/nginx configs)       |
+| `yarn check:clients`                      | Check for port/subdomain/database conflicts                   |
+| `yarn clients:rebuild <id>`               | Rebuild client containers (after Dockerfile/deps changes)     |
+| `yarn clients:rebuild <id> -- --restart`  | Rebuild + restart that client                                 |
 
 ### 🐳 Docker Commands
+| Command                         | Description                       |
+|---------------------------------|-----------------------------------|
+| `yarn docker:build`             | Build all images                  |
+| `yarn docker:rebuild`           | Rebuild images (no cache)         |
+| `yarn docker:restart`           | Restart all services              |
+| `yarn docker:exec <svc> <cmd>`  | Run command in a container        |
+| `yarn docker:portfolio:up`      | Start Portfolio only (no clients) |
+| `yarn docker:portfolio:down`    | Stop Portfolio only               |
+
+### 📊 Other Commands
 ```bash
-# Start all services
-docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml up -d
+# Development (without Docker)
+yarn dev                  # Start all workspaces
+yarn dev:frontend         # Portfolio frontend only
+yarn dev:backend          # Portfolio backend only
 
-# Stop all services
-docker-compose -f docker-compose.yml -f .generated/docker-compose.clients.yml down
+# Database
+yarn db:migrate           # Portfolio migrations
+yarn db:seed              # Portfolio seed
+yarn db:reset             # Portfolio reset
 
-# View logs (all services)
-docker-compose logs -f
-
-# View logs (specific service)
-docker-compose logs -f frontend
-docker-compose logs -f memoon-card-frontend
-
-# Restart services
-docker-compose restart
-
-# Check service status
-docker-compose ps
-
-# Rebuild containers
-docker-compose build --no-cache
+# Logs for a specific service
+./scripts/docker-stack.sh logs -f frontend
+./scripts/docker-stack.sh logs -f memoon-card-backend
 ```
 
-### 🧶 Yarn Commands
+### 🗄️ Database Access
 ```bash
-# Client Management
-yarn discover:clients              # Discover clients and generate configs
-yarn check:clients                 # Check for client conflicts
-yarn generate:client-setup        # Generate SETUP.md for clients
-yarn migrate:clients               # Run database migrations for all clients
+./scripts/docker-stack.sh exec postgres psql -U postgres -d portfolio_db
 
-# Development
-yarn dev                           # Start all workspaces in dev mode
-yarn dev:frontend                  # Start Portfolio frontend only
-yarn dev:backend                  # Start Portfolio backend only
-
-# Building
-yarn build                         # Build all workspaces
-yarn build:frontend               # Build Portfolio frontend
-yarn build:backend                # Build Portfolio backend
-
-# Code Quality
-yarn lint                         # Lint all workspaces
-yarn lint:fix                     # Fix linting issues
-yarn type-check                   # TypeScript validation
-yarn format                      # Format code with Prettier
-
-# Testing
-yarn test                         # Run all tests
-yarn test:frontend               # Test Portfolio frontend
-yarn test:backend                # Test Portfolio backend
-yarn test:e2e                    # End-to-end tests
+# Backup
+./scripts/docker-stack.sh exec postgres pg_dump -U postgres portfolio_db > backup.sql
 ```
 
-### 🔧 Client Management
-```bash
-# Discover and integrate new clients
-yarn discover:clients
-./scripts/integrate-clients.sh
-
-# Check for conflicts (ports, subdomains, databases)
-yarn check:clients
-
-# Generate setup documentation
-yarn generate:client-setup
-
-# Run database migrations
-yarn migrate:clients
-```
-
-### 📊 Monitoring
-```bash
-# Check all services status
-docker-compose ps
-
-# View health status
-docker inspect --format='{{.State.Health.Status}}' portfolio_frontend_dev
-
-# Health check endpoints
-curl http://localhost/health                    # Nginx
-curl http://localhost:${FRONTEND_PORT}/health   # Portfolio Frontend
-curl http://localhost:${BACKEND_PORT}/api/health # Portfolio Backend
-```
-
-### 🗄️ Database
-```bash
-# Access PostgreSQL
-docker-compose exec postgres psql -U postgres -d portfolio_db
-
-# Backup database
-docker-compose exec postgres pg_dump -U postgres portfolio_db > backup.sql
-
-# Restore database
-cat backup.sql | docker-compose exec -T postgres psql -U postgres -d portfolio_db
-```
+> **Note:** `start`, `stop`, `logs`, `status` and `docker:*` use `scripts/docker-stack.sh`, which automatically includes client services when `.generated/docker-compose.clients.yml` exists (created by `yarn integrate`).
 
 ---
 
@@ -200,11 +158,8 @@ cp documentation/env-templates/env.example .env
 ### 2. Discover and Integrate Clients
 
 ```bash
-# Discover all clients and generate configurations
-yarn discover:clients
-
 # Full integration (discovery + setup + verification)
-./scripts/integrate-clients.sh
+yarn integrate
 
 # This generates:
 # - .generated/docker-compose.clients.yml (client services)
@@ -217,20 +172,14 @@ yarn discover:clients
 
 ```bash
 # Start all services (Portfolio + Clients)
-docker-compose \
-  -f docker-compose.yml \
-  -f .generated/docker-compose.clients.yml \
-  up -d
-
-# Or if you've merged the files manually:
-docker-compose up -d
+yarn start
 
 # View logs
-docker-compose logs -f
+yarn logs
 
 # View logs for specific service
-docker-compose logs -f frontend
-docker-compose logs -f memoon-card-frontend
+./scripts/docker-stack.sh logs -f frontend
+./scripts/docker-stack.sh logs -f memoon-card-frontend
 
 # Access the application
 # Portfolio Frontend (via proxy): ${NGINX_URL}
@@ -545,6 +494,26 @@ docker-compose exec nginx ls -la /etc/nginx/conf.d/
 ```
 
 ## 🏢 Client Management
+
+### Rebuilding a Client
+
+When you change a client's Dockerfile, dependencies, or config, rebuild that client:
+
+```bash
+# From Portfolio root
+yarn clients:rebuild memoon-card
+yarn clients:rebuild memoon-card -- --restart   # Rebuild + restart
+
+# From within the client folder (clients/memoon-card/ or clients/memoon-card/frontend/)
+../../scripts/rebuild-client.sh
+../../scripts/rebuild-client.sh --restart
+
+# Using Make
+make rebuild-client CLIENT=memoon-card
+make rebuild-client-restart CLIENT=memoon-card
+```
+
+Source changes (no Dockerfile/dep changes) use hot reload via volume mounts; restart if needed: `./scripts/docker-stack.sh restart memoon-card-backend memoon-card-frontend`.
 
 ### Adding a New Client
 
