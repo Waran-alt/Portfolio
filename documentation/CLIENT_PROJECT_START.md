@@ -342,9 +342,11 @@ git submodule update --init --recursive
 
 ### Environment Configuration (Integrated vs Standalone)
 
-- **Integrated (Portfolio)**: Client containers load root `.env` first, then `clients/{id}/.env` (if it exists). Only `POSTGRES_HOST` and `POSTGRES_DB` are overridden to point to the shared Portfolio Postgres. All other vars (POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET, etc.) come from the client's `.env`—same behavior as standalone.
-- **Standalone**: Client uses only its own `.env` (e.g. when running `docker compose up` from `clients/memoon-card/`).
+- **Integrated (Portfolio)**: Client containers load root `.env` first, then `clients/{id}/.env` (if it exists). The discover-clients script overrides only `POSTGRES_HOST`, `POSTGRES_DB`, and `BACKEND_URL` to point to the shared Portfolio stack. All other vars (POSTGRES_USER, POSTGRES_PASSWORD, JWT_SECRET, NEXT_PUBLIC_API_URL, etc.) come from the client's `.env` files—same behavior as standalone.
+- **Standalone**: Client uses only its own `.env` files (e.g. when running `docker compose up` from `clients/memoon-card/`).
 - **Migrations**: `yarn migrate:clients` loads each client's `.env` for credentials. Use credentials that match the target Postgres (standalone = client's own DB, integrated = Portfolio's shared DB).
+
+**How to override environment variables:** See [CLIENT_ENVIRONMENT.md](./CLIENT_ENVIRONMENT.md) for the full resolution order, sub-.env structure (`backend/.env`, `frontend/.env`), and how to override values from the root `.env` or from discover-clients.
 
 ### Code Organization
 

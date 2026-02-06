@@ -93,7 +93,7 @@ When integrated with the Portfolio monorepo, run these **from the Portfolio root
 
 When you work inside this client directory (e.g. `clients/test-client/`) but the stack runs from the Portfolio root:
 
-| Task                                        | From client folder                                                                | From Portfolio root                                                           |
+| Task                                        | From test-client folder                                                           | From Portfolio root                                                           |
 |---------------------------------------------|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | **Rebuild** (after Dockerfile/deps changes) | `../../scripts/rebuild-client.sh` (auto-detects client)                           | `yarn clients:rebuild test-client`                                            |
 | **Rebuild + restart**                       | `../../scripts/rebuild-client.sh --restart`                                       | `yarn clients:rebuild test-client -- --restart`                               |

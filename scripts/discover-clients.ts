@@ -201,6 +201,9 @@ function generateDockerComposeServices(clients: DiscoveredClient[]): { services:
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=1
+      - CHOKIDAR_INTERVAL=1000
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=1000
       - BACKEND_URL=http://${backendServiceName}:${client.ports.backend}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:${client.ports.frontend} || exit 1"]
@@ -300,6 +303,9 @@ server {
     listen 443 ssl http2;
     server_name ${serverName};
 
+    # Ensure backend receives X-Forwarded-Proto for Secure cookies (client connected via HTTPS)
+    set $forwarded_proto https;
+
     # DNS resolver for dynamic service discovery
     # Docker's internal DNS (127.0.0.11) allows resolving service names
     resolver 127.0.0.11 valid=30s;
@@ -333,6 +339,7 @@ server {
 
     # API routes
     # Using variable in proxy_pass with resolver enables dynamic upstream resolution
+    # X-Forwarded-Proto required so backend sets Secure cookies when client used HTTPS
     location /api/ {
         limit_req zone=api burst=20 nodelay;
         proxy_pass http://$backend_upstream;
@@ -342,7 +349,8 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        proxy_set_header X-Forwarded-Host $host;
         proxy_cache_bypass $http_upgrade;
         proxy_connect_timeout 30s;
         proxy_send_timeout 30s;
@@ -358,7 +366,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
     }
 
     # Static files
@@ -367,7 +375,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
@@ -382,7 +390,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
         proxy_cache_bypass $http_upgrade;
         proxy_connect_timeout 30s;
         proxy_send_timeout 30s;
