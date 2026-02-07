@@ -348,10 +348,44 @@ git submodule update --init --recursive
 
 **How to override environment variables:** See [CLIENT_ENVIRONMENT.md](./CLIENT_ENVIRONMENT.md) for the full resolution order, sub-.env structure (`backend/.env`, `frontend/.env`), and how to override values from the root `.env` or from discover-clients.
 
+### Using Shared Packages
+
+Clients can depend on shared packages from `packages/` via Yarn workspaces.
+
+| Package | Purpose | When to use |
+|---------|---------|-------------|
+| `@portfolio/shared` | Shared utilities, constants, types | When you need common logic, validation, or types |
+| `@portfolio/i18n` | Internationalization (locale config, LocaleProvider, useTranslation, middleware) | When the client needs i18n with locale routing |
+
+**Version alignment**: Use the same package versions as the main portfolio when possible (e.g. Next.js 15.3.5, React ^19.2.0) to reduce compatibility issues.
+
+**Example (test-client)**:
+
+```json
+{
+  "dependencies": {
+    "@portfolio/i18n": "workspace:^",
+    "next": "15.3.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
+```
+
+**Shared i18n usage**:
+1. Call `initI18n(config)` in your root layout with app-specific config (storageKey, cookieName, languages, etc.)
+2. Add `[locale]` routing and middleware (see `clients/test-client/frontend/` as reference)
+3. Put translations in `public/locales/{locale}/{namespace}.json`
+4. Use `LocaleProvider`, `useLocale`, `useTranslation`, and `HtmlAttributes` from `@portfolio/i18n`
+
+**Copy-and-trim vs shared**: For clients that need early independence or different i18n structure, copy and trim the i18n logic into the client (as done for memoon-card). Plan for future extraction to `@portfolio/i18n` when patterns converge.
+
+**Docker**: When building client containers that depend on shared packages, run `yarn install` from the monorepo root so workspace links resolve. The Dockerfile should copy the necessary `packages/` and root `package.json`/`yarn.lock`, or use a multi-stage build that installs from root.
+
 ### Code Organization
 
 - **Client-specific code**: All code in `clients/{client-id}/`
-- **Shared utilities**: Use `packages/shared/` for reusable code
+- **Shared utilities**: Use `packages/shared/` and `packages/i18n/` for reusable code
 - **No cross-client dependencies**: Clients shouldn't import from each other
 - **Consistent structure**: Follow the same structure for all clients
 

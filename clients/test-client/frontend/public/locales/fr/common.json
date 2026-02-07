@@ -1,0 +1,11 @@
+{
+  "title": "Client de test",
+  "description": "Client de test simple pour le développement et les tests d'intégration.",
+  "status": {
+    "message": "Si vous voyez cette page, l'intégration du module partagé @portfolio/i18n fonctionne !",
+    "heading": "Statut",
+    "frontend": "Frontend : En cours d'exécution",
+    "backend": "Backend : Vérifier"
+  },
+  "language": "Langue"
+}
