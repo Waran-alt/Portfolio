@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 /**
  * Props for the ClientOnly component
@@ -25,6 +25,10 @@ interface ClientOnlyProps {
   /** Fallback content to show during server-side rendering */
   fallback?: React.ReactNode;
 }
+
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 /**
  * Client-only wrapper component for preventing hydration mismatches
@@ -57,15 +61,8 @@ interface ClientOnlyProps {
  * ```
  */
 export default function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
-  // Track whether the component has mounted on the client
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasMounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
-  // Set mounted state after component mounts on client
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  // Show fallback during SSR, children after client mount
   if (!hasMounted) {
     return <>{fallback}</>;
   }

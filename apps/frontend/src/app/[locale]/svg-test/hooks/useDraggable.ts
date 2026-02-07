@@ -261,7 +261,7 @@ export function useDraggable(
     document.body.style.cursor = 'grabbing';
 
     onDragStart?.(point, dragState.position);
-  }, [point, dragState.position, transform, onDragStart]);
+  }, [point, dragState.position, transform, onDragStart, svgRef]);
 
   /**
    * Handles drag movement.
@@ -306,7 +306,7 @@ export function useDraggable(
     }));
 
     onDragMove?.(point, newPosition);
-  }, [point, dragState.position, dragState.lastPointerPos, transform, minDragDistance, shouldSnapToGrid, gridSize, constraints, onDragMove]);
+  }, [point, dragState.position, dragState.lastPointerPos, transform, minDragDistance, shouldSnapToGrid, gridSize, constraints, onDragMove, svgRef]);
 
   /**
    * Handles the end of a drag interaction.

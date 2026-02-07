@@ -136,7 +136,7 @@ describe('useSvgPathEditor', () => {
       result.current.setPoints(prev => prev.map(p => p.id === 'pt-2-q1' ? { ...p, x: 330 } : p));
     });
     act(() => {
-      (result.current as any).updatePathFromPointsForPoint('pt-2-q1');
+      result.current.updatePathFromPointsForPoint('pt-2-q1');
     });
 
     const out = result.current.pathString;
@@ -157,7 +157,7 @@ describe('useSvgPathEditor', () => {
       result.current.setPoints(prev => prev.map(p => p.id === 'pt-1-q1' ? { ...p, x: 210 } : p));
     });
     act(() => {
-      (result.current as any).updatePathFromPointsForPoint('pt-1-q1');
+      result.current.updatePathFromPointsForPoint('pt-1-q1');
     });
 
     const out = result.current.pathString;
@@ -180,7 +180,7 @@ describe('useSvgPathEditor', () => {
       result.current.setPoints(prev => prev.map(p => p.id === 'pt-1-q1' ? { ...p, x: 210 } : p));
     });
     act(() => {
-      (result.current as any).updatePathFromPointsForPoint('pt-1-q1');
+      result.current.updatePathFromPointsForPoint('pt-1-q1');
     });
 
     const out = result.current.pathString;

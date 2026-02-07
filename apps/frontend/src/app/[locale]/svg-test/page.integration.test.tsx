@@ -31,20 +31,19 @@ jest.mock('svg-path-parser', () => ({
 
 // Mocking browser APIs that are not available in JSDOM
 if (typeof window !== 'undefined') {
+  const svgProto = window.SVGElement.prototype as unknown;
+  const proto = svgProto as Record<string, unknown>;
   // Mock getScreenCTM for SVG coordinate transformations
-  (window.SVGElement.prototype as any).getScreenCTM = function () {
+  proto['getScreenCTM'] = function () {
     return {
       a: 1, d: 1, e: 0, f: 0,
       inverse: function() {
-        return {
-          a: 1, d: 1, e: 0, f: 0,
-        };
-      }
+        return { a: 1, d: 1, e: 0, f: 0 };
+      },
     };
   };
-  
   // Mock createSVGPoint for creating SVG points
-  (window.SVGElement.prototype as any).createSVGPoint = function () {
+  proto['createSVGPoint'] = function () {
     const point = { x: 0, y: 0, matrixTransform: jest.fn() };
     point.matrixTransform = jest.fn().mockReturnValue(point);
     return point;

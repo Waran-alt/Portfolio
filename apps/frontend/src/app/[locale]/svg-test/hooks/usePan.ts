@@ -90,12 +90,12 @@ const KEYBOARD_PAN_STEP = 10;
 /**
  * Throttles function calls to improve performance.
  */
-function throttle<T extends (...args: any[]) => any>(
-  func: T,
+function throttle<T extends unknown[]>(
+  func: (...args: T) => void,
   delay: number
-): (...args: Parameters<T>) => void {
+): (...args: T) => void {
   let lastCall = 0;
-  return (...args: Parameters<T>) => {
+  return (...args: T) => {
     const now = Date.now();
     if (now - lastCall >= delay) {
       lastCall = now;
@@ -170,7 +170,7 @@ export function usePan(options: PanOptions = {}): UsePanReturn {
     onPanMove,
     onPanEnd,
     enableKeyboard = true,
-    enablePointerEvents = true,
+    enablePointerEvents: _enablePointerEvents = true,
     transform
   } = options;
 
@@ -190,15 +190,21 @@ export function usePan(options: PanOptions = {}): UsePanReturn {
   const panOffsetRef = React.useRef(initialOffset);
 
   // --- THROTTLED UPDATE FUNCTION ---
-  
-  const throttledPanUpdate = React.useCallback(
-    throttle((newOffset: { x: number; y: number }) => {
-      setPanState(prev => ({
-        ...prev,
-        throttledPanOffset: newOffset
-      }));
-    }, throttleInterval),
+
+  const throttledFn = React.useMemo(
+    () =>
+      throttle((newOffset: { x: number; y: number }) => {
+        setPanState(prev => ({
+          ...prev,
+          throttledPanOffset: newOffset
+        }));
+      }, throttleInterval),
     [throttleInterval]
+  );
+
+  const throttledPanUpdate = React.useCallback(
+    (newOffset: { x: number; y: number }) => throttledFn(newOffset),
+    [throttledFn]
   );
 
   // --- EVENT HANDLERS ---
@@ -404,7 +410,7 @@ export function usePan(options: PanOptions = {}): UsePanReturn {
     handlers.onMouseUp = () => {}; // Handled globally
 
     return handlers;
-  }, [handlePanStart, handleKeyDown, enableKeyboard, enablePointerEvents]);
+  }, [handlePanStart, handleKeyDown, enableKeyboard]);
 
   return {
     panState,

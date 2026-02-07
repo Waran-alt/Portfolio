@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Command as SVGCommand } from 'svg-path-parser';
 import * as parser from 'svg-path-parser';
 import type { Point } from '../types';
@@ -62,7 +62,7 @@ export function useSvgPathEditor(initialPath: string): UseSvgPathEditorApi {
   const [points, setPoints] = useState<Point[]>([]);
   const [segmentTypeToAppend, setSegmentTypeToAppend] = useState<string>('Q');
   const [isRelative, setIsRelative] = useState<boolean>(false);
-  const [isPathClosed, setIsPathClosed] = useState<boolean>(/z\s*$/i.test(initialPath.trim()));
+  const isPathClosed = /z\s*$/i.test(pathString.trim());
   const [isValid, setIsValid] = useState<boolean>(true);
 
   /**
@@ -76,7 +76,7 @@ export function useSvgPathEditor(initialPath: string): UseSvgPathEditorApi {
       const extractedPoints = extractPointsFromCommands(parsedCommands);
       setPoints(extractedPoints);
       setIsValid(true);
-    } catch (error) {
+    } catch {
       // Invalid path: clear points and mark invalid
       setPoints([]);
       setIsValid(false);
@@ -91,7 +91,6 @@ export function useSvgPathEditor(initialPath: string): UseSvgPathEditorApi {
   const setPathFromExample = (newPath: string) => {
     setPathString(newPath);
     setPendingPathString(newPath);
-    setIsPathClosed(/z\s*$/i.test(newPath.trim()));
   };
 
   /**
@@ -486,11 +485,6 @@ export function useSvgPathEditor(initialPath: string): UseSvgPathEditorApi {
       // ignore
     }
   };
-
-  // Keep checkbox in sync with actual rendered path
-  useEffect(() => {
-    setIsPathClosed(/z\s*$/i.test(pathString.trim()));
-  }, [pathString]);
 
   return {
     pathString,

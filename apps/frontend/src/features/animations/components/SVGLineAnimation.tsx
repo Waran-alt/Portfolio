@@ -2,7 +2,7 @@
 
 import { type SVGLineConfig } from '@/constants';
 import { animationLogger, componentLogger } from '@/utils/logger';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 interface SVGLineAnimationProps {
   isActive: boolean;
@@ -10,19 +10,22 @@ interface SVGLineAnimationProps {
   config: SVGLineConfig;
 }
 
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export default function SVGLineAnimation({ isActive, devMode = false, config }: SVGLineAnimationProps) {
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasMounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Component lifecycle logging
   useEffect(() => {
     componentLogger.component('SVGLineAnimation', 'mount', { isActive, devMode, config });
-    setHasMounted(true);
-    
+
     return () => {
       componentLogger.component('SVGLineAnimation', 'unmount');
     };
-  }, []);
+  }, [isActive, devMode, config]);
 
   useEffect(() => {
     if (!hasMounted || !isActive || !svgRef.current) {

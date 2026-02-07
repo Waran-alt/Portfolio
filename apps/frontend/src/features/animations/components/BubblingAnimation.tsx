@@ -44,6 +44,8 @@ interface Bubble {
   delay: number;
   opacity: number;
   direction: 'up' | 'down' | 'left' | 'right' | 'diagonal';
+  diagonalSignX?: number;
+  diagonalSignY?: number;
   // Liquid stain properties
   curves: number;
   irregularity: number;
@@ -99,7 +101,7 @@ export default function BubblingAnimation({
    * Generate a smooth liquid stain-like path using multiple approaches
    */
   const generateLiquidStainPath = (bubble: Bubble): string => {
-    const { size, curves, irregularity, rotation } = bubble;
+    const { size } = bubble;
     const centerX = size / 2;
     const centerY = size / 2;
     const baseRadius = size / 2;
@@ -156,9 +158,7 @@ export default function BubblingAnimation({
       // Calculate smooth control points
       const dx = next.x - current.x;
       const dy = next.y - current.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const controlDistance = distance * 0.4; // Smooth curve factor
-      
+
       const cp1x = current.x + dx * 0.5;
       const cp1y = current.y + dy * 0.5;
       const cp2x = next.x - dx * 0.5;
@@ -285,7 +285,8 @@ export default function BubblingAnimation({
    */
   const generateBubble = (id: number): Bubble => {
     const directions = ['up', 'down', 'left', 'right', 'diagonal'] as const;
-    
+    const direction = directions[Math.floor(Math.random() * directions.length)]!;
+
     return {
       id,
       x: randomBetween(0, dimensions.width),
@@ -294,7 +295,9 @@ export default function BubblingAnimation({
       duration: randomBetween(config.durationRange[0], config.durationRange[1]),
       delay: randomBetween(0, config.maxDelay),
       opacity: randomBetween(config.opacityRange[0], config.opacityRange[1]),
-      direction: directions[Math.floor(Math.random() * directions.length)]!,
+      direction,
+      diagonalSignX: direction === 'diagonal' ? (Math.random() > 0.5 ? 1 : -1) : undefined,
+      diagonalSignY: direction === 'diagonal' ? (Math.random() > 0.5 ? 1 : -1) : undefined,
       // Liquid stain properties - now configurable
       curves: Math.floor(randomBetween(config.liquidStain.curvesRange[0], config.liquidStain.curvesRange[1])),
       irregularity: randomBetween(config.liquidStain.irregularityRange[0], config.liquidStain.irregularityRange[1]),
@@ -333,6 +336,7 @@ export default function BubblingAnimation({
       const newBubbles = Array.from({ length: config.bubbleCount }, (_, index) => 
         generateBubble(index)
       );
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Generate random bubbles from dimensions/config (valid effect pattern)
       setBubbles(newBubbles);
       
       animationLogger.animation('Bubbling', 'bubbles generated', {
@@ -342,6 +346,7 @@ export default function BubblingAnimation({
         bubbleDurations: newBubbles.map(b => b.duration)
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- generateBubble changes every render; deps are sufficient
   }, [dimensions, config.bubbleCount, config.maxSize, config.minSize, config.durationRange, config.opacityRange]);
 
   /**
@@ -369,8 +374,8 @@ export default function BubblingAnimation({
         moveX = moveDistance;
         break;
       case 'diagonal':
-        moveX = moveDistance * (Math.random() > 0.5 ? 1 : -1);
-        moveY = moveDistance * (Math.random() > 0.5 ? 1 : -1);
+        moveX = moveDistance * (bubble.diagonalSignX ?? 1);
+        moveY = moveDistance * (bubble.diagonalSignY ?? 1);
         break;
     }
 

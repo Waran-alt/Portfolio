@@ -9,9 +9,15 @@ jest.mock('@/shared/components/ClientOnly', () => ({
 }));
 
 // Lightweight OverlayMenu that exposes handlers and current state
+interface OverlayMenuMockProps {
+  onToggleGlobalAnimation?: React.MouseEventHandler<HTMLButtonElement>;
+  onToggleDevMode?: React.MouseEventHandler<HTMLButtonElement>;
+  globalAnimationActive?: boolean;
+  devMode?: boolean;
+}
 jest.mock('@/shared/components/layout/OverlayMenu', () => ({
   __esModule: true,
-  default: (props: any) => (
+  default: (props: OverlayMenuMockProps) => (
     <div data-testid="overlay-menu">
       <button data-testid="toggle-global" onClick={props.onToggleGlobalAnimation}>
         Toggle Global

@@ -34,7 +34,7 @@ export default function ApiTest({ show = false }: ApiTestProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
-    data?: any;
+    data?: unknown;
     error?: string;
     url?: string;
   } | null>(null);
@@ -113,9 +113,9 @@ export default function ApiTest({ show = false }: ApiTestProps) {
                 URL: {result.url}
               </div>
             )}
-            {result.data && (
+            {result.data !== undefined && (
               <div className="text-xs opacity-80">
-                Response: {JSON.stringify(result.data, null, 2)}
+                Response: {JSON.stringify(result.data as object, null, 2)}
               </div>
             )}
             {result.error && (

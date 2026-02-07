@@ -47,6 +47,7 @@ interface Stain {
   curves: number;
   irregularity: number;
   rotation: number;
+  path: string;
 }
 
 /**
@@ -142,8 +143,7 @@ export default function StainAnimation({
    */
   const generateStain = (id: number): Stain => {
     const directions = ['up', 'down', 'left', 'right', 'diagonal'] as const;
-    
-    return {
+    const stainBase = {
       id,
       x: randomBetween(0, dimensions.width),
       y: randomBetween(0, dimensions.height),
@@ -152,11 +152,11 @@ export default function StainAnimation({
       delay: randomBetween(0, config.maxDelay),
       opacity: randomBetween(config.opacityRange[0], config.opacityRange[1]),
       direction: directions[Math.floor(Math.random() * directions.length)]!,
-      // Liquid stain properties - now configurable
       curves: Math.floor(randomBetween(config.liquidStain.curvesRange[0], config.liquidStain.curvesRange[1])),
       irregularity: randomBetween(config.liquidStain.irregularityRange[0], config.liquidStain.irregularityRange[1]),
       rotation: randomBetween(0, 2 * Math.PI)
     };
+    return { ...stainBase, path: generateLiquidStainPath(stainBase) };
   };
 
   /**
@@ -190,6 +190,7 @@ export default function StainAnimation({
       const newStains = Array.from({ length: config.stainCount }, (_, index) => 
         generateStain(index)
       );
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Generate random stains from dimensions/config (valid effect pattern)
       setStains(newStains);
       
       animationLogger.animation('Stain', 'stains generated', {
@@ -199,6 +200,7 @@ export default function StainAnimation({
         stainDurations: newStains.map(b => b.duration)
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- generateStain changes every render; deps are sufficient
   }, [dimensions, config.stainCount, config.maxSize, config.minSize, config.durationRange, config.opacityRange]);
 
   /**
@@ -287,7 +289,7 @@ export default function StainAnimation({
               </radialGradient>
             </defs>
             <path
-              d={generateLiquidStainPath(stain)}
+              d={stain.path}
               fill={`url(#stainGradient${stain.id})`}
               stroke="rgba(255, 255, 255, 0.1)"
               strokeWidth={config.liquidStain.strokeWidth}

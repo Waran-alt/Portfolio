@@ -76,7 +76,7 @@ class Logger {
     const performance = window.performance;
     if (!performance) return '';
     
-    const memory = (performance as any).memory;
+    const memory = (performance as Performance & { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
     if (memory) {
       return ` | Memory: ${Math.round(memory.usedJSHeapSize / 1024 / 1024)}MB/${Math.round(memory.jsHeapSizeLimit / 1024 / 1024)}MB`;
     }
@@ -87,7 +87,7 @@ class Logger {
   /**
    * Log a message with the specified level
    */
-  private log(level: LogLevel, message: string, data?: any): void {
+  private log(level: LogLevel, message: string, data?: unknown): void {
     if (level < this.config.minLevel) return;
 
     const timestamp = this.formatTimestamp();
@@ -113,28 +113,28 @@ class Logger {
   /**
    * Log debug information
    */
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: unknown): void {
     this.log(LogLevel.DEBUG, `[DEBUG] ${message}`, data);
   }
 
   /**
    * Log informational messages
    */
-  info(message: string, data?: any): void {
+  info(message: string, data?: unknown): void {
     this.log(LogLevel.INFO, `[INFO] ${message}`, data);
   }
 
   /**
    * Log warning messages
    */
-  warn(message: string, data?: any): void {
+  warn(message: string, data?: unknown): void {
     this.log(LogLevel.WARN, `[WARN] ${message}`, data);
   }
 
   /**
    * Log error messages
    */
-  error(message: string, error?: Error | any): void {
+  error(message: string, error?: Error | unknown): void {
     this.log(LogLevel.ERROR, `[ERROR] ${message}`, error);
     
     // In production, you might want to send errors to a monitoring service
@@ -146,7 +146,7 @@ class Logger {
   /**
    * Log animation-specific debug information
    */
-  animation(animationName: string, action: string, data?: any): void {
+  animation(animationName: string, action: string, data?: unknown): void {
     this.debug(`Animation [${animationName}] ${action}`, data);
   }
 
@@ -160,7 +160,7 @@ class Logger {
   /**
    * Log component lifecycle events
    */
-  component(componentName: string, lifecycle: 'mount' | 'update' | 'unmount', data?: any): void {
+  component(componentName: string, lifecycle: 'mount' | 'update' | 'unmount', data?: unknown): void {
     this.debug(`Component [${componentName}] ${lifecycle}`, data);
   }
 }

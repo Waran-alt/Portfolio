@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react';
 import { LocaleProvider } from '../../../../../i18n/LocaleContext';
 
 // Mutable current locale used by the mocked useLocale
-let currentLocale: any = 'aa';
+let currentLocale: string = 'aa';
 const setLocaleMock = jest.fn();
 
 jest.mock('../../../../../i18n/constants', () => ({
@@ -31,8 +31,9 @@ jest.mock('next/navigation', () => ({
 }));
 
 import LanguageSwitcher from './LanguageSwitcher';
+import { mockT } from '../test-utils/mockTranslation';
 
-const t = (key: string) => key; // simple translator stub
+const t = mockT;
 
 describe('LanguageSwitcher', () => {
   beforeEach(() => {
@@ -48,7 +49,7 @@ describe('LanguageSwitcher', () => {
 
     const { getByRole } = render(
       <LocaleProvider initialLocale={currentLocale}>
-        <LanguageSwitcher t={t as any} />
+        <LanguageSwitcher t={t} />
       </LocaleProvider>
     );
 
@@ -69,7 +70,7 @@ describe('LanguageSwitcher', () => {
 
     const { getByRole } = render(
       <LocaleProvider initialLocale={currentLocale}>
-        <LanguageSwitcher t={t as any} />
+        <LanguageSwitcher t={t} />
       </LocaleProvider>
     );
     const select = getByRole('combobox') as HTMLSelectElement;
@@ -87,7 +88,7 @@ describe('LanguageSwitcher', () => {
 
     const { getByRole } = render(
       <LocaleProvider initialLocale={currentLocale}>
-        <LanguageSwitcher t={t as any} />
+        <LanguageSwitcher t={t} />
       </LocaleProvider>
     );
     const select = getByRole('combobox') as HTMLSelectElement;
@@ -103,7 +104,7 @@ describe('LanguageSwitcher', () => {
 
     const { getByRole } = render(
       <LocaleProvider initialLocale={currentLocale}>
-        <LanguageSwitcher t={t as any} />
+        <LanguageSwitcher t={t} />
       </LocaleProvider>
     );
     const select = getByRole('combobox') as HTMLSelectElement;
@@ -118,7 +119,7 @@ describe('LanguageSwitcher', () => {
 
     const { getByRole } = render(
       <LocaleProvider initialLocale={currentLocale}>
-        <LanguageSwitcher t={t as any} />
+        <LanguageSwitcher t={t} />
       </LocaleProvider>
     );
     const select = getByRole('combobox') as HTMLSelectElement;

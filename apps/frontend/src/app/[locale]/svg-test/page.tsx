@@ -10,7 +10,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import '@/shared/styles/noselect.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocale } from 'i18n';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import ExampleSelector from './components/ExampleSelector';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import PathCommandBreakdown from './components/PathCommandBreakdown';
@@ -41,7 +41,8 @@ const SVGTestPage: React.FC = () => {
   const { t: tCommon } = useTranslation('common', currentLocale);
   
   // Client-only rendering guard to avoid hydration mismatches
-  const [isClient, setIsClient] = useState(false);
+  const emptySubscribe = useCallback(() => () => {}, []);
+  const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
   // State for the currently selected path example from the dropdown
   const [selectedExample, setSelectedExample] = useState<string>(DEFAULT_EXAMPLE_ID);
   const editor = useSvgPathEditor(examples[DEFAULT_EXAMPLE_ID]?.pathData ?? '');
@@ -140,11 +141,6 @@ const SVGTestPage: React.FC = () => {
   }, [editorPoints, draggingPoint, updatePathFromPoints, editor]);
 
   // Note: editor keeps isPathClosed in sync internally; no page-level effect needed
-
-  // Effect to guard against SSR issues by only rendering full component on the client
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   // Effect to preserve cursor position in the textarea during state updates
   useLayoutEffect(() => {

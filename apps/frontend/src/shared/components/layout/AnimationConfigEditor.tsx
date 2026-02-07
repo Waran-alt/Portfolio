@@ -142,12 +142,14 @@ export default function AnimationConfigEditor({ config, onConfigChange }: Animat
       hasChanges: JSON.stringify(config) !== JSON.stringify(localConfig)
     });
     
-    // Update local state if props changed
+    // Update local state if props changed (sync pattern for editable form)
     if (JSON.stringify(config) !== JSON.stringify(localConfig)) {
       console.log('🔍 AnimationConfigEditor: Syncing local state with props');
       animationLogger.animation('ConfigEditor', 'syncing local state with props');
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional sync of props to local editable state
       setLocalConfig(config);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- localConfig intentionally excluded to avoid sync loop
   }, [config]);
 
   // Track when local state changes
@@ -173,7 +175,7 @@ export default function AnimationConfigEditor({ config, onConfigChange }: Animat
       console.log('🔍 AnimationConfigEditor: Component unmounting');
       animationLogger.component('AnimationConfigEditor', 'unmount');
     };
-  }, []);
+  }, [config]);
 
   // =============================================================================
   // CONFIG UPDATE HELPERS

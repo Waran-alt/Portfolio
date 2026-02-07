@@ -3,7 +3,11 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 
 // Capture latest OverlayMenu props across renders for assertions and triggering handlers
-let lastOverlayMenuProps: any = null;
+interface OverlayMenuMockProps {
+  globalAnimationActive?: boolean;
+  devMode?: boolean;
+}
+let lastOverlayMenuProps: OverlayMenuMockProps | null = null;
 
 // Mock client-only wrapper to render children directly in tests
 jest.mock('@/shared/components/ClientOnly', () => ({
@@ -14,7 +18,7 @@ jest.mock('@/shared/components/ClientOnly', () => ({
 // Mock OverlayMenu to a lightweight component that records props
 jest.mock('@/shared/components/layout/OverlayMenu', () => ({
   __esModule: true,
-  default: (props: any) => {
+  default: (props: OverlayMenuMockProps) => {
     lastOverlayMenuProps = props;
     return <div data-testid="overlay-menu" />;
   },
@@ -46,8 +50,9 @@ describe('[locale]/animated-demo/page (HomePage)', () => {
 
     expect(lastOverlayMenuProps).toBeTruthy();
     // Defaults from component: backgroundActive=true, devMode=false
-    expect(lastOverlayMenuProps.globalAnimationActive).toBe(true);
-    expect(lastOverlayMenuProps.devMode).toBe(false);
+    const props = lastOverlayMenuProps as OverlayMenuMockProps;
+    expect(props.globalAnimationActive).toBe(true);
+    expect(props.devMode).toBe(false);
   });
 });
 
