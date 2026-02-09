@@ -28,7 +28,7 @@ fi
 echo ""
 echo "📦 Integrating client configurations..."
 
-# Generate client setup documentation (SETUP.md)
+# Generate client setup documentation (SETUP.portfolio-generated.md)
 echo "   Generating client setup documentation..."
 set +e
 yarn generate:client-setup

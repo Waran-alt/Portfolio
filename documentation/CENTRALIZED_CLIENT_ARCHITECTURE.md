@@ -35,7 +35,7 @@ Portfolio/
 │   ├── discover-clients.ts      # Auto-discovers clients
 │   ├── run-migrations.ts        # Runs Liquibase migrations
 │   ├── integrate-clients.sh     # Integrates configs
-│   └── generate-client-setup.ts # Generates SETUP.md files
+│   └── generate-client-setup.ts # Generates SETUP.portfolio-generated.md files
 │
 ├── .generated/                # Auto-generated configs (gitignored)
 │   ├── docker-compose.clients.yml
@@ -159,7 +159,7 @@ yarn discover:clients
 ./scripts/integrate-clients.sh
 
 # This:
-# - Generates .env.example and SETUP.md files for each client (with correct ports from client.config.json)
+# - Generates .env.example and SETUP.portfolio-generated.md files for each client (with correct ports from client.config.json)
 # - Updates .env with database names
 # - Prepares configs for Docker Compose and Nginx
 # - Verifies integration by checking generated files and Docker Compose syntax
@@ -392,7 +392,7 @@ Runs Liquibase migrations for a specific client.
 ### `./scripts/integrate-clients.sh`
 
 Integrates generated configs into the main project:
-- Generates `SETUP.md` files for each client (using `yarn generate:client-setup`)
+- Generates `SETUP.portfolio-generated.md` files for each client (using `yarn generate:client-setup`)
 - Updates `.env` with database names
 - Verifies integration by checking generated files exist
 - Validates Docker Compose syntax (if docker-compose is available)
@@ -401,7 +401,7 @@ Integrates generated configs into the main project:
 ### `yarn generate:client-setup`
 
 Generates setup documentation for all clients:
-- Creates `SETUP.md` file in each client directory with setup instructions
+- Creates `SETUP.portfolio-generated.md` file in each client directory with setup instructions
 - Includes environment variable template with correct ports from `client.config.json`
 - Uses `BASE_DOMAIN` environment variable (defaults to `yourdomain.com`)
 - Shows progress and summary of generated files

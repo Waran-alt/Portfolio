@@ -1,7 +1,7 @@
 {
-  "name": "@test-client/frontend",
+  "name": "@vat-man/frontend",
   "version": "1.0.0",
-  "description": "Simple frontend for test client",
+  "description": "VatMan - Winery vat management PWA",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,14 +11,22 @@
   },
   "dependencies": {
     "@portfolio/i18n": "workspace:^",
+    "konva": "^9.3.16",
+    "lucide-react": "^0.468.0",
     "next": "15.3.5",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-konva": "^18.2.10",
+    "use-image": "^1.1.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^25.0.8",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.9.3"
   },
   "engines": {

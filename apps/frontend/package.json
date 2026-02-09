@@ -31,7 +31,6 @@
     "playwright:install-deps": "playwright install-deps",
     "playwright:report": "playwright show-report",
     "clean": "rm -rf .next out dist",
-    "postinstall": "yarn dlx @yarnpkg/sdks vscode",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "analyze": "cross-env ANALYZE=true next build",

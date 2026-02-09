@@ -1,0 +1,29 @@
+{
+  "app": {
+    "title": "VatMan",
+    "subtitle": "Winery Vat Management"
+  },
+  "cellar": {
+    "title": "Cellar Plan",
+    "uploadBackground": "Upload background image (PNG/JPG)",
+    "noBackground": "No background - tap to upload cellar plan"
+  },
+  "vat": {
+    "label": "Vat",
+    "capacity": "Capacity",
+    "status": "Status",
+    "notes": "Notes",
+    "quickUpdate": "Quick Update"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "upload": "Upload"
+  },
+  "status": {
+    "empty": "Empty",
+    "inProgress": "In progress",
+    "full": "Full",
+    "cleaning": "Cleaning"
+  }
+}
