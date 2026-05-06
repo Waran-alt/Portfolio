@@ -35,18 +35,7 @@ else
   echo "Certificates already exist, skipping generation."
 fi
 
-# Step 2: Copy client Nginx configurations if they exist
-if [ -f "/app/.generated/nginx.clients.conf" ]; then
-  echo "Copying client Nginx configurations..."
-  cp /app/.generated/nginx.clients.conf /etc/nginx/conf.d/clients.conf
-  echo "✓ Client configurations integrated"
-else
-  echo "⚠️  No client configurations found (this is OK if no clients are configured)"
-  # Remove old clients.conf if it exists
-  rm -f /etc/nginx/conf.d/clients.conf
-fi
-
-# Step 3: Substitute environment variables in nginx config
+# Step 2: Substitute environment variables in nginx config
 echo "Substituting environment variables in nginx configuration..."
 # Default values
 FRONTEND_PORT=${FRONTEND_PORT}
@@ -60,5 +49,5 @@ sed -e "s|{{FRONTEND_PORT}}|$FRONTEND_PORT|g" \
     /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
 echo "Starting nginx..."
-# Step 4: Start nginx
+# Step 3: Start nginx
 exec nginx -g "daemon off;" 

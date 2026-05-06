@@ -75,11 +75,7 @@ make setup-env
 ### 2. Start Development Environment
 
 ```bash
-# Integrate clients (first time or after adding a client)
-yarn integrate
-yarn migrate:clients
-
-# Start all services (Portfolio + clients via Docker)
+# Start all services (portfolio via Docker)
 yarn start
 # or: make dev
 
@@ -88,7 +84,7 @@ yarn start
 
 ### Development
 ```bash
-# Docker (Portfolio + clients)
+# Docker (portfolio)
 yarn start          # Start containers
 yarn stop           # Stop containers
 yarn logs           # Stream logs
@@ -288,6 +284,16 @@ make prod-build
 # View production logs
 make prod-logs
 ```
+
+### Git deploy (VPS provider)
+
+If your VPS provider auto-deploys on every pushed commit, use the single-file compose setup:
+
+```bash
+docker compose -f docker-compose.deploy.yml up -d --build
+```
+
+In this mode, the portfolio containers bind to `127.0.0.1` and your VPS/provider reverse proxy handles `focus-on-pixel.com` and TLS.
 
 ### Production Features
 

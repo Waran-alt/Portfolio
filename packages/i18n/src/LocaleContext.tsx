@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { getBestLocale } from './utils.js';
-import { getLocaleFromStorage, saveLocaleToCookie, saveLocaleToStorage } from './storage.js';
+import { getBestLocale } from './utils';
+import { getLocaleFromStorage, saveLocaleToCookie, saveLocaleToStorage } from './storage';
 
 export type SupportedLocale = string;
 

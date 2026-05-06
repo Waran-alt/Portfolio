@@ -1,5 +1,5 @@
-import { getConfig } from './config.js';
-import type { SupportedLocale } from './utils.js';
+import { getConfig } from './config';
+import type { SupportedLocale } from './utils';
 
 export function saveLocaleToStorage(locale: SupportedLocale): boolean {
   try {

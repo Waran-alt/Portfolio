@@ -7,10 +7,10 @@
  * 3. Use middleware helpers for Next.js middleware
  */
 
-export { initI18n, getConfig, resetConfig } from './config.js';
-export type { I18nConfig, LanguageConfig } from './types.js';
-export { getBestLocale, getSupportedLocales, isSupportedLocale, getLanguageConfig } from './utils.js';
-export type { SupportedLocale } from './utils.js';
+export { initI18n, getConfig, resetConfig } from './config';
+export type { I18nConfig, LanguageConfig } from './types';
+export { getBestLocale, getSupportedLocales, isSupportedLocale, getLanguageConfig } from './utils';
+export type { SupportedLocale } from './utils';
 export {
   saveLocaleToStorage,
   getLocaleFromStorage,
@@ -19,7 +19,7 @@ export {
   getLocaleFromCookie,
   clearLocaleFromCookie,
   getLocaleFromCookieHeader,
-} from './storage.js';
+} from './storage';
 export {
   getLocaleFromPathname,
   getLocaleFromHeaders,
@@ -27,8 +27,8 @@ export {
   hasLocalePrefix,
   removeLocalePrefix,
   addLocalePrefix,
-} from './middleware.js';
-export { LocaleProvider, useLocale } from './LocaleContext.jsx';
-export { HtmlAttributes } from './HtmlAttributes.jsx';
-export { useTranslation } from './useTranslation.jsx';
-export type { TranslationFunction, InterpolationVariables } from './useTranslation.jsx';
+} from './middleware';
+export { LocaleProvider, useLocale } from './LocaleContext';
+export { HtmlAttributes } from './HtmlAttributes';
+export { useTranslation } from './useTranslation';
+export type { TranslationFunction, InterpolationVariables } from './useTranslation';

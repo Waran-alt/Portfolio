@@ -1,5 +1,5 @@
-import { getConfig } from './config.js';
-import type { LanguageConfig } from './types.js';
+import { getConfig } from './config';
+import type { LanguageConfig } from './types';
 
 export type SupportedLocale = string;
 

@@ -14,8 +14,8 @@ help: ## Show this help message
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-# Development commands (uses docker-stack.sh = Portfolio + Clients)
-dev: ## Start development environment (Portfolio + clients)
+# Development commands (portfolio only)
+dev: ## Start development environment (portfolio only)
 	@echo "Starting development environment..."
 	./scripts/docker-stack.sh up -d
 
@@ -48,7 +48,7 @@ prod-build: ## Build and start production environment
 prod-logs: ## Follow production logs
 	docker-compose -f docker-compose.prod.yml logs -f
 
-# General Docker commands (full stack = Portfolio + clients)
+# General Docker commands (portfolio only)
 build: ## Build all Docker images
 	./scripts/docker-stack.sh build
 
@@ -213,22 +213,6 @@ health: ## Check health of all services
 	@for service in frontend backend postgres nginx; do \
 		echo "$$service: $$(docker inspect --format='{{.State.Health.Status}}' portfolio_$${service}_dev 2>/dev/null || echo 'not running')"; \
 	done
-
-# Client integration
-integrate: ## Discover and integrate client projects
-	@echo "Discovering and integrating clients..."
-	yarn integrate
-	@echo "Run 'yarn migrate:clients' if clients have database migrations"
-
-# Rebuild a specific client (Usage: make rebuild-client CLIENT=memoon-card)
-rebuild-client: ## Rebuild client containers (CLIENT=memoon-card)
-	@if [ -z "$(CLIENT)" ]; then echo "Usage: make rebuild-client CLIENT=memoon-card"; exit 1; fi
-	./scripts/rebuild-client.sh $(CLIENT)
-
-# Rebuild and restart a specific client
-rebuild-client-restart: ## Rebuild and restart client (CLIENT=memoon-card)
-	@if [ -z "$(CLIENT)" ]; then echo "Usage: make rebuild-client-restart CLIENT=memoon-card"; exit 1; fi
-	./scripts/rebuild-client.sh $(CLIENT) --restart
 
 # Environment setup
 setup: ## Initial setup - create env files and start development

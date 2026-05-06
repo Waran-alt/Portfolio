@@ -3,9 +3,9 @@
  * Framework-agnostic: accepts Headers and URLSearchParams.
  */
 
-import { getConfig } from './config.js';
-import { getLocaleFromCookieHeader } from './storage.js';
-import { isSupportedLocale } from './utils.js';
+import { getConfig } from './config';
+import { getLocaleFromCookieHeader } from './storage';
+import { isSupportedLocale } from './utils';
 
 function getFirstPathSegment(pathname: string): string | undefined {
   const segments = pathname.split('/').filter(Boolean);

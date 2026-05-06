@@ -166,7 +166,6 @@ services:
     volumes:
       - ./tools/nginx/startup.sh:/usr/local/bin/startup.sh
       - nginx_ssl:/etc/nginx/ssl
-      - ./.generated:/app/.generated:ro
 
   # ============================================================================
   # PGADMIN (optional - use --profile pgadmin to enable)

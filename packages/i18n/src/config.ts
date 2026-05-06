@@ -3,7 +3,7 @@
  * Call initI18n(config) before using any i18n utilities.
  */
 
-import type { I18nConfig } from './types.js';
+import type { I18nConfig } from './types';
 
 let config: I18nConfig | null = null;
 

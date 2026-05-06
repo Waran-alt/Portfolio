@@ -6,14 +6,10 @@ This repository contains a comprehensive Docker setup for a Next.js portfolio ap
 
 ### 🚀 Quick Start
 ```bash
-# 1. Integrate clients (first time or after adding a client)
-yarn integrate
-yarn migrate:clients
-
-# 2. Start everything (Portfolio + Clients)
+# 1. Start the portfolio stack
 yarn start
 
-# 3. Check status / view logs
+# 2. Check status / view logs
 yarn status
 yarn logs
 ```
@@ -21,21 +17,11 @@ yarn logs
 ### 📦 Stack Commands (daily use)
 | Command               | Description                              |
 |-----------------------|------------------------------------------|
-| `yarn start`          | Start all services (Portfolio + clients) |
+| `yarn start`          | Start all services (portfolio only) |
 | `yarn start:pgadmin`  | Start with pgAdmin (DB web UI)           |
 | `yarn stop`           | Stop all services                        |
 | `yarn logs`           | Stream logs from all services            |
 | `yarn status`         | Show container status                    |
-
-### 🔧 Setup Commands
-| Command                                   | Description                                                   |
-|-------------------------------------------|---------------------------------------------------------------|
-| `yarn integrate`                          | Discover clients + run integration (generates `.generated/`)  |
-| `yarn migrate:clients`                    | Run database migrations for all clients                       |
-| `yarn discover:clients`                   | Discover clients only (generates compose/nginx configs)       |
-| `yarn check:clients`                      | Check for port/subdomain/database conflicts                   |
-| `yarn clients:rebuild <id>`               | Rebuild client containers (after Dockerfile/deps changes)     |
-| `yarn clients:rebuild <id> -- --restart`  | Rebuild + restart that client                                 |
 
 ### 🐳 Docker Commands
 | Command                         | Description                       |
@@ -61,7 +47,7 @@ yarn db:reset             # Portfolio reset
 
 # Logs for a specific service
 ./scripts/docker-stack.sh logs -f frontend
-./scripts/docker-stack.sh logs -f memoon-card-backend
+./scripts/docker-stack.sh logs -f backend
 ```
 
 ### 🗄️ Database Access
@@ -74,7 +60,7 @@ yarn db:reset             # Portfolio reset
 ```
 
 ### 🛠️ pgAdmin (optional)
-Start the stack with pgAdmin for a web UI to manage all databases (portfolio_db, client DBs):
+Start the stack with pgAdmin for a web UI to manage the portfolio database:
 
 ```bash
 yarn start:pgadmin
@@ -87,15 +73,15 @@ yarn start:pgadmin
   - **Host**: `postgres` (Docker service name)
   - **Port**: 5432
   - **Username** / **Password**: from root `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`)
-  - **Databases**: portfolio_db, memoon_card_db, test_client_db, etc.
+  - **Databases**: portfolio_db
 
-> **Note:** `start`, `stop`, `logs`, `status` and `docker:*` use `scripts/docker-stack.sh`, which automatically includes client services when `.generated/docker-compose.clients.yml` exists (created by `yarn integrate`).
+> **Note:** `start`, `stop`, `logs`, `status` and `docker:*` use `scripts/docker-stack.sh` which targets the portfolio stack (`docker-compose.yml`).
 
 ---
 
 ## 🏗️ Architecture Overview
 
-The application consists of **Portfolio services** and **Client services** (auto-discovered):
+The application consists of **portfolio services**:
 
 ### Portfolio Services
 - **Frontend**: Next.js application with TypeScript
@@ -103,52 +89,33 @@ The application consists of **Portfolio services** and **Client services** (auto
 - **Database**: PostgreSQL with initialization scripts
 - **Reverse Proxy**: Nginx for routing and SSL termination
 
-### Client Services (Auto-Discovered)
-- Each client in `clients/` directory gets:
-  - **Client Frontend**: Next.js application
-  - **Client Backend**: Express API server
-  - **Client Database**: Separate database in shared PostgreSQL instance
-
 ### Architecture Diagram
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │                     NGINX (Port 80/443)                        │
 │                   (Routes by server_name)                      │
-└──────────────┬──────────────────────────────┬──────────────────┘
-               │                              │
-       ┌───────┴────────┐           ┌─────────┴──────────┐
-       │                │           │                    │
-       ▼                ▼           ▼                    ▼
-┌──────────────┐  ┌──────────┐   ┌──────────┐      ┌──────────┐
-│  Portfolio   │  │ Client 1 │   │ Client 2 │ ...  │ Client N │
-│  Frontend    │  │ Frontend │   │ Frontend │      │ Frontend │
-└──────┬───────┘  └────┬─────┘   └────┬─────┘      └─────┬────┘
-       │               │              │                  │
-       ▼               ▼              ▼                  ▼
-┌──────────────┐  ┌──────────┐   ┌──────────┐      ┌──────────┐
-│  Portfolio   │  │ Client 1 │   │ Client 2 │ ...  │ Client N │
-│  Backend     │  │ Backend  │   │ Backend  │      │ Backend  │
-└──────┬───────┘  └────┬─────┘   └─────┬────┘      └─────┬────┘
-       │               │               │                 │
-       └───────────────┼───────────────┼─────────────────┘
-                       │               │
-                       ▼               ▼
-                  ┌─────────────────────────┐
-                  │   PostgreSQL (Shared)   │
-                  │  - portfolio_db         │
-                  │  - client1_db           │
-                  │  - client2_db           │
-                  │  - ...                  │
-                  └─────────────────────────┘
+└──────────────┬───────────────────────────────────────────────┘
+               │
+       ┌───────┴────────┐
+       │                │
+       ▼                ▼
+┌──────────────┐  ┌──────────────┐
+│  Portfolio   │  │  Portfolio   │
+│  Frontend    │  │  Backend     │
+└──────┬───────┘  └──────┬───────┘
+       │                 │
+       └────────────┬────┘
+                    ▼
+            ┌─────────────────┐
+            │   PostgreSQL    │
+            │  - portfolio_db │
+            └─────────────────┘
 ```
 
 **Key Points:**
 - All services run on the same Docker network (`portfolio_network`)
-- Nginx routes traffic based on domain/subdomain (`server_name`)
-- Each client has its own frontend and backend containers
-- All services share the same PostgreSQL instance (different databases)
-- Client services are auto-generated from `clients/` directory
+- Nginx routes traffic to the portfolio based on `server_name`
 
 ## 📋 Prerequisites
 
@@ -197,37 +164,23 @@ yarn logs
 
 # View logs for specific service
 ./scripts/docker-stack.sh logs -f frontend
-./scripts/docker-stack.sh logs -f memoon-card-frontend
+./scripts/docker-stack.sh logs -f backend
 
 # Access the application
 # Portfolio Frontend (via proxy): ${NGINX_URL}
 # Portfolio Backend API (via proxy): ${NGINX_URL}/api
-# Client Frontend (via proxy): https://${client.subdomain}.${BASE_DOMAIN}
-# Client Backend API (via proxy): https://${client.subdomain}.${BASE_DOMAIN}/api
 # Direct Portfolio Frontend (dev only): localhost:${FRONTEND_PORT}
 # Direct Portfolio Backend (dev only): localhost:${BACKEND_PORT}
-# Direct Client Frontend (dev only): localhost:${client.ports.frontend}
-# Direct Client Backend (dev only): localhost:${client.ports.backend}
 ```
 
-### 4. Production Setup
+### 3. Production Setup
 
 ```bash
-# Ensure clients are discovered and integrated
-yarn discover:clients
-./scripts/integrate-clients.sh
-
-# Build and start production services (Portfolio + Clients)
-docker-compose \
-  -f docker-compose.prod.yml \
-  -f .generated/docker-compose.clients.yml \
-  up -d
+# Build and start production services
+docker-compose -f docker-compose.prod.yml up -d
 
 # View production logs
-docker-compose \
-  -f docker-compose.prod.yml \
-  -f .generated/docker-compose.clients.yml \
-  logs -f
+docker-compose -f docker-compose.prod.yml logs -f
 ```
 
 ## 🔧 Environment Configuration
@@ -260,11 +213,8 @@ See `env.example` for complete configuration options.
 ### Starting Development Environment
 
 ```bash
-# Start all services (Portfolio + Clients)
-docker-compose \
-  -f docker-compose.yml \
-  -f .generated/docker-compose.clients.yml \
-  up -d
+# Start all services
+docker-compose -f docker-compose.yml up -d
 
 # Start specific Portfolio service
 docker-compose up -d frontend
@@ -272,9 +222,6 @@ docker-compose up -d backend
 docker-compose up -d postgres
 docker-compose up -d nginx
 
-# Start specific client service
-docker-compose -f .generated/docker-compose.clients.yml up -d memoon-card-frontend
-docker-compose -f .generated/docker-compose.clients.yml up -d memoon-card-backend
 ```
 
 ### Working with Individual Services
@@ -318,12 +265,10 @@ cat backup.sql | docker-compose exec -T postgres psql -U postgres -d portfolio_d
 
 ### Hot Reloading
 
-Both Portfolio and Client services support hot reloading in development:
+The portfolio services support hot reloading in development:
 
 - **Portfolio Frontend**: Next.js hot reloading via webpack-dev-server
 - **Portfolio Backend**: tsx watches for TypeScript changes with hot reload
-- **Client Frontends**: Same Next.js hot reloading
-- **Client Backends**: Same tsx hot reloading
 - **File watching**: Uses polling for cross-platform compatibility (CHOKIDAR_USEPOLLING=1)
 - **Volume mounts**: Source code mounted for live updates
 
@@ -350,6 +295,18 @@ docker-compose -f docker-compose.prod.yml build
 # Start production environment
 docker-compose -f docker-compose.prod.yml up -d
 ```
+
+### Git deploy (VPS provider)
+
+If your VPS provider runs a deploy on each commit pushed, prefer the single-file compose setup:
+
+```bash
+docker compose -f docker-compose.deploy.yml up -d --build
+```
+
+This deploy mode is portfolio-only and binds services to `127.0.0.1` (so they are not directly public). Use your VPS/provider reverse proxy to route `https://focus-on-pixel.com` → `127.0.0.1:${FRONTEND_PORT}` and `https://focus-on-pixel.com/api` → `127.0.0.1:${BACKEND_PORT}`.
+
+An example Nginx vhost you can drop into your proxy is available at `tools/nginx/examples/focus-on-pixel.com.conf`.
 
 ### Production Features
 

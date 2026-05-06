@@ -69,7 +69,6 @@ services:
           memory: 512M
         reservations:
           memory: 256M
-      replicas: 2
 
   # Frontend Service (Next.js)
   frontend:

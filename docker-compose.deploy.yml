@@ -1,0 +1,94 @@
+# Git-deploy friendly compose file (single file, portfolio-only).
+#
+# Intended use:
+# - You push a commit
+# - Your VPS provider runs `docker compose -f docker-compose.deploy.yml up -d --build`
+# - Your provider / VPS nginx handles: https://focus-on-pixel.com → 127.0.0.1:${FRONTEND_PORT}, and /api → 127.0.0.1:${BACKEND_PORT}
+#
+# Notes:
+# - Services bind to 127.0.0.1 so they aren't publicly exposed without a reverse proxy.
+# - No internal nginx container here by design (keep routing/TLS with the VPS/provider).
+#
+# Required env vars in the provider's deploy environment:
+# - POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+# - JWT_SECRET, SESSION_SECRET
+# - FRONTEND_PORT, BACKEND_PORT
+# - NEXT_PUBLIC_API_URL (e.g. https://focus-on-pixel.com/api)
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: portfolio_postgres_deploy
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./tools/database/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - portfolio_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+      target: production
+    image: portfolio-backend:latest
+    container_name: portfolio_backend_deploy
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${BACKEND_PORT:?Set BACKEND_PORT}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://focus-on-pixel.com}
+      CORS_CREDENTIALS: ${CORS_CREDENTIALS:-true}
+      # Used by healthchecks / logs; no internal nginx is run in this deploy mode.
+      NGINX_URL: http://127.0.0.1
+    ports:
+      - "127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - portfolio_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      target: runner
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL:-https://focus-on-pixel.com}
+    image: portfolio-frontend:latest
+    container_name: portfolio_frontend_deploy
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${FRONTEND_PORT:?Set FRONTEND_PORT}
+      HOSTNAME: "0.0.0.0"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL:-https://focus-on-pixel.com}
+      # Used by container healthcheck; no internal nginx is run in this deploy mode.
+      NGINX_URL: http://127.0.0.1
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT}:${FRONTEND_PORT}"
+    depends_on:
+      - backend
+    networks:
+      - portfolio_network
+
+volumes:
+  postgres_data:
+
+networks:
+  portfolio_network:
+    driver: bridge

@@ -14,10 +14,7 @@
     "apps/frontend",
     "apps/backend",
     "packages/*",
-    "tools/*",
-    "clients/*/frontend",
-    "clients/*/backend",
-    "clients/*/shared"
+    "tools/*"
   ],
   "packageManager": "yarn@4.12.0",
   "engines": {
@@ -40,7 +37,6 @@
     "stop": "./scripts/docker-stack.sh down",
     "logs": "./scripts/docker-stack.sh logs -f",
     "status": "./scripts/docker-stack.sh ps",
-    "integrate": "yarn discover:clients && ./scripts/integrate-clients.sh",
     "setup": "yarn install && yarn build",
     "setup:env": "./scripts/setup-env.sh",
     "prepare": "husky install",
@@ -77,15 +73,15 @@
     "start:backend": "yarn workspace @portfolio/backend start",
     "debug:frontend": "yarn workspace @portfolio/frontend debug",
     "debug:backend": "yarn workspace @portfolio/backend debug",
-    "discover:clients": "tsx scripts/discover-clients.ts",
-    "check:clients": "tsx scripts/check-client-conflicts.ts",
-    "migrate:clients": "tsx scripts/run-migrations.ts",
-    "generate:client-setup": "tsx scripts/generate-client-setup.ts",
-    "clients:discover": "yarn discover:clients",
-    "clients:check": "yarn check:clients",
-    "clients:integrate": "yarn integrate",
-    "clients:migrate": "yarn migrate:clients",
-    "clients:rebuild": "./scripts/rebuild-client.sh"
+    "discover:clients": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "check:clients": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "migrate:clients": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "generate:client-setup": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "clients:discover": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "clients:check": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "clients:integrate": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "clients:migrate": "echo \"clients are no longer managed from this repo\" && exit 1",
+    "clients:rebuild": "echo \"clients are no longer managed from this repo\" && exit 1"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",

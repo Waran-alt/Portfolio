@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getConfig } from './config.js';
-import { getBestLocale } from './utils.js';
+import { getConfig } from './config';
+import { getBestLocale } from './utils';
 
 /**
  * Translation data structure.

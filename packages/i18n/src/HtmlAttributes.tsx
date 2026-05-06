@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getConfig } from './config.js';
-import { useLocale } from './LocaleContext.jsx';
+import { getConfig } from './config';
+import { useLocale } from './LocaleContext';
 
 export function HtmlAttributes(): null {
   const { locale } = useLocale();

@@ -17,6 +17,79 @@ function hasMigrations(config: DiscoveredClient): boolean {
   return existsSync(join(config.migrationsPath, 'changelog.xml'));
 }
 
+function hasFrontend(config: DiscoveredClient): boolean {
+  return existsSync(join(config.path, 'frontend'));
+}
+
+function hasBackend(config: DiscoveredClient): boolean {
+  return existsSync(join(config.path, 'backend'));
+}
+
+/**
+ * Generate root env.example content
+ */
+function generateRootEnvExample(config: DiscoveredClient): string {
+  return `# =============================================================================
+# ${config.name} – Root (shared env)
+# =============================================================================
+# Copy to .env at ${config.id} root. Docker Compose reads this when run locally.
+# Frontend/backend specific vars: see frontend/env.example and backend/env.example
+
+NODE_ENV=development
+FRONTEND_PORT=${config.ports.frontend}
+BACKEND_PORT=${config.ports.backend}
+`;
+}
+
+/**
+ * Generate frontend env.example content
+ */
+function generateFrontendEnvExample(config: DiscoveredClient): string {
+  const nginxUrl = `https://${config.subdomain}.localhost`;
+  return `# =============================================================================
+# ${config.name} – Frontend
+# =============================================================================
+# Copy to .env or .env.local in frontend folder.
+# Use the Nginx URL so API calls go through the reverse proxy (same origin).
+# For direct backend: http://localhost:${config.ports.backend}
+
+NEXT_PUBLIC_API_URL=${nginxUrl}
+`;
+}
+
+/**
+ * Generate backend env.example content
+ */
+function generateBackendEnvExample(config: DiscoveredClient): string {
+  const dbUser = config.database.user || 'postgres';
+  const nginxUrl = `https://${config.subdomain}.localhost`;
+  return `# =============================================================================
+# ${config.name} – Backend
+# =============================================================================
+# Copy to .env in backend folder.
+
+# -----------------------------------------------------------------------------
+# CORS (allowed frontend origins)
+# -----------------------------------------------------------------------------
+CORS_ORIGIN=${nginxUrl}
+# CORS_ORIGINS=http://localhost:${config.ports.frontend},${nginxUrl}
+
+# -----------------------------------------------------------------------------
+# Database
+# -----------------------------------------------------------------------------
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=${config.database.name}
+POSTGRES_USER=${dbUser}
+POSTGRES_PASSWORD=postgres
+
+# -----------------------------------------------------------------------------
+# Liquibase (optional)
+# -----------------------------------------------------------------------------
+# DATABASE_URL=jdbc:postgresql://localhost:5432/${config.database.name}
+`;
+}
+
 /**
  * Generate SETUP.portfolio-generated.md content with environment variable instructions
  * @param config - Client configuration from discoverClients
@@ -45,39 +118,11 @@ Quick setup guide for ${config.name} application.
 
 ## Environment Setup
 
-Create a \`.env\` file in the client root directory with the following variables:
+Copy the env example files to \`.env\` in each folder:
 
-\`\`\`bash
-# =============================================================================
-# APPLICATION
-# =============================================================================
-NODE_ENV=development
-
-# =============================================================================
-# FRONTEND
-# =============================================================================
-FRONTEND_PORT=${config.ports.frontend}
-NEXT_PUBLIC_API_URL=http://localhost:${config.ports.backend}
-
-# =============================================================================
-# BACKEND
-# =============================================================================
-BACKEND_PORT=${config.ports.backend}
-
-# =============================================================================
-# DATABASE
-# =============================================================================
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=${config.database.name}
-POSTGRES_USER=${dbUser}
-POSTGRES_PASSWORD=postgres
-
-# =============================================================================
-# DATABASE CONNECTION (for Liquibase, optional)
-# =============================================================================
-# DATABASE_URL=jdbc:postgresql://localhost:5432/${config.database.name}
-\`\`\`
+- \`env.example\` → root \`.env\` (NODE_ENV, FRONTEND_PORT, BACKEND_PORT)
+- \`frontend/env.example\` → \`frontend/.env\` or \`frontend/.env.local\` (NEXT_PUBLIC_API_URL)
+- \`backend/env.example\` → \`backend/.env\` (POSTGRES_*, DATABASE_URL)
 
 **Important Notes:**
 - Update \`POSTGRES_PASSWORD\` with a secure password
@@ -186,13 +231,42 @@ export async function generateClientSetup(): Promise<{
     for (const client of clients) {
       try {
         const setupFilename = 'SETUP.portfolio-generated.md';
-        console.log(`Generating ${setupFilename} for ${client.name} (${client.id})...`);
+        console.log(`Generating setup for ${client.name} (${client.id})...`);
         
+        const actions: string[] = [];
+        
+        // SETUP.portfolio-generated.md: always create or update.portfolio-generated files
         const setupMdPath = join(client.path, setupFilename);
-        const setupMdContent = generateSetupMd(client, baseDomain);
-        await writeFile(setupMdPath, setupMdContent, 'utf-8');
+        const setupExisted = existsSync(setupMdPath);
+        await writeFile(setupMdPath, generateSetupMd(client, baseDomain), 'utf-8');
+        actions.push(setupExisted ? `updated ${setupFilename}` : `created ${setupFilename}`);
         
-        console.log(`✓ ${client.name}: Generated ${setupFilename}`);
+        // env.example files: only create if they don't exist
+        const rootEnvPath = join(client.path, 'env.example');
+        if (!existsSync(rootEnvPath)) {
+          await writeFile(rootEnvPath, generateRootEnvExample(client), 'utf-8');
+          actions.push('created env.example');
+        }
+        if (hasFrontend(client)) {
+          const frontendEnvPath = join(client.path, 'frontend', 'env.example');
+          if (!existsSync(frontendEnvPath)) {
+            await writeFile(frontendEnvPath, generateFrontendEnvExample(client), 'utf-8');
+            actions.push('created frontend/env.example');
+          }
+        }
+        if (hasBackend(client)) {
+          const backendEnvPath = join(client.path, 'backend', 'env.example');
+          if (!existsSync(backendEnvPath)) {
+            await writeFile(backendEnvPath, generateBackendEnvExample(client), 'utf-8');
+            actions.push('created backend/env.example');
+          }
+        }
+        
+        if (actions.length > 0) {
+          console.log(`✓ ${client.name}: ${actions.join(', ')}`);
+        } else {
+          console.log(`✓ ${client.name}: No changes (all files exist, .portfolio-generated skipped)`);
+        }
         
         results.push({
           clientId: client.id,
