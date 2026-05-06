@@ -170,7 +170,6 @@ export function usePan(options: PanOptions = {}): UsePanReturn {
     onPanMove,
     onPanEnd,
     enableKeyboard = true,
-    enablePointerEvents: _enablePointerEvents = true,
     transform
   } = options;
 
