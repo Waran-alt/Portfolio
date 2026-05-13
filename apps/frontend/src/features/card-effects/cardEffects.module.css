@@ -1,0 +1,466 @@
+/**
+ * Reusable tilt + holo foil + title-mark depth helpers.
+ * Pair with `useCardTiltAndFoil` on a host that sets the same custom properties.
+ *
+ * Title-mark `translateZ` depth: intermediate flex/layout ancestors default to
+ * `transform-style: flat` and flatten stacked marks — see README.md in this folder
+ * (title marks + corner flip chip, parallax order, hover keyframes).
+ *
+ * On `.tiltArea` (or any element you drive from JS):
+ * - `--foil-rotate-front` / `--foil-rotate-back`: conic “from” angle (deg).
+ * - `--foil-at-x` / `--foil-at-y`: conic center.
+ * - `--foil-halo-x` / `--foil-halo-y` / `--foil-halo-r`: cursor halo for masked foils.
+ * - `--tilt-x` / `--tilt-y`: smoothed tilt (deg) for parallax children.
+ */
+
+.tiltArea {
+  position: relative;
+  perspective: 1200px;
+  perspective-origin: 50% 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  --foil-at-x: 108%;
+  --foil-at-y: -8%;
+  --foil-rotate-front: 32;
+  --foil-rotate-back: 12;
+  --foil-halo-x: 50%;
+  --foil-halo-y: 50%;
+  --foil-halo-r: 0px;
+  --tilt-x: 0;
+  --tilt-y: 0;
+}
+
+.tiltLayer {
+  position: relative;
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.tiltLayerHot {
+  will-change: transform;
+}
+
+.parallaxTiltHost {
+  transform-style: preserve-3d;
+  transform: translateZ(18px) rotateX(calc(var(--tilt-y) * 0.22deg)) rotateY(calc(var(--tilt-x) * 0.28deg));
+  will-change: transform;
+  overflow: visible;
+}
+
+/* --- SVG / foreignObject holo (title marks) --- */
+
+.markFoilHost {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.markFoilBg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(155deg, #1e293b 0%, #0f172a 50%, #020617 100%);
+  opacity: 1;
+}
+
+.markFoilAmbient {
+  --foil-angle: var(--foil-rotate-front);
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: color-dodge;
+  filter: saturate(1.18) contrast(1.04);
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0,
+      transparent 2px,
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(255, 255, 255, 0.04) 3px
+    ),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0,
+      transparent 6px,
+      rgba(255, 255, 255, 0.025) 6px,
+      rgba(255, 255, 255, 0.025) 7px
+    ),
+    conic-gradient(
+      from calc(var(--foil-angle) * 1deg) at var(--foil-at-x) var(--foil-at-y),
+      rgba(168, 85, 247, 0) 0deg,
+      rgba(56, 189, 248, 0.35) 55deg,
+      rgba(251, 191, 36, 0.3) 115deg,
+      rgba(244, 114, 182, 0.32) 175deg,
+      rgba(129, 140, 248, 0.28) 235deg,
+      rgba(45, 212, 191, 0.25) 295deg,
+      rgba(168, 85, 247, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
+}
+
+.markFoilMasked {
+  --foil-angle: var(--foil-rotate-front);
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  opacity: 0.32;
+  mix-blend-mode: color-dodge;
+  filter: saturate(1.26) contrast(1.06);
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0,
+      transparent 2px,
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(255, 255, 255, 0.04) 3px
+    ),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0,
+      transparent 6px,
+      rgba(255, 255, 255, 0.025) 6px,
+      rgba(255, 255, 255, 0.025) 7px
+    ),
+    conic-gradient(
+      from calc(var(--foil-angle) * 1deg) at var(--foil-at-x) var(--foil-at-y),
+      rgba(168, 85, 247, 0) 0deg,
+      rgba(56, 189, 248, 0.35) 55deg,
+      rgba(251, 191, 36, 0.3) 115deg,
+      rgba(244, 114, 182, 0.32) 175deg,
+      rgba(129, 140, 248, 0.28) 235deg,
+      rgba(45, 212, 191, 0.25) 295deg,
+      rgba(168, 85, 247, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
+  -webkit-mask-image: radial-gradient(
+    circle var(--foil-halo-r) at var(--foil-halo-x) var(--foil-halo-y),
+    #000 0%,
+    #000 22%,
+    rgba(0, 0, 0, 0.42) 40%,
+    rgba(0, 0, 0, 0.2) 58%,
+    rgba(0, 0, 0, 0.06) 78%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--foil-halo-r) at var(--foil-halo-x) var(--foil-halo-y),
+    #000 0%,
+    #000 22%,
+    rgba(0, 0, 0, 0.42) 40%,
+    rgba(0, 0, 0, 0.2) 58%,
+    rgba(0, 0, 0, 0.06) 78%,
+    transparent 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.markDetachedFloat {
+  transform: translateZ(40px);
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 28px 20px rgb(0 0 0 / 0.32)) drop-shadow(0 14px 10px rgb(0 0 0 / 0.22))
+    drop-shadow(0 6px 4px rgb(0 0 0 / 0.18));
+}
+
+.markDetachedFloatLiftStrong {
+  transform: translateZ(55px);
+}
+
+.markLayered {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.markLayeredOffsetY {
+  transform: translate3d(0, 6px, 0);
+  transform-style: preserve-3d;
+}
+
+.markSurfaceShadow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform: translateZ(0);
+  filter: blur(3px);
+  opacity: 0.7;
+}
+
+/* --- Full-card foils (faces, chips) --- */
+
+.foil {
+  --foil-angle: var(--foil-rotate-front);
+  pointer-events: none;
+  position: absolute;
+  inset: -20%;
+  border-radius: inherit;
+  z-index: 1;
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0,
+      transparent 2px,
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(255, 255, 255, 0.04) 3px
+    ),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0,
+      transparent 6px,
+      rgba(255, 255, 255, 0.025) 6px,
+      rgba(255, 255, 255, 0.025) 7px
+    ),
+    conic-gradient(
+      from calc(var(--foil-angle) * 1deg) at var(--foil-at-x) var(--foil-at-y),
+      rgba(168, 85, 247, 0) 0deg,
+      rgba(56, 189, 248, 0.35) 55deg,
+      rgba(251, 191, 36, 0.3) 115deg,
+      rgba(244, 114, 182, 0.32) 175deg,
+      rgba(129, 140, 248, 0.28) 235deg,
+      rgba(45, 212, 191, 0.25) 295deg,
+      rgba(168, 85, 247, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
+  -webkit-mask-image: radial-gradient(
+    circle var(--foil-halo-r) at var(--foil-halo-x) var(--foil-halo-y),
+    #000 0%,
+    #000 22%,
+    rgba(0, 0, 0, 0.42) 40%,
+    rgba(0, 0, 0, 0.2) 58%,
+    rgba(0, 0, 0, 0.06) 78%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--foil-halo-r) at var(--foil-halo-x) var(--foil-halo-y),
+    #000 0%,
+    #000 22%,
+    rgba(0, 0, 0, 0.42) 40%,
+    rgba(0, 0, 0, 0.2) 58%,
+    rgba(0, 0, 0, 0.06) 78%,
+    transparent 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.foilFront {
+  opacity: 0.24;
+  mix-blend-mode: overlay;
+  filter: saturate(1.15) contrast(1.02);
+}
+
+.foilFrontAmbient {
+  --foil-angle: var(--foil-rotate-front);
+  pointer-events: none;
+  position: absolute;
+  inset: -20%;
+  border-radius: inherit;
+  z-index: 1;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  filter: saturate(1.12) contrast(1.01);
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0,
+      transparent 2px,
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(255, 255, 255, 0.04) 3px
+    ),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0,
+      transparent 6px,
+      rgba(255, 255, 255, 0.025) 6px,
+      rgba(255, 255, 255, 0.025) 7px
+    ),
+    conic-gradient(
+      from calc(var(--foil-angle) * 1deg) at var(--foil-at-x) var(--foil-at-y),
+      rgba(168, 85, 247, 0) 0deg,
+      rgba(56, 189, 248, 0.35) 55deg,
+      rgba(251, 191, 36, 0.3) 115deg,
+      rgba(244, 114, 182, 0.32) 175deg,
+      rgba(129, 140, 248, 0.28) 235deg,
+      rgba(45, 212, 191, 0.25) 295deg,
+      rgba(168, 85, 247, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
+}
+
+.foilFrontSecondaryAmbient {
+  pointer-events: none;
+  position: absolute;
+  inset: -20%;
+  border-radius: inherit;
+  z-index: 1;
+  opacity: 0.1;
+  mix-blend-mode: soft-light;
+  filter: saturate(1.1) contrast(1.01);
+  background:
+    repeating-linear-gradient(
+      72deg,
+      transparent 0,
+      transparent 1px,
+      rgba(255, 255, 255, 0.035) 1px,
+      rgba(255, 255, 255, 0.035) 2px
+    ),
+    repeating-linear-gradient(
+      -12deg,
+      transparent 0,
+      transparent 5px,
+      rgba(15, 23, 42, 0.02) 5px,
+      rgba(15, 23, 42, 0.02) 6px
+    ),
+    conic-gradient(
+      from calc(122deg - var(--foil-rotate-front) * 1deg) at var(--foil-2-at-x) var(--foil-2-at-y),
+      rgba(236, 72, 153, 0) 0deg,
+      rgba(99, 102, 241, 0.32) 48deg,
+      rgba(34, 211, 238, 0.28) 102deg,
+      rgba(250, 204, 21, 0.26) 158deg,
+      rgba(167, 139, 250, 0.3) 212deg,
+      rgba(52, 211, 153, 0.22) 268deg,
+      rgba(236, 72, 153, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
+}
+
+.foilFrontSecondary {
+  pointer-events: none;
+  position: absolute;
+  inset: -20%;
+  border-radius: inherit;
+  z-index: 1;
+  opacity: 0.2;
+  mix-blend-mode: soft-light;
+  filter: saturate(1.2) contrast(1.03);
+  background:
+    repeating-linear-gradient(
+      72deg,
+      transparent 0,
+      transparent 1px,
+      rgba(255, 255, 255, 0.035) 1px,
+      rgba(255, 255, 255, 0.035) 2px
+    ),
+    repeating-linear-gradient(
+      -12deg,
+      transparent 0,
+      transparent 5px,
+      rgba(15, 23, 42, 0.02) 5px,
+      rgba(15, 23, 42, 0.02) 6px
+    ),
+    conic-gradient(
+      from calc(122deg - var(--foil-rotate-front) * 1deg) at var(--foil-2-at-x) var(--foil-2-at-y),
+      rgba(236, 72, 153, 0) 0deg,
+      rgba(99, 102, 241, 0.32) 48deg,
+      rgba(34, 211, 238, 0.28) 102deg,
+      rgba(250, 204, 21, 0.26) 158deg,
+      rgba(167, 139, 250, 0.3) 212deg,
+      rgba(52, 211, 153, 0.22) 268deg,
+      rgba(236, 72, 153, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
+  -webkit-mask-image: radial-gradient(
+    circle var(--foil-halo-r) at var(--foil-halo-x) var(--foil-halo-y),
+    #000 0%,
+    #000 20%,
+    rgba(0, 0, 0, 0.38) 38%,
+    rgba(0, 0, 0, 0.18) 56%,
+    rgba(0, 0, 0, 0.05) 76%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--foil-halo-r) at var(--foil-halo-x) var(--foil-halo-y),
+    #000 0%,
+    #000 20%,
+    rgba(0, 0, 0, 0.38) 38%,
+    rgba(0, 0, 0, 0.18) 56%,
+    rgba(0, 0, 0, 0.05) 76%,
+    transparent 100%
+  );
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.foilBack {
+  --foil-angle: var(--foil-rotate-back);
+  opacity: 0.3;
+  mix-blend-mode: color-dodge;
+  filter: saturate(1.25) contrast(1.05);
+}
+
+.foilBackAmbient {
+  --foil-angle: var(--foil-rotate-back);
+  pointer-events: none;
+  position: absolute;
+  inset: -20%;
+  border-radius: inherit;
+  z-index: 1;
+  opacity: 0.14;
+  mix-blend-mode: color-dodge;
+  filter: saturate(1.12) contrast(1.02);
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0,
+      transparent 2px,
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(255, 255, 255, 0.04) 3px
+    ),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0,
+      transparent 6px,
+      rgba(255, 255, 255, 0.025) 6px,
+      rgba(255, 255, 255, 0.025) 7px
+    ),
+    conic-gradient(
+      from calc(var(--foil-angle) * 1deg) at var(--foil-at-x) var(--foil-at-y),
+      rgba(168, 85, 247, 0) 0deg,
+      rgba(56, 189, 248, 0.35) 55deg,
+      rgba(251, 191, 36, 0.3) 115deg,
+      rgba(244, 114, 182, 0.32) 175deg,
+      rgba(129, 140, 248, 0.28) 235deg,
+      rgba(45, 212, 191, 0.25) 295deg,
+      rgba(168, 85, 247, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
+}
+
+.foilChipUsesFrontAngle {
+  --foil-angle: var(--foil-rotate-front);
+}
+
+.foilPaused {
+  content-visibility: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foilFront {
+    opacity: 0.16;
+  }
+
+  .foilFrontSecondary {
+    opacity: 0.11;
+  }
+
+  .foilFrontAmbient {
+    opacity: 0.07;
+  }
+
+  .foilFrontSecondaryAmbient {
+    opacity: 0.05;
+  }
+
+  .foilBack {
+    opacity: 0.2;
+  }
+
+  .foilBackAmbient {
+    opacity: 0.07;
+  }
+}
