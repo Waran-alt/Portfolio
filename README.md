@@ -298,15 +298,19 @@ For a **private** repo, add a [Hostinger deploy SSH key](https://www.hostinger.c
 
 **Nginx on the VPS:** use `tools/nginx/examples/focus-on-pixel.com.conf` as a starting point, then Certbot (or Hostinger SSL) and `nginx -t` / reload. Do not reuse another app’s ports on the same host (e.g. keep this landing on **3000** if another stack uses **3002** / **4002**).
 
-**Manual deploy on the VPS:**
+**Manual deploy on the VPS** (project directory is often `/docker/portfolio`; Hostinger may materialize the file as `docker-compose.yml` rather than `docker-compose.deploy.yml`):
 
 ```bash
-docker compose -f docker-compose.deploy.yml up -d --build
+cd /docker/portfolio
+docker compose build --no-cache frontend
+docker compose up -d
 ```
+
+If the compose file is still named `docker-compose.deploy.yml`, use `docker compose -f docker-compose.deploy.yml` instead.
 
 **Checks:** `https://focus-on-pixel.com/fr` (landing). If the site does not update after a push, inspect the Hostinger build log on the VPS (often `.build.log` under the project directory) and `docker logs portfolio_frontend_deploy`.
 
-**If the Hostinger project exists but the container is not running:** on the VPS, `docker ps` only lists running containers. Use `docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -i portfolio` and `docker logs --tail 80 portfolio_frontend_deploy`. A status `Exited` usually means the image build failed on an older commit, `server.js` was started from the wrong path, or port `3000` is already bound on `127.0.0.1`. Confirm the latest `main` deploy finished in GitHub Actions, then redeploy. Manual recovery from the Hostinger project directory (often `/docker/portfolio`): `docker compose -f docker-compose.deploy.yml up -d --build`.
+**If the Hostinger project exists but the container is not running:** on the VPS, `docker ps` only lists running containers. Use `docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -i portfolio` and `docker logs --tail 80 portfolio_frontend_deploy`. A status `Exited` usually means the image build failed on an older commit, `server.js` was started from the wrong path, or port `3000` is already bound on `127.0.0.1`. If `.build.log` shows `pull access denied` for `portfolio-frontend:latest`, the deploy tried to pull a local image from Docker Hub—redeploy from a commit that sets `pull_policy: build` on the frontend service, or run the manual `docker compose build` commands above. Confirm the latest `main` deploy finished in GitHub Actions, then redeploy.
 
 ### Full stack (API + database)
 
