@@ -29,6 +29,6 @@ jobs:
           docker-compose-path: docker-compose.deploy.yml
           environment-variables: |
             NODE_ENV=production
-            FRONTEND_PORT=${{ vars.FRONTEND_PORT }}
+            FRONTEND_PORT=${{ vars.FRONTEND_PORT || '3000' }}
             NEXT_PUBLIC_FRONTEND_URL=${{ vars.NEXT_PUBLIC_FRONTEND_URL }}
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}

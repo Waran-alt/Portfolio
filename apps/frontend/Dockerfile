@@ -2,7 +2,7 @@
 FROM node:22-alpine AS base
 
 # Install Yarn 4.x (the Alpine image comes with Yarn 1.x)
-RUN corepack enable && corepack prepare yarn@4.10.3 --activate
+RUN corepack enable && corepack prepare yarn@4.12.0 --activate
 
 # Shared context stage - copy monorepo files once
 FROM base AS workspace-setup
@@ -16,7 +16,9 @@ COPY .yarnrc.yml ./
 COPY .yarn ./yarn
 COPY package.json ./package.json
 COPY apps/frontend/package.json ./apps/frontend/package.json
+COPY apps/backend/package.json ./apps/backend/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
+COPY packages/i18n/package.json ./packages/i18n/package.json
 
 # Install dependencies only when needed
 FROM workspace-setup AS deps
@@ -41,6 +43,7 @@ WORKDIR /app
 
 # Copy frontend source files
 COPY apps/frontend/src ./apps/frontend/src
+COPY apps/frontend/i18n ./apps/frontend/i18n
 COPY apps/frontend/tsconfig.json ./apps/frontend/tsconfig.json
 COPY apps/frontend/next.config.js ./apps/frontend/next.config.js
 COPY apps/frontend/next-env.d.ts ./apps/frontend/next-env.d.ts
@@ -73,30 +76,31 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Security: Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Security: Install dumb-init and wget for the container health check
+RUN apk add --no-cache dumb-init wget
 
-COPY --from=frontend-builder /app/apps/frontend/public ./public
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/apps/frontend/.next/standalone ./
+COPY --from=frontend-builder --chown=nextjs:nodejs /app/apps/frontend/.next/static ./apps/frontend/.next/static
+COPY --from=frontend-builder --chown=nextjs:nodejs /app/apps/frontend/public ./apps/frontend/public
 
 # Security: Switch to non-root user
 USER nextjs
 
-EXPOSE ${FRONTEND_PORT}
+WORKDIR /app/apps/frontend
 
-ENV PORT ${FRONTEND_PORT}
-# set hostname to environment variable or default
-ENV HOSTNAME ${HOSTNAME:-"0.0.0.0"}
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NGINX_URL=http://127.0.0.1
+ENV FRONTEND_PORT=3000
 
 # Security: Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
 
 # Health check with better timeout
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider ${NGINX_URL}:${FRONTEND_PORT} || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:${PORT:-3000} || exit 1
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
