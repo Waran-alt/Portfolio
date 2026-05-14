@@ -1,0 +1,34 @@
+# Deploy the public landing (Next.js only) on push to main.
+#
+# One-time setup: Settings → Secrets and variables → Actions → Repository.
+# - Secret: HOSTINGER_API_KEY
+# - Variables: HOSTINGER_VM_ID, NEXT_PUBLIC_FRONTEND_URL, FRONTEND_PORT (optional)
+
+name: Deploy landing to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Hostinger VPS
+        uses: hostinger/deploy-on-vps@v2
+        with:
+          api-key: ${{ secrets.HOSTINGER_API_KEY }}
+          virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
+          project-name: portfolio
+          docker-compose-path: docker-compose.deploy.yml
+          environment-variables: |
+            NODE_ENV=production
+            FRONTEND_PORT=${{ vars.FRONTEND_PORT }}
+            NEXT_PUBLIC_FRONTEND_URL=${{ vars.NEXT_PUBLIC_FRONTEND_URL }}
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}

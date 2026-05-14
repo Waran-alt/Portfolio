@@ -293,7 +293,7 @@ If your VPS provider auto-deploys on every pushed commit, use the single-file co
 docker compose -f docker-compose.deploy.yml up -d --build
 ```
 
-In this mode, the portfolio containers bind to `127.0.0.1` and your VPS/provider reverse proxy handles `focus-on-pixel.com` and TLS.
+In this mode, the landing container binds to `127.0.0.1` and your VPS reverse proxy handles `focus-on-pixel.com` and TLS. The full API stack remains available via `docker-compose.prod.yml` when you need it.
 
 ### Production Features
 

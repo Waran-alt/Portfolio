@@ -304,9 +304,9 @@ If your VPS provider runs a deploy on each commit pushed, prefer the single-file
 docker compose -f docker-compose.deploy.yml up -d --build
 ```
 
-This deploy mode is portfolio-only and binds services to `127.0.0.1` (so they are not directly public). Use your VPS/provider reverse proxy to route `https://focus-on-pixel.com` → `127.0.0.1:${FRONTEND_PORT}` and `https://focus-on-pixel.com/api` → `127.0.0.1:${BACKEND_PORT}`.
+This deploy mode serves the public landing only (Next.js). Containers bind to `127.0.0.1` and your VPS reverse proxy handles `focus-on-pixel.com` and TLS. No Postgres, backend, or JWT secrets are required for this path.
 
-An example Nginx vhost you can drop into your proxy is available at `tools/nginx/examples/focus-on-pixel.com.conf`.
+An example Nginx vhost is available at `tools/nginx/examples/focus-on-pixel.com.conf`.
 
 ### Production Features
 
