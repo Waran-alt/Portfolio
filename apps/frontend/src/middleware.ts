@@ -1,10 +1,29 @@
 import { DEFAULT_LOCALIZED_HOME } from 'i18n';
 import {
   determineTargetLocale,
-  getLocaleFromPathname
+  getLocaleFromPathname,
+  removeLocalePrefix,
 } from 'i18n/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { createRedirectResponse } from './middleware/utils';
+
+const PUBLIC_ROOT_ASSETS = new Set(['/qr-focus-on-pixel.png']);
+
+/**
+ * Serve root `public/` assets when the browser requests them under a locale prefix
+ * (e.g. `/fr/qr-focus-on-pixel.png` → `/qr-focus-on-pixel.png`).
+ */
+function handleLocalizedPublicAssets(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (!getLocaleFromPathname(pathname)) return null;
+
+  const assetPath = removeLocalePrefix(pathname);
+  if (!PUBLIC_ROOT_ASSETS.has(assetPath)) return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = assetPath;
+  return NextResponse.rewrite(url);
+}
 
 /**
  * Handle internationalization routing.
@@ -46,6 +65,9 @@ function handleI18n(request: NextRequest): NextResponse | null {
  * Processes requests through all middleware concerns in order.
  */
 export function middleware(request: NextRequest): NextResponse {
+  const localizedAsset = handleLocalizedPublicAssets(request);
+  if (localizedAsset) return localizedAsset;
+
   // Process i18n routing
   const i18nResponse = handleI18n(request);
   if (i18nResponse) return i18nResponse;
@@ -69,6 +91,6 @@ export const config = {
      * - /robots.txt, /sitemap.xml, /manifest.webmanifest (public metadata)
      * - /apple-touch-icon.png and common static public assets
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|apple-touch-icon.png).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|apple-touch-icon.png|qr-focus-on-pixel\\.png).*)',
   ],
 };

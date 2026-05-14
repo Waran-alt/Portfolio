@@ -431,8 +431,100 @@
   background-blend-mode: soft-light, soft-light, normal;
 }
 
+.foilContactAmbient {
+  --foil-angle: calc(var(--foil-rotate-front) * -0.72deg + 64deg);
+  pointer-events: none;
+  position: absolute;
+  inset: -24%;
+  border-radius: inherit;
+  z-index: 1;
+  opacity: 0.2;
+  mix-blend-mode: soft-light;
+  filter: saturate(1.22) contrast(1.03);
+  background:
+    repeating-linear-gradient(
+      128deg,
+      transparent 0,
+      transparent 3px,
+      rgba(255, 255, 255, 0.045) 3px,
+      rgba(255, 255, 255, 0.045) 4px
+    ),
+    repeating-linear-gradient(
+      -42deg,
+      transparent 0,
+      transparent 8px,
+      rgba(15, 23, 42, 0.018) 8px,
+      rgba(15, 23, 42, 0.018) 9px
+    ),
+    radial-gradient(ellipse 92% 72% at 18% 14%, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0) 62%),
+    conic-gradient(
+      from var(--foil-angle) at var(--foil-3-at-x) var(--foil-3-at-y),
+      rgba(193, 154, 107, 0) 0deg,
+      rgba(109, 179, 167, 0.34) 62deg,
+      rgba(196, 123, 141, 0.28) 128deg,
+      rgba(158, 174, 225, 0.3) 192deg,
+      rgba(238, 206, 140, 0.26) 256deg,
+      rgba(92, 150, 132, 0.24) 318deg,
+      rgba(193, 154, 107, 0) 360deg
+    );
+  background-blend-mode: soft-light, multiply, screen, normal;
+}
+
+.foilContact {
+  --foil-angle: calc(var(--foil-rotate-front) * -0.85deg + 48deg);
+  opacity: 0.36;
+  mix-blend-mode: soft-light;
+  filter: saturate(1.3) contrast(1.05);
+  background:
+    repeating-linear-gradient(
+      128deg,
+      transparent 0,
+      transparent 3px,
+      rgba(255, 255, 255, 0.045) 3px,
+      rgba(255, 255, 255, 0.045) 4px
+    ),
+    repeating-linear-gradient(
+      -42deg,
+      transparent 0,
+      transparent 8px,
+      rgba(15, 23, 42, 0.018) 8px,
+      rgba(15, 23, 42, 0.018) 9px
+    ),
+    radial-gradient(ellipse 88% 68% at 78% 18%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 58%),
+    conic-gradient(
+      from var(--foil-angle) at var(--foil-at-x) var(--foil-at-y),
+      rgba(193, 154, 107, 0) 0deg,
+      rgba(109, 179, 167, 0.38) 58deg,
+      rgba(196, 123, 141, 0.32) 124deg,
+      rgba(158, 174, 225, 0.34) 188deg,
+      rgba(238, 206, 140, 0.3) 252deg,
+      rgba(92, 150, 132, 0.28) 314deg,
+      rgba(193, 154, 107, 0) 360deg
+    );
+  background-blend-mode: soft-light, multiply, screen, normal;
+}
+
 .foilChipUsesFrontAngle {
   --foil-angle: var(--foil-rotate-front);
+}
+
+/* Light substrates: same foil stack, without halo mask or color-dodge wash-out. */
+.foilSubstrateLight.foilBackAmbient {
+  mix-blend-mode: multiply;
+  background-blend-mode: normal;
+  -webkit-mask: none;
+  mask: none;
+  opacity: 0.18;
+  filter: saturate(1.55) contrast(1.18);
+}
+
+.foilSubstrateLight.foil.foilBack {
+  mix-blend-mode: multiply;
+  background-blend-mode: normal;
+  -webkit-mask: none;
+  mask: none;
+  opacity: 0.26;
+  filter: saturate(1.62) contrast(1.2);
 }
 
 .foilPaused {
@@ -462,5 +554,21 @@
 
   .foilBackAmbient {
     opacity: 0.07;
+  }
+
+  .foilSubstrateLight.foilBackAmbient {
+    opacity: 0.34;
+  }
+
+  .foilSubstrateLight.foil.foilBack {
+    opacity: 0.42;
+  }
+
+  .foilContact {
+    opacity: 0.24;
+  }
+
+  .foilContactAmbient {
+    opacity: 0.12;
   }
 }

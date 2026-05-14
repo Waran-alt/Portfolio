@@ -37,6 +37,7 @@ import { useLocale } from 'i18n';
 import { Comic_Neue, Silkscreen, Unica_One } from 'next/font/google';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 /** Imported CSS module object; cast below so class names are checked against a fixed key union. */
+import contactQrImage from '@/assets/qr-focus-on-pixel.png';
 import { useCardTiltAndFoil } from '@/features/card-effects';
 import rawFx from '@/features/card-effects/cardEffects.module.css';
 import rawStyles from './BusinessCardHero.module.css';
@@ -49,6 +50,7 @@ import type { PixelChromaTiltEllipseConfig } from './pixelChromaTiltEllipse';
 import {
   PIXEL_SQUARE_REVEAL_DURATION_MS,
   PIXEL_SQUARE_REVEAL_SPAN_MS,
+  PIXEL_WORD_FACE_CELL_KEYS,
   pixelSquareRevealOpacity,
 } from './pixelMarkMetrics';
 import { FocusMarkLayered, ProjectMarkLayered } from './TitleMarks';
@@ -79,6 +81,19 @@ export const PIXEL_CHROMA_TILT_ELLIPSE: PixelChromaTiltEllipseConfig = {
   useSmoothRamp: true,
   /** Below 1 → reach center color/opacity sooner as you tilt inward; 1 = linear after smooth step; above 1 → tint builds mostly near center. */
   rampExponent: 0.12,
+};
+
+/** Dedicated foil preset for “-pixel” face-grid cells (not blended with `PIXEL_CHROMA_GRID_REFS`). */
+export const PIXEL_WORD_CHROMA_TILT_ELLIPSE: PixelChromaTiltEllipseConfig = {
+  centerTiltX: 0,
+  centerTiltY: 0,
+  semiAxisTiltX: 30,
+  semiAxisTiltY: 25,
+  boundaryEps: 0.004,
+  edgeRgba: [200, 120, 40, Math.round(0.7 * 255)],
+  centerRgba: [15, 23, 42, Math.round(1 * 255)],
+  useSmoothRamp: true,
+  rampExponent: 1.75,
 };
 
 /** Shallow merge over `PIXEL_CHROMA_TILT_ELLIPSE` for per-ref `ellipse` payloads. */
@@ -481,7 +496,10 @@ function drawPixelGridChromaCanvas(
     return;
   }
 
-  const grid = fillPixelChromaFoilGrid(PIXEL_CHROMA_GRID_REFS, cols, rows, tiltX, tiltY);
+  const grid = fillPixelChromaFoilGrid(PIXEL_CHROMA_GRID_REFS, cols, rows, tiltX, tiltY, {
+    wordFaceCells: PIXEL_WORD_FACE_CELL_KEYS,
+    wordEllipse: PIXEL_WORD_CHROMA_TILT_ELLIPSE,
+  });
 
   ctx.clearRect(0, 0, w, h);
 
@@ -524,22 +542,51 @@ const comicNeue = Comic_Neue({ weight: '700', subsets: ['latin'], display: 'swap
 
 /** CSS module typings use an index signature; keep class names type-safe locally. */
 const css = rawStyles as Record<
+  | 'heroRoot'
+  | 'heroCursorBright'
+  | 'heroCursorDark'
   | 'perspective'
   | 'cardCastShadow'
   | 'cardShell'
   | 'flipHost'
   | 'flipHit'
+  | 'flipHitPassthrough'
   | 'flipInner'
   | 'face'
   | 'faceFront'
+  | 'faceContact'
   | 'faceBack'
   | 'contourHatch'
+  | 'contourHatchLaminate'
+  | 'contourHatchLaminateAmbient'
+  | 'contourHatchLaminateFoil'
+  | 'contourHatchLines'
   | 'contourSvg'
   | 'pixelGridBg'
   | 'pixelGridChromaWave'
   | 'sheen'
   | 'faceContent'
   | 'faceFrontTitleOnly'
+  | 'faceContactContent'
+  | 'faceContactDetailsHost'
+  | 'faceContactDetails3dHost'
+  | 'faceContactMarkLayered'
+  | 'faceContactDetailsShadow'
+  | 'faceContactPanel'
+  | 'faceContactDetailsFloat'
+  | 'faceContactDetailsFootFloat'
+  | 'faceContactDetailsFoot'
+  | 'faceContactDetailsFootShadow'
+  | 'faceContactDetails'
+  | 'faceContactAside'
+  | 'faceContactName'
+  | 'faceContactNameGiven'
+  | 'faceContactNameFamily'
+  | 'faceContactRole'
+  | 'faceContactPhone'
+  | 'faceContactEmail'
+  | 'faceContactQrPanel'
+  | 'faceContactQr'
   | 'titleTriHeading'
   | 'titleTriLayout'
   | 'titleTriFocus'
@@ -549,10 +596,13 @@ const css = rawStyles as Record<
   | 'titleTriProject'
   | 'cornerArrowPerspective'
   | 'cornerArrow3dHost'
-  | 'cornerArrowShadowDisc'
   | 'cornerArrowFloating'
+  | 'cornerArrowDetachedFloat'
+  | 'cornerArrowFloatingLight'
   | 'cornerArrowStack'
   | 'cornerArrowFaceBg'
+  | 'cornerArrowFaceBgLight'
+  | 'cornerArrowChipUsesBackAngle'
   | 'cornerArrowSvg',
   string
 >;
@@ -573,6 +623,7 @@ const fx = rawFx as Record<
   | 'foilBack'
   | 'foilBackAmbient'
   | 'foilChipUsesFrontAngle'
+  | 'foilSubstrateLight'
   | 'foilPaused',
   string
 >;
@@ -627,10 +678,127 @@ const FLIP_PIVOT = { x: 55, y: 40 };
 
 /** QR + link target for the contact face (public URL, not a secret). */
 const CONTACT_QR_URL = 'https://focus-on-pixel.com';
-/** Prebuilt PNG (repo `public/qr-focus-on-pixel.png`) so the client bundle never imports `qrcode`. */
-const CONTACT_QR_IMAGE_SRC = '/qr-focus-on-pixel.png';
+const CONTACT_FIRST_NAME = 'GILLES';
+const CONTACT_LAST_NAME = 'axence';
+const CONTACT_PHONE_DISPLAY = '+33 7 88 00 19 82';
+const CONTACT_PHONE_HREF = 'tel:+33788001982';
+const CONTACT_EMAIL = 'contact@focus-on-pixel.com';
+/** Quantized viewport grid for contact-face contour seed (higher = finer cursor response). */
+const CONTOUR_POINTER_SEED_GRID = 12;
+/** Duration to reach a committed contour seed target from the current displayed seed. */
+const CONTOUR_SEED_TRANSITION_DURATION_MS = 400;
+/** Max seed transition updates per second while `requestAnimationFrame` drives timing. */
+const CONTOUR_SEED_TRANSITION_HZ = 60;
+/** Minimum interval before the cursor may commit a new contour seed target cell. */
+const CONTOUR_SEED_TARGET_UPDATE_MS = 500;
+/**
+ * Canvas-space shift of the contour field and laminate foil per grid unit on X/Y.
+ * Lower = adjacent seeds stay closer; higher = stronger cursor response.
+ */
+const CONTOUR_SEED_GRID_SPREAD = 24;
 
 type CardFace = 0 | 1 | 2;
+
+type ContourSeedCell = { x: number; y: number };
+
+function hashContourBaseSeed(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i += 1) h = Math.imul(h ^ input.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type ContourBump = { x: number; y: number; a: number; s: number };
+
+function evalContourRawField(
+  x: number,
+  y: number,
+  bumps: ContourBump[],
+  offsetX: number,
+  offsetY: number,
+  phase: number,
+  width: number,
+  height: number
+): number {
+  let v = 0;
+  for (const bump of bumps) {
+    const dx = x - (bump.x + offsetX);
+    const dy = y - (bump.y + offsetY);
+    const r2 = dx * dx + dy * dy;
+    v += bump.a * Math.exp(-r2 / (2 * bump.s * bump.s));
+  }
+  v +=
+    0.14 * Math.sin((x / width) * Math.PI * 2 + 0.65 + phase) +
+    0.1 * Math.cos((y / height) * Math.PI * 2 + phase * 0.75);
+  v += 0.22 * (x / width) - 0.14 * (y / height) + phase * 0.05;
+  return v;
+}
+
+function contourSeedFoilOffsetVars(seed: ContourSeedCell): Record<string, string> {
+  const spread = CONTOUR_SEED_GRID_SPREAD;
+  return {
+    '--contour-seed-foil-angle-offset': `${(seed.x - seed.y) * spread * 0.085}deg`,
+    '--contour-seed-foil-at-x-offset': `${seed.x * spread * 0.06}%`,
+    '--contour-seed-foil-at-y-offset': `${seed.y * spread * 0.06}%`,
+    '--contour-seed-foil-hatch-angle-offset': `${seed.x * spread * 0.07}deg`,
+  };
+}
+
+function contourFillMaskDataUrl(fillMask: Uint8Array, width: number, height: number): string {
+  if (!fillMask.length || typeof document === 'undefined') return '';
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+
+  const image = ctx.createImageData(width, height);
+  for (let i = 0; i < fillMask.length; i += 1) {
+    if (!fillMask[i]) continue;
+    const offset = i * 4;
+    image.data[offset] = 255;
+    image.data[offset + 1] = 255;
+    image.data[offset + 2] = 255;
+    image.data[offset + 3] = 255;
+  }
+  ctx.putImageData(image, 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
+function contourSeedAtTransitionProgress(
+  from: ContourSeedCell,
+  to: ContourSeedCell,
+  progress: number
+): ContourSeedCell {
+  const t = Math.min(1, Math.max(0, progress));
+  return {
+    x: from.x + (to.x - from.x) * t,
+    y: from.y + (to.y - from.y) * t,
+  };
+}
+
+function contourPointerSeedCell(clientX: number, clientY: number): { x: number; y: number } {
+  const width = Math.max(1, window.innerWidth);
+  const height = Math.max(1, window.innerHeight);
+  const x = Math.min(
+    CONTOUR_POINTER_SEED_GRID - 1,
+    Math.max(0, Math.floor((clientX / width) * CONTOUR_POINTER_SEED_GRID))
+  );
+  const y = Math.min(
+    CONTOUR_POINTER_SEED_GRID - 1,
+    Math.max(0, Math.floor((clientY / height) * CONTOUR_POINTER_SEED_GRID))
+  );
+  return { x, y };
+}
 
 function normAxis(a: { x: number; y: number; z: number }): [number, number, number] {
   const m = Math.hypot(a.x, a.y, a.z);
@@ -676,9 +844,7 @@ export function BusinessCardHero({
         ariaNextToAbout: 'Afficher la face À propos',
         ariaNextToContact: 'Afficher la face Contact',
         ariaNextToTitle: 'Afficher la face titre',
-        contactHeading: 'Contact',
-        contactLead: 'Scannez le code pour ouvrir le site.',
-        contactLinkLabel: 'focus-on-pixel.com',
+        contactRole: 'Développeur Javascript',
       };
     }
     return {
@@ -690,9 +856,7 @@ export function BusinessCardHero({
       ariaNextToAbout: 'Show About face',
       ariaNextToContact: 'Show Contact face',
       ariaNextToTitle: 'Show title face',
-      contactHeading: 'Contact',
-      contactLead: 'Scan the code to open the site.',
-      contactLinkLabel: 'focus-on-pixel.com',
+      contactRole: 'Javascript Developer',
     };
   }, [locale]);
 
@@ -749,12 +913,19 @@ export function BusinessCardHero({
    * (`PIXEL_SQUARE_REVEAL_SPAN_MS` + `PIXEL_SQUARE_REVEAL_DURATION_MS`); then pointer tilt unlocks.
    */
   const [pixelStaggerComplete, setPixelStaggerComplete] = useState(true);
+  const [contourSeedCell, setContourSeedCell] = useState({ x: 0, y: 0 });
 
   const flipAriaLabel = useMemo(() => {
     if (cardFace === 0) return copy.ariaNextToAbout;
     if (cardFace === 1) return copy.ariaNextToContact;
     return copy.ariaNextToTitle;
   }, [cardFace, copy]);
+
+  const cardCursorClass = cardFace === 1 ? css.heroCursorBright : css.heroCursorDark;
+  const cornerArrowChipLight = cardFace === 1 || cardFace === 2;
+  const cornerArrowChipFoilSubstrateClass = cornerArrowChipLight ? fx.foilSubstrateLight : '';
+  const cornerArrowChipFoilAngleClass =
+    cardFace === 1 ? css.cornerArrowChipUsesBackAngle : fx.foilChipUsesFrontAngle;
 
   // --- Refs for pointer / animation (avoid re-renders on every move) ---
 
@@ -782,6 +953,15 @@ export function BusinessCardHero({
   const prevFaceForRevealRef = useRef<number>(-1);
   const prevEntranceForRevealRef = useRef(false);
   const pixelStaggerGateTidRef = useRef(0);
+  const contourSeedPendingTargetRef = useRef({ x: 0, y: 0 });
+  const contourSeedTargetRef = useRef({ x: 0, y: 0 });
+  const contourSeedCellRef = useRef({ x: 0, y: 0 });
+  const contourSeedTransitionFromRef = useRef({ x: 0, y: 0 });
+  const contourSeedTransitionToRef = useRef({ x: 0, y: 0 });
+  const contourSeedTransitionActiveRef = useRef(false);
+  const contourSeedTransitionStartedAtRef = useRef(0);
+  const contourSeedTransitionRafRef = useRef(0);
+  const contourSeedTransitionLastSampleAtRef = useRef(0);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -790,6 +970,83 @@ export function BusinessCardHero({
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
   }, []);
+
+  useEffect(() => {
+    if (cardFace !== 2 || reducedMotion) return;
+
+    const onPointerMove = (event: PointerEvent) => {
+      contourSeedPendingTargetRef.current = contourPointerSeedCell(event.clientX, event.clientY);
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onPointerMove);
+  }, [cardFace, reducedMotion]);
+
+  useEffect(() => {
+    if (cardFace !== 2 || reducedMotion) return;
+
+    const transitionSampleIntervalMs = 1000 / CONTOUR_SEED_TRANSITION_HZ;
+
+    const pumpContourSeedTransition = () => {
+      window.cancelAnimationFrame(contourSeedTransitionRafRef.current);
+      const step = (now: number) => {
+        if (cardFaceRef.current !== 2 || reducedMotionRef.current || !contourSeedTransitionActiveRef.current) {
+          return;
+        }
+
+        const elapsed = now - contourSeedTransitionStartedAtRef.current;
+        const progress = Math.min(1, elapsed / CONTOUR_SEED_TRANSITION_DURATION_MS);
+        const shouldSample =
+          contourSeedTransitionLastSampleAtRef.current === 0 ||
+          progress >= 1 ||
+          now - contourSeedTransitionLastSampleAtRef.current >= transitionSampleIntervalMs;
+
+        if (shouldSample) {
+          contourSeedTransitionLastSampleAtRef.current = now;
+          const next = contourSeedAtTransitionProgress(
+            contourSeedTransitionFromRef.current,
+            contourSeedTransitionToRef.current,
+            progress
+          );
+          contourSeedCellRef.current = next;
+          setContourSeedCell(next);
+        }
+
+        if (progress < 1) {
+          contourSeedTransitionRafRef.current = window.requestAnimationFrame(step);
+          return;
+        }
+
+        contourSeedTransitionActiveRef.current = false;
+      };
+
+      contourSeedTransitionRafRef.current = window.requestAnimationFrame(step);
+    };
+
+    const beginContourSeedTransition = (from: ContourSeedCell, to: ContourSeedCell) => {
+      contourSeedTransitionFromRef.current = { x: from.x, y: from.y };
+      contourSeedTransitionToRef.current = { x: to.x, y: to.y };
+      contourSeedTransitionStartedAtRef.current = performance.now();
+      contourSeedTransitionLastSampleAtRef.current = 0;
+      contourSeedTransitionActiveRef.current = true;
+      pumpContourSeedTransition();
+    };
+
+    const commitContourSeedTarget = () => {
+      const pending = contourSeedPendingTargetRef.current;
+      const target = contourSeedTargetRef.current;
+      if (pending.x === target.x && pending.y === target.y) return;
+      contourSeedTargetRef.current = pending;
+      beginContourSeedTransition(contourSeedCellRef.current, pending);
+    };
+
+    const targetIntervalId = window.setInterval(commitContourSeedTarget, CONTOUR_SEED_TARGET_UPDATE_MS);
+    return () => {
+      window.clearInterval(targetIntervalId);
+      window.cancelAnimationFrame(contourSeedTransitionRafRef.current);
+      contourSeedTransitionActiveRef.current = false;
+    };
+  }, [cardFace, reducedMotion]);
 
   const refreshPixelChroma = useCallback((tiltX?: number, tiltY?: number) => {
     const canvas = pixelChromaCanvasRef.current;
@@ -1043,35 +1300,14 @@ export function BusinessCardHero({
   );
 
   /**
-   * Procedural topo contours
-   * ------------------------
-   * We generate *non-crossing* contour lines by extracting iso-lines (level sets) of a single-valued
-   * scalar field f(x,y). Two different levels can never intersect because a point cannot satisfy
-   * f(x,y)=a and f(x,y)=b simultaneously. The iso-lines are extracted on a grid via marching squares
-   * and then stitched into longer polylines.
-   *
-   * This is deterministic (seeded) so SSR/CSR hydration matches and it doesn't "flicker" on re-render.
+   * Procedural laminate mask + contour strokes for the contact face.
+   * Base bumps are seeded from title/locale; cursor grid nudges the field by `CONTOUR_SEED_GRID_SPREAD`.
    */
-  const contourPaths = useMemo(() => {
-    // --- tiny deterministic PRNG (Mulberry32) ---
-    const mulberry32 = (seed: number) => {
-      let t = seed >>> 0;
-      return () => {
-        t += 0x6d2b79f5;
-        let r = Math.imul(t ^ (t >>> 15), 1 | t);
-        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
-        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-      };
-    };
-
-    const hashString = (s: string) => {
-      let h = 2166136261;
-      for (let i = 0; i < s.length; i += 1) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
-      return h >>> 0;
-    };
-
-    // Seed: stable but "random-looking" per locale/title copy.
-    const rand = mulberry32(hashString(`${title}::${locale}`));
+  const contourHatch = useMemo(() => {
+    const rand = mulberry32(hashContourBaseSeed(`${title}::${locale}`));
+    const gridOffsetX = contourSeedCell.x * CONTOUR_SEED_GRID_SPREAD;
+    const gridOffsetY = contourSeedCell.y * CONTOUR_SEED_GRID_SPREAD;
+    const gridPhase = (contourSeedCell.x - contourSeedCell.y) * CONTOUR_SEED_GRID_SPREAD * 0.004;
 
     const W = 600;
     const H = 400;
@@ -1079,8 +1315,8 @@ export function BusinessCardHero({
     const NY = 64;
 
     // Build a smooth scalar field as a sum of Gaussian "bumps" + a weak directional gradient.
-    const bumps: Array<{ x: number; y: number; a: number; s: number }> = [];
-    const bumpCount = 10;
+    const bumps: ContourBump[] = [];
+    const bumpCount = 6;
     for (let i = 0; i < bumpCount; i += 1) {
       bumps.push({
         x: rand() * W,
@@ -1090,36 +1326,60 @@ export function BusinessCardHero({
       });
     }
 
-    const field: number[][] = Array.from({ length: NY + 1 }, () => Array(NX + 1).fill(0));
-    const getF = (yy: number, xx: number) => field[yy]![xx]!;
     let minV = Infinity;
     let maxV = -Infinity;
+    for (let j = 0; j <= NY; j += 1) {
+      const y = (j / NY) * H;
+      for (let i = 0; i <= NX; i += 1) {
+        const x = (i / NX) * W;
+        const v = evalContourRawField(x, y, bumps, 0, 0, 0, W, H);
+        if (v < minV) minV = v;
+        if (v > maxV) maxV = v;
+      }
+    }
+    const normSpan = maxV - minV || 1;
+    const norm = (v: number) => Math.min(1, Math.max(0, (v - minV) / normSpan));
+
+    const field: number[][] = Array.from({ length: NY + 1 }, () => Array(NX + 1).fill(0));
+    const getF = (yy: number, xx: number) => field[yy]![xx]!;
 
     for (let j = 0; j <= NY; j += 1) {
       const y = (j / NY) * H;
       for (let i = 0; i <= NX; i += 1) {
         const x = (i / NX) * W;
-        let v = 0;
-        for (const b of bumps) {
-          const dx = x - b.x;
-          const dy = y - b.y;
-          const r2 = dx * dx + dy * dy;
-          v += b.a * Math.exp(-r2 / (2 * b.s * b.s));
-        }
-        // Gentle large-scale bend (helps the "flow" like the reference).
-        v += 0.25 * Math.sin((x / W) * Math.PI * 2 + 0.65) + 0.18 * Math.cos((y / H) * Math.PI * 2);
-        // Mild diagonal slope so we get wide + tight spacing regions.
-        v += 0.35 * (x / W) - 0.2 * (y / H);
-
-        field[j]![i] = v;
-        if (v < minV) minV = v;
-        if (v > maxV) maxV = v;
+        field[j]![i] = norm(
+          evalContourRawField(x, y, bumps, gridOffsetX, gridOffsetY, gridPhase, W, H)
+        );
       }
     }
 
-    const norm = (v: number) => (v - minV) / (maxV - minV || 1);
-    for (let j = 0; j <= NY; j += 1)
-      for (let i = 0; i <= NX; i += 1) field[j]![i] = norm(field[j]![i]!);
+    const sampleField = (x: number, y: number) => {
+      const gx = (x / W) * NX;
+      const gy = (y / H) * NY;
+      const i0 = Math.min(NX - 1, Math.max(0, Math.floor(gx)));
+      const j0 = Math.min(NY - 1, Math.max(0, Math.floor(gy)));
+      const i1 = Math.min(NX, i0 + 1);
+      const j1 = Math.min(NY, j0 + 1);
+      const tx = gx - i0;
+      const ty = gy - j0;
+      const v00 = getF(j0, i0);
+      const v10 = getF(j0, i1);
+      const v11 = getF(j1, i1);
+      const v01 = getF(j1, i0);
+      return (
+        v00 * (1 - tx) * (1 - ty) +
+        v10 * tx * (1 - ty) +
+        v11 * tx * ty +
+        v01 * (1 - tx) * ty
+      );
+    };
+
+    const baseStep = 0.09 + rand() * 0.01;
+    const fillLevels: number[] = [];
+    for (let v = 0.12; v <= 0.86; v += baseStep) fillLevels.push(v);
+
+    const lineLevels: number[] = [];
+    for (let v = 0.12; v <= 0.86; v += baseStep / 3) lineLevels.push(v);
 
     type Pt = { x: number; y: number };
     type Seg = { a: Pt; b: Pt };
@@ -1136,11 +1396,10 @@ export function BusinessCardHero({
 
       for (let y = 0; y < NY; y += 1) {
         for (let x = 0; x < NX; x += 1) {
-          const v0 = getF(y, x); // top-left
-          const v1 = getF(y, x + 1); // top-right
-          const v2 = getF(y + 1, x + 1); // bottom-right
-          const v3 = getF(y + 1, x); // bottom-left
-
+          const v0 = getF(y, x);
+          const v1 = getF(y, x + 1);
+          const v2 = getF(y + 1, x + 1);
+          const v3 = getF(y + 1, x);
           const c0 = v0 >= level ? 1 : 0;
           const c1 = v1 >= level ? 1 : 0;
           const c2 = v2 >= level ? 1 : 0;
@@ -1152,22 +1411,16 @@ export function BusinessCardHero({
           const p1: Pt = { x: (x + 1) * cellW, y: y * cellH };
           const p2: Pt = { x: (x + 1) * cellW, y: (y + 1) * cellH };
           const p3: Pt = { x: x * cellW, y: (y + 1) * cellH };
-
           const t01 = (level - v0) / (v1 - v0 || 1e-6);
           const t12 = (level - v1) / (v2 - v1 || 1e-6);
           const t23 = (level - v2) / (v3 - v2 || 1e-6);
           const t30 = (level - v3) / (v0 - v3 || 1e-6);
-
-          const e0 = lerpPt(p0, p1, t01); // top
-          const e1 = lerpPt(p1, p2, t12); // right
-          const e2 = lerpPt(p2, p3, t23); // bottom
-          const e3 = lerpPt(p3, p0, t30); // left
-
-          // Marching squares lookup: produce 0,1 or 2 segments per cell.
-          // Ambiguous saddle cases (5/10) are resolved consistently using the cell average.
+          const e0 = lerpPt(p0, p1, t01);
+          const e1 = lerpPt(p1, p2, t12);
+          const e2 = lerpPt(p2, p3, t23);
+          const e3 = lerpPt(p3, p0, t30);
           const avg = (v0 + v1 + v2 + v3) * 0.25;
           const saddlePrefersA = avg >= level;
-
           const push = (a: Pt, b: Pt) => segs.push({ a, b });
 
           switch (idx) {
@@ -1196,8 +1449,7 @@ export function BusinessCardHero({
               push(e0, e3);
               break;
             case 5:
-            case 10: {
-              // two segments
+            case 10:
               if (idx === 5) {
                 if (saddlePrefersA) {
                   push(e0, e1);
@@ -1206,17 +1458,14 @@ export function BusinessCardHero({
                   push(e0, e3);
                   push(e1, e2);
                 }
+              } else if (saddlePrefersA) {
+                push(e0, e3);
+                push(e1, e2);
               } else {
-                if (saddlePrefersA) {
-                  push(e0, e3);
-                  push(e1, e2);
-                } else {
-                  push(e0, e1);
-                  push(e2, e3);
-                }
+                push(e0, e1);
+                push(e2, e3);
               }
               break;
-            }
             default:
               break;
           }
@@ -1228,7 +1477,6 @@ export function BusinessCardHero({
     const keyOf = (p: Pt) => `${Math.round(p.x * 10) / 10},${Math.round(p.y * 10) / 10}`;
 
     const stitch = (segs: Seg[]): Pt[][] => {
-      // adjacency list per endpoint key
       const adj = new Map<string, Pt[]>();
       const addAdj = (a: Pt, b: Pt) => {
         const ka = keyOf(a);
@@ -1248,7 +1496,6 @@ export function BusinessCardHero({
       };
 
       const polylines: Pt[][] = [];
-
       for (const [startKey, neighs] of adj.entries()) {
         for (const n of neighs) {
           const startParts = startKey.split(',');
@@ -1261,8 +1508,6 @@ export function BusinessCardHero({
 
           const line: Pt[] = [start, n];
           visitedEdge.add(ek);
-
-          // grow forward
           let cur = n;
           let prev = start;
           for (let guard = 0; guard < 20000; guard += 1) {
@@ -1280,47 +1525,88 @@ export function BusinessCardHero({
             line.push(next);
             prev = cur;
             cur = next;
-            // closed loop
             if (keyOf(cur) === keyOf(start)) break;
           }
-
           polylines.push(line);
         }
       }
-
-      // Filter out tiny junk lines.
-      return polylines.filter((l) => l.length >= 10);
+      return polylines.filter((l) => l.length >= 18);
     };
 
-    const levels: number[] = [];
-    // Smaller step = more contours (denser topo). Keep slight per-seed variance.
-    const step = 0.022 + rand() * 0.006;
-    for (let v = 0.08; v <= 0.94; v += step) levels.push(v);
-
-    const paths: Array<{ d: string; faint: boolean }> = [];
-
-    for (const level of levels) {
-      const segs = isoSegmentsForLevel(level);
-      const lines = stitch(segs);
-      for (const line of lines) {
-        // Build a polyline path. (Smoothing happens naturally with dense sampling.)
+    const smoothPolylinePath = (line: Pt[]): string => {
+      if (line.length < 3) {
         const p0 = line[0]!;
         let d = `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)}`;
         for (let i = 1; i < line.length; i += 1) {
           const pi = line[i]!;
           d += ` L ${pi.x.toFixed(1)} ${pi.y.toFixed(1)}`;
         }
-        // Alternate intensity a bit (matches reference contrast variety).
+        return d;
+      }
+
+      const p0 = line[0]!;
+      let d = `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)}`;
+      for (let i = 1; i < line.length - 1; i += 1) {
+        const pi = line[i]!;
+        const next = line[i + 1]!;
+        const ex = (pi.x + next.x) * 0.5;
+        const ey = (pi.y + next.y) * 0.5;
+        d += ` Q ${pi.x.toFixed(1)} ${pi.y.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+      }
+      const last = line[line.length - 1]!;
+      d += ` L ${last.x.toFixed(1)} ${last.y.toFixed(1)}`;
+      return d;
+    };
+
+    const strokePaths: Array<{ d: string; faint: boolean }> = [];
+    for (let li = 0; li < lineLevels.length; li += 1) {
+      const level = lineLevels[li]!;
+      if (li % 2 === 1) continue;
+      const segs = isoSegmentsForLevel(level);
+      const lines = stitch(segs);
+      for (const line of lines) {
+        const d = smoothPolylinePath(line);
         const faint = (Math.floor(level * 1000) % 3) === 0;
-        paths.push({ d, faint });
+        strokePaths.push({ d, faint });
       }
     }
 
-    return paths;
-  }, [locale, title]);
+    const fillMask = new Uint8Array(W * H);
+    for (let j = 0; j < H; j += 1) {
+      for (let i = 0; i < W; i += 1) {
+        const v = sampleField(i + 0.5, j + 0.5);
+        let inBand = false;
+        for (let li = 0; li < fillLevels.length - 1; li += 1) {
+          if (li % 2 !== 0) continue;
+          if (v >= fillLevels[li]! && v < fillLevels[li + 1]!) {
+            inBand = true;
+            break;
+          }
+        }
+        if (inBand) fillMask[j * W + i] = 1;
+      }
+    }
+
+    return {
+      fillMask,
+      fillMaskDataUrl: contourFillMaskDataUrl(fillMask, W, H),
+      strokePaths,
+      width: W,
+      height: H,
+    };
+  }, [locale, title, contourSeedCell.x, contourSeedCell.y]);
+
+  const contourLaminateStyle = useMemo(() => {
+    if (!contourHatch.fillMaskDataUrl) return undefined;
+    return {
+      ...contourSeedFoilOffsetVars(contourSeedCell),
+      WebkitMaskImage: `url(${contourHatch.fillMaskDataUrl})`,
+      maskImage: `url(${contourHatch.fillMaskDataUrl})`,
+    };
+  }, [contourHatch.fillMaskDataUrl, contourSeedCell]);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 py-12">
+    <main className={`${css.heroRoot} h-dvh overflow-hidden overscroll-none flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4`}>
       <div className={css.perspective}>
         <div ref={tiltAreaRef} className={fx.tiltArea}>
           <div ref={tiltRef} className={fx.tiltLayer}>
@@ -1328,7 +1614,7 @@ export function BusinessCardHero({
             {/* Blurred ellipse behind the card (translateZ); tilts with the shell. */}
             <div className={css.cardCastShadow} aria-hidden />
             {/* 3D host is a div (NOT button) so translateZ children (chip) actually float. */}
-            <div className={css.flipHost}>
+            <div className={`${css.flipHost} ${cardCursorClass}`}>
               {/* 3D flip: three faces in one box; CSS `backface-visibility` hides inactive faces. */}
               <div ref={flipInnerRef} className={css.flipInner}>
                 {cardFace === 0 ? (
@@ -1405,140 +1691,104 @@ export function BusinessCardHero({
                   </div>
                 </div>
                 ) : (
-                  <div className={`${css.face} ${css.faceFront}`}>
+                  <div className={`${css.face} ${css.faceFront} ${css.faceContact}`}>
                   <div className={css.contourHatch} aria-hidden>
+                    {contourLaminateStyle ? (
+                      <div
+                        className={`${css.contourSvg} ${css.contourHatchLaminate}`}
+                        style={contourLaminateStyle}
+                        aria-hidden
+                      >
+                        <span className={css.contourHatchLaminateAmbient} aria-hidden />
+                        <span className={css.contourHatchLaminateFoil} aria-hidden />
+                      </div>
+                    ) : null}
+
                     <svg
-                      className={css.contourSvg}
+                      className={`${css.contourSvg} ${css.contourHatchLines}`}
                       viewBox="0 0 600 400"
                       xmlns="http://www.w3.org/2000/svg"
                       preserveAspectRatio="xMidYMid slice"
+                      aria-hidden
                     >
-                      <defs>
-                        <filter id="topoA" x="-15%" y="-15%" width="130%" height="130%">
-                          <feTurbulence
-                            type="fractalNoise"
-                            baseFrequency="0.003 0.005"
-                            numOctaves="3"
-                            seed="13"
-                            result="n"
-                          />
-                          <feGaussianBlur in="n" stdDeviation="2.2" result="b" />
-                          <feComponentTransfer in="b" result="q">
-                            <feFuncR
-                              type="discrete"
-                              tableValues="0 0.06 0.12 0.18 0.24 0.3 0.36 0.42 0.48 0.54 0.6 0.66 0.72 0.78 0.84 0.9 0.96 1"
-                            />
-                            <feFuncG
-                              type="discrete"
-                              tableValues="0 0.06 0.12 0.18 0.24 0.3 0.36 0.42 0.48 0.54 0.6 0.66 0.72 0.78 0.84 0.9 0.96 1"
-                            />
-                            <feFuncB
-                              type="discrete"
-                              tableValues="0 0.06 0.12 0.18 0.24 0.3 0.36 0.42 0.48 0.54 0.6 0.66 0.72 0.78 0.84 0.9 0.96 1"
-                            />
-                          </feComponentTransfer>
-                          <feConvolveMatrix
-                            in="q"
-                            order="3"
-                            kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1"
-                            result="e"
-                          />
-                          <feColorMatrix
-                            in="e"
-                            type="matrix"
-                            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 0"
-                            result="a"
-                          />
-                          <feMorphology in="a" operator="erode" radius="0.7" result="thin" />
-                          <feFlood floodColor="#0f172a" floodOpacity="1" result="ink" />
-                          <feComposite in="ink" in2="thin" operator="in" />
-                        </filter>
-
-                        <filter id="topoB" x="-15%" y="-15%" width="130%" height="130%">
-                          <feTurbulence
-                            type="fractalNoise"
-                            baseFrequency="0.006 0.009"
-                            numOctaves="2"
-                            seed="7"
-                            result="n"
-                          />
-                          <feGaussianBlur in="n" stdDeviation="1.4" result="b" />
-                          <feComponentTransfer in="b" result="q">
-                            <feFuncR type="discrete" tableValues="0 0.2 0.4 0.6 0.8 1" />
-                            <feFuncG type="discrete" tableValues="0 0.2 0.4 0.6 0.8 1" />
-                            <feFuncB type="discrete" tableValues="0 0.2 0.4 0.6 0.8 1" />
-                          </feComponentTransfer>
-                          <feConvolveMatrix
-                            in="q"
-                            order="3"
-                            kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1"
-                            result="e"
-                          />
-                          <feColorMatrix
-                            in="e"
-                            type="matrix"
-                            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 1 1 0 0"
-                            result="a"
-                          />
-                          <feMorphology in="a" operator="erode" radius="0.8" result="thin" />
-                          <feFlood floodColor="#0f172a" floodOpacity="1" result="ink" />
-                          <feComposite in="ink" in2="thin" operator="in" />
-                        </filter>
-                      </defs>
-
-                      <rect width="600" height="400" filter="url(#topoA)" opacity="1" />
-                      <rect width="600" height="400" filter="url(#topoB)" opacity="0.42" />
-
-                      <g fill="none" stroke="#0f172a" strokeLinecap="round" strokeLinejoin="round">
-                        {contourPaths.map((p, i) => (
+                      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+                        {contourHatch.strokePaths.map((p, i) => (
                           <path
                             key={`${i}-${p.d.slice(0, 28)}`}
                             d={p.d}
-                            strokeOpacity={p.faint ? 0.09 : 0.18}
-                            strokeWidth={p.faint ? 0.75 : 1.05}
+                            strokeWidth={p.faint ? 0.85 : 1.1}
+                            data-faint={p.faint ? 'true' : 'false'}
                           />
                         ))}
                       </g>
                     </svg>
                   </div>
-                    <div
-                      className={`${fx.foilFrontAmbient} ${cardFace !== 2 ? fx.foilPaused : ''}`}
-                      aria-hidden
-                    />
-                    <div
-                      className={`${fx.foilFrontSecondaryAmbient} ${cardFace !== 2 ? fx.foilPaused : ''}`}
-                      aria-hidden
-                    />
-                    <div
-                      className={`${fx.foil} ${fx.foilFront} ${cardFace !== 2 ? fx.foilPaused : ''}`}
-                      aria-hidden
-                    />
-                    <div
-                      className={`${fx.foilFrontSecondary} ${cardFace !== 2 ? fx.foilPaused : ''}`}
-                      aria-hidden
-                    />
-                    <div className={css.sheen} aria-hidden />
-                    <div className={`${css.faceContent} ${css.faceFrontTitleOnly}`}>
-                      <div className="flex w-full flex-col items-center justify-center gap-4 px-2 py-6 text-center">
-                        <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                          {copy.contactHeading}
-                        </p>
-                        <p className="max-w-[90%] text-sm text-slate-600">{copy.contactLead}</p>
-                        <img
-                          src={CONTACT_QR_IMAGE_SRC}
-                          alt=""
-                          width={132}
-                          height={132}
-                          className="rounded-md border border-slate-200 bg-white p-1 shadow-sm"
-                        />
-                        <a
-                          href={CONTACT_QR_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-slate-800 underline decoration-slate-400 underline-offset-2 hover:text-slate-950"
+                    <div className={`${css.faceContent} ${css.faceContactContent}`}>
+                      <div className={css.faceContactDetailsHost}>
+                        <div
+                          className={`${fx.parallaxTiltHost} ${fx.markLayered} ${css.faceContactMarkLayered} ${css.faceContactDetails3dHost}`}
                         >
-                          {copy.contactLinkLabel}
-                        </a>
+                          <span
+                            className={`${fx.markSurfaceShadow} ${css.faceContactDetailsShadow}`}
+                            aria-hidden
+                          />
+                          <div
+                            className={`${fx.markDetachedFloat} ${css.faceContactPanel} ${css.faceContactDetailsFloat}`}
+                          >
+                            <div className={css.faceContactDetails}>
+                              <p
+                                className={`${css.faceContactName} ${unicaOne.className}`}
+                                aria-label={`${CONTACT_FIRST_NAME} Maxence`}
+                              >
+                                <span className={css.faceContactNameGiven}>{CONTACT_FIRST_NAME}</span>{' '}
+                                <span className={css.faceContactNameGiven}>M</span>
+                                <span className={css.faceContactNameFamily}>{CONTACT_LAST_NAME}</span>
+                              </p>
+                              <a href={CONTACT_PHONE_HREF} className={css.faceContactPhone}>
+                                {CONTACT_PHONE_DISPLAY}
+                              </a>
+                              <a href={`mailto:${CONTACT_EMAIL}`} className={css.faceContactEmail}>
+                                {CONTACT_EMAIL}
+                              </a>
+                            </div>
+                          </div>
+                          <span
+                            className={`${fx.markSurfaceShadow} ${css.faceContactDetailsShadow} ${css.faceContactDetailsFootShadow}`}
+                            aria-hidden
+                          />
+                          <div
+                            className={`${fx.markDetachedFloat} ${css.faceContactPanel} ${css.faceContactDetailsFootFloat}`}
+                          >
+                            <p className={`${css.faceContactDetailsFoot} ${css.faceContactRole}`}>
+                              {copy.contactRole}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={css.faceContactAside}>
+                        <div
+                          className={`${fx.parallaxTiltHost} ${fx.markLayered} ${css.faceContactMarkLayered} ${css.faceContactDetails3dHost}`}
+                        >
+                          <span
+                            className={`${fx.markSurfaceShadow} ${css.faceContactDetailsShadow}`}
+                            aria-hidden
+                          />
+                          <a
+                            href={CONTACT_QR_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${fx.markDetachedFloat} ${css.faceContactPanel} ${css.faceContactQrPanel}`}
+                            aria-label={CONTACT_QR_URL}
+                          >
+                            <img
+                              src={contactQrImage.src}
+                              alt=""
+                              width={contactQrImage.width}
+                              height={contactQrImage.height}
+                              className={css.faceContactQr}
+                            />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1547,23 +1797,21 @@ export function BusinessCardHero({
                 {/* Floating “sub-container” affordance: every face; positioned relative to flipInner. */}
                 <div className={css.cornerArrowPerspective}>
                     <div className={`${fx.parallaxTiltHost} ${fx.markLayered} ${css.cornerArrow3dHost}`}>
-                      <span
-                        className={`${fx.markSurfaceShadow} ${css.cornerArrowShadowDisc}`}
-                        aria-hidden
-                      />
                       <button
                         type="button"
-                        className={`${css.cornerArrowFloating} ${fx.markDetachedFloat}`}
+                        className={`${css.cornerArrowFloating} ${css.cornerArrowDetachedFloat} ${cornerArrowChipLight ? css.cornerArrowFloatingLight : ''}`}
                         onClick={toggleFlip}
                         aria-label={flipAriaLabel}
                       >
                         <span className={css.cornerArrowStack} aria-hidden>
-                          <span className={css.cornerArrowFaceBg} />
                           <span
-                            className={`${fx.foilBackAmbient} ${fx.foilChipUsesFrontAngle}`}
+                            className={`${css.cornerArrowFaceBg} ${cornerArrowChipLight ? css.cornerArrowFaceBgLight : ''}`}
                           />
                           <span
-                            className={`${fx.foil} ${fx.foilBack} ${fx.foilChipUsesFrontAngle}`}
+                            className={`${fx.foilBackAmbient} ${cornerArrowChipFoilAngleClass} ${cornerArrowChipFoilSubstrateClass}`}
+                          />
+                          <span
+                            className={`${fx.foil} ${fx.foilBack} ${cornerArrowChipFoilAngleClass} ${cornerArrowChipFoilSubstrateClass}`}
                           />
                         </span>
                         <svg
@@ -1590,14 +1838,13 @@ export function BusinessCardHero({
                       </button>
                     </div>
                   </div>
+                <button
+                  type="button"
+                  className={`${css.flipHit} ${cardCursorClass}`}
+                  onClick={toggleFlip}
+                  aria-label={flipAriaLabel}
+                />
               </div>
-              {/* Click / focus overlay (MemoOn pattern). */}
-              <button
-                type="button"
-                className={css.flipHit}
-                onClick={toggleFlip}
-                aria-label={flipAriaLabel}
-              />
             </div>
             </div>
           </div>

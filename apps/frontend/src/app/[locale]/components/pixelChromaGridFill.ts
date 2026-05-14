@@ -30,9 +30,19 @@ export type FillPixelChromaFoilGridOptions = {
    * Per ref, effective tilt Y offset is `(row - ref.row) * tiltCouplingPerRow` before averaging.
    */
   tiltCouplingPerRow?: number;
+  /**
+   * Face-grid cells (`"col,row"`) that evaluate `wordEllipse` directly at the sampled tilt,
+   * without blending `refs`.
+   */
+  wordFaceCells?: ReadonlySet<string>;
+  wordEllipse?: PixelChromaTiltEllipseConfig;
 };
 
-const DEFAULT_FILL_OPTIONS: Required<FillPixelChromaFoilGridOptions> = {
+type FillPixelChromaFoilGridDefaults = Required<
+  Pick<FillPixelChromaFoilGridOptions, 'tiltCouplingPerCol' | 'tiltCouplingPerRow'>
+>;
+
+const DEFAULT_FILL_OPTIONS: FillPixelChromaFoilGridDefaults = {
   tiltCouplingPerCol: 0.18,
   tiltCouplingPerRow: 0.14,
 };
@@ -190,6 +200,12 @@ export function pickPixelChromaFoilRgbaForCell(
   tiltY: number,
   options?: FillPixelChromaFoilGridOptions
 ): PixelChromaFoilGridCell {
+  const wordCells = options?.wordFaceCells;
+  const wordEllipse = options?.wordEllipse;
+  if (wordCells?.has(`${col},${row}`) && wordEllipse) {
+    return tiltEllipticalFoilRgba(tiltX, tiltY, wordEllipse);
+  }
+
   const cpc = options?.tiltCouplingPerCol ?? DEFAULT_FILL_OPTIONS.tiltCouplingPerCol;
   const cpr = options?.tiltCouplingPerRow ?? DEFAULT_FILL_OPTIONS.tiltCouplingPerRow;
 

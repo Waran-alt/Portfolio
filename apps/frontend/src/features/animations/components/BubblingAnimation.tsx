@@ -77,12 +77,13 @@ export default function BubblingAnimation({
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const initialPropsRef = useRef({ isActive, config });
 
   // Component lifecycle logging
   useEffect(() => {
     componentLogger.component('BubblingAnimation', 'mount', { 
-      isActive, 
-      config
+      isActive: initialPropsRef.current.isActive,
+      config: initialPropsRef.current.config
     });
     
     return () => {

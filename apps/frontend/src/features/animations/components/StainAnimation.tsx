@@ -75,12 +75,13 @@ export default function StainAnimation({
   const [stains, setStains] = useState<Stain[]>([]);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const initialPropsRef = useRef({ isActive, config });
 
   // Component lifecycle logging
   useEffect(() => {
     componentLogger.component('StainAnimation', 'mount', { 
-      isActive, 
-      config
+      isActive: initialPropsRef.current.isActive,
+      config: initialPropsRef.current.config
     });
     
     return () => {

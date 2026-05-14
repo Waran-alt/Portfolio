@@ -2,6 +2,66 @@
 export const PIXEL_SQUARE_REVEAL_SPAN_MS = 300;
 export const PIXEL_SQUARE_REVEAL_DURATION_MS = 75;
 
+/** Face-grid anchor for the “-pixel” mark (internal word indices add to this origin). */
+export const PIXEL_MARK_GRID_ORIGIN = { col: 16, row: 15 } as const;
+
+/** Face-grid cells for “-pixel” chroma (absolute `col`, `row`). */
+export const PIXEL_WORD_FACE_CELLS: readonly [number, number][] = [
+  [16, 17],
+  [17, 17],
+  [18, 17],
+  [21, 15],
+  [22, 15],
+  [23, 15],
+  [21, 16],
+  [24, 16],
+  [21, 17],
+  [22, 17],
+  [23, 17],
+  [21, 18],
+  [21, 19],
+  [27, 15],
+  [27, 16],
+  [27, 17],
+  [27, 18],
+  [27, 19],
+  [30, 15],
+  [34, 15],
+  [31, 16],
+  [33, 16],
+  [32, 17],
+  [31, 18],
+  [33, 18],
+  [30, 19],
+  [34, 19],
+  [37, 15],
+  [38, 15],
+  [39, 15],
+  [37, 16],
+  [37, 17],
+  [38, 17],
+  [39, 17],
+  [37, 18],
+  [37, 19],
+  [38, 19],
+  [39, 19],
+  [42, 15],
+  [42, 16],
+  [42, 17],
+  [42, 18],
+  [42, 19],
+  [43, 19],
+  [44, 19],
+] as const;
+
+export const PIXEL_WORD_FACE_CELL_KEYS: ReadonlySet<string> = new Set(
+  PIXEL_WORD_FACE_CELLS.map(([col, row]) => `${col},${row}`)
+);
+
+export function isPixelWordFaceCell(col: number, row: number): boolean {
+  return PIXEL_WORD_FACE_CELL_KEYS.has(`${col},${row}`);
+}
+
 /**
  * Deterministic pseudo-random delay in `[0, spanMs)` from integer grid indices (stable across frames).
  */
