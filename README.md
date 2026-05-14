@@ -132,9 +132,10 @@ Portfolio/
 │   └── ENVIRONMENT_SETUP.md    # Environment configuration
 │
 └── 🐳 Docker & Deployment
-    ├── docker-compose.yml      # Development environment
-    ├── docker-compose.prod.yml # Production environment
-    └── Makefile                # Convenient commands
+    ├── docker-compose.yml          # Development environment
+    ├── docker-compose.prod.yml     # Full production stack (API + Postgres)
+    ├── docker-compose.deploy.yml   # Public landing only (Next.js)
+    └── Makefile                    # Convenient commands
 ```
 
 ## 🛠️ Development Commands
@@ -275,7 +276,39 @@ The project uses service-specific environment files for secure configuration man
 
 ## 🚀 Production Deployment
 
-### Quick Production Start
+### Public landing (Hostinger / VPS)
+
+The default production path for **focus-on-pixel.com** deploys **only the Next.js landing** (`docker-compose.deploy.yml`). It does not start PostgreSQL, the Express API, or JWT/session secrets. The container listens on **127.0.0.1**; Nginx on the VPS terminates TLS and proxies to that port (default **3000**).
+
+**Automated deploy (GitHub Actions):** push to `main` runs `.github/workflows/deploy-hostinger.yml` via Hostinger’s `deploy-on-vps` action (`project-name: portfolio`).
+
+Configure in the GitHub repo under **Settings → Secrets and variables → Actions → Repository** (not Environment):
+
+| Name | Type | Purpose |
+|------|------|---------|
+| `HOSTINGER_API_KEY` | Secret | Hostinger API key ([hPanel → Profile → API](https://hpanel.hostinger.com/profile/api)) |
+| `HOSTINGER_VM_ID` | Variable | VPS id from the hPanel URL |
+| `NEXT_PUBLIC_FRONTEND_URL` | Variable | Public site URL, e.g. `https://focus-on-pixel.com` (no trailing slash) |
+| `FRONTEND_PORT` | Variable | Optional; default `3000` |
+| `NEXT_PUBLIC_API_URL` | Variable | Optional at build time; the landing does not call the API at runtime |
+
+For a **private** repo, add a [Hostinger deploy SSH key](https://www.hostinger.com/support/how-to-deploy-from-private-github-repository-on-hostinger-docker-manager/) so the action can clone on the VPS.
+
+**DNS:** point `@` and `www` **A** records to the VPS IP. A separate subdomain (e.g. another app on the same VPS) keeps its own Nginx `server` block and ports.
+
+**Nginx on the VPS:** use `tools/nginx/examples/focus-on-pixel.com.conf` as a starting point, then Certbot (or Hostinger SSL) and `nginx -t` / reload. Do not reuse another app’s ports on the same host (e.g. keep this landing on **3000** if another stack uses **3002** / **4002**).
+
+**Manual deploy on the VPS:**
+
+```bash
+docker compose -f docker-compose.deploy.yml up -d --build
+```
+
+**Checks:** `https://focus-on-pixel.com/fr` (landing). If the site does not update after a push, inspect the Hostinger build log on the VPS (often `.build.log` under the project directory) and `docker logs portfolio_frontend_deploy`.
+
+### Full stack (API + database)
+
+When you need the complete monorepo in production (Postgres, backend, internal Nginx), use `docker-compose.prod.yml` locally or on a VPS—not the Hostinger landing workflow above.
 
 ```bash
 # Build and start production environment
@@ -285,17 +318,7 @@ make prod-build
 make prod-logs
 ```
 
-### Git deploy (VPS provider)
-
-If your VPS provider auto-deploys on every pushed commit, use the single-file compose setup:
-
-```bash
-docker compose -f docker-compose.deploy.yml up -d --build
-```
-
-In this mode, the landing container binds to `127.0.0.1` and your VPS reverse proxy handles `focus-on-pixel.com` and TLS. The full API stack remains available via `docker-compose.prod.yml` when you need it.
-
-### Production Features
+### Production features (full stack)
 
 - **Multi-stage Docker builds** for optimized images
 - **SSL/TLS termination** with Nginx
