@@ -46,8 +46,14 @@ COPY apps/frontend/src ./apps/frontend/src
 COPY apps/frontend/i18n ./apps/frontend/i18n
 COPY apps/frontend/tsconfig.json ./apps/frontend/tsconfig.json
 COPY apps/frontend/next.config.js ./apps/frontend/next.config.js
-COPY apps/frontend/next-env.d.ts ./apps/frontend/next-env.d.ts
 COPY apps/frontend/public ./apps/frontend/public
+RUN printf '%s\n' \
+  '/// <reference types="next" />' \
+  '/// <reference types="next/image-types/global" />' \
+  '' \
+  '// NOTE: This file should not be edited' \
+  '// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.' \
+  > apps/frontend/next-env.d.ts
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
