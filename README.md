@@ -306,6 +306,8 @@ docker compose -f docker-compose.deploy.yml up -d --build
 
 **Checks:** `https://focus-on-pixel.com/fr` (landing). If the site does not update after a push, inspect the Hostinger build log on the VPS (often `.build.log` under the project directory) and `docker logs portfolio_frontend_deploy`.
 
+**If the Hostinger project exists but the container is not running:** on the VPS, `docker ps` only lists running containers. Use `docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -i portfolio` and `docker logs --tail 80 portfolio_frontend_deploy`. A status `Exited` usually means the image build failed on an older commit, `server.js` was started from the wrong path, or port `3000` is already bound on `127.0.0.1`. Confirm the latest `main` deploy finished in GitHub Actions, then redeploy. Manual recovery from the Hostinger project directory (often `/docker/portfolio`): `docker compose -f docker-compose.deploy.yml up -d --build`.
+
 ### Full stack (API + database)
 
 When you need the complete monorepo in production (Postgres, backend, internal Nginx), use `docker-compose.prod.yml` locally or on a VPS—not the Hostinger landing workflow above.
