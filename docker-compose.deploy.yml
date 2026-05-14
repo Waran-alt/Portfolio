@@ -19,7 +19,7 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
         NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL:-https://focus-on-pixel.com}
     image: portfolio-frontend:latest
-    pull_policy: build
+    pull_policy: never
     container_name: portfolio_frontend_deploy
     restart: unless-stopped
     environment:
