@@ -22,8 +22,9 @@
  * (single RAF lerp; only the visible face updates `--foil-rotate-*`; hidden faces use `.foilPaused`).
  * Pointer tilt unlocks only after `.cardShell` entrance **and** title-face chroma stagger
  * (`pixelStaggerComplete`), unless reduced motion or a non-title face (no stagger).
- * Tilt tracks the cursor on the page (`pointerTiltTracksDocument`); leaving the viewport or blurring
- * the window resets the card to neutral tilt.
+ * Tilt tracks the cursor on the page (`pointerTiltTracksDocument`); on touch devices, `touchSwipeTiltEnabled`
+ * maps screen swipes to the same tilt and resets when the finger lifts. Leaving the viewport or blurring
+ * the window resets the card to neutral tilt (pointer).
  *
  * ## Performance tactics
  * - No idle RAF: schedule frames only while something is easing.

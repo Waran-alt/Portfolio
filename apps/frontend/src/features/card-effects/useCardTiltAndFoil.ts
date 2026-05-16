@@ -40,6 +40,11 @@ export type UseCardTiltAndFoilOptions = CardTiltFoilRefs & {
    * moves for the foil halo near the card.
    */
   pointerTiltTracksDocument?: boolean;
+  /**
+   * On touch devices, map screen swipes (`touchmove` on `document`) to card tilt. More reliable
+   * than `pointermove` alone on mobile; resets tilt when the finger lifts. Defaults to true.
+   */
+  touchSwipeTiltEnabled?: boolean;
   /** When true, lerp and write `--foil-rotate-back`; otherwise front. */
   showingBack: boolean;
   /** e.g. `fx.tiltLayerHot` from `cardEffects.module.css`. */
@@ -56,6 +61,7 @@ export function useCardTiltAndFoil({
   reducedMotion,
   pointerTiltEnabled = true,
   pointerTiltTracksDocument = false,
+  touchSwipeTiltEnabled = true,
   showingBack,
   areaRef,
   tiltLayerRef,
@@ -82,6 +88,8 @@ export function useCardTiltAndFoil({
   });
   const rafRef = useRef(0);
   const lastPointerRef = useRef({ x: NaN, y: NaN });
+  /** While > 0, touch handlers own tilt (avoids duplicate pointer + touch updates). */
+  const activeTouchCountRef = useRef(0);
   const showingBackRef = useRef(showingBack);
   const scheduleTickImplRef = useRef<(() => void) | null>(null);
 
@@ -227,28 +235,28 @@ export function useCardTiltAndFoil({
       scheduleTick();
     };
 
-    const applyTiltFromPointer = (p: PointerEvent) => {
+    const applyTiltFromClientPoint = (clientX: number, clientY: number, force = false) => {
       const lp = lastPointerRef.current;
-      if (Number.isFinite(lp.x)) {
-        const dx = p.clientX - lp.x;
-        const dy = p.clientY - lp.y;
+      if (!force && Number.isFinite(lp.x)) {
+        const dx = clientX - lp.x;
+        const dy = clientY - lp.y;
         if (dx * dx + dy * dy < POINTER_MOVE_EPS_SQ) {
           return;
         }
       }
-      lp.x = p.clientX;
-      lp.y = p.clientY;
+      lp.x = clientX;
+      lp.y = clientY;
 
       const rect = areaEl.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      const nx = (p.clientX - cx) / (rect.width / 2);
-      const ny = (p.clientY - cy) / (rect.height / 2);
+      const nx = (clientX - cx) / (rect.width / 2);
+      const ny = (clientY - cy) / (rect.height / 2);
       const nxClamped = clamp(nx, -1, 1);
       const nyClamped = clamp(ny, -1, 1);
       const nextTx = nxClamped * MAX_TILT_DEG;
       const nextTy = -nyClamped * MAX_TILT_DEG;
-      const nextAng = (Math.atan2(p.clientY - cy, p.clientX - cx) * 180) / Math.PI;
+      const nextAng = (Math.atan2(clientY - cy, clientX - cx) * 180) / Math.PI;
 
       const t = targetRef.current;
       if (
@@ -265,6 +273,11 @@ export function useCardTiltAndFoil({
       scheduleTick();
     };
 
+    const applyTiltFromPointer = (p: PointerEvent) => {
+      if (activeTouchCountRef.current > 0) return;
+      applyTiltFromClientPoint(p.clientX, p.clientY);
+    };
+
     const onGlobalPointerMove = (e: Event) => {
       const p = e as PointerEvent;
       syncFoilHalo(p.clientX, p.clientY);
@@ -277,8 +290,51 @@ export function useCardTiltAndFoil({
       applyTiltFromPointer(e as PointerEvent);
     };
 
+    const touchCaptureOpts: AddEventListenerOptions = { passive: true, capture: true };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      activeTouchCountRef.current = e.touches.length;
+      lastPointerRef.current = { x: NaN, y: NaN };
+      const t = e.touches[0]!;
+      syncFoilHalo(t.clientX, t.clientY);
+      if (pointerTiltTracksDocument) {
+        applyTiltFromClientPoint(t.clientX, t.clientY, true);
+      }
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      activeTouchCountRef.current = e.touches.length;
+      const t = e.touches[0]!;
+      syncFoilHalo(t.clientX, t.clientY);
+      if (pointerTiltTracksDocument) {
+        applyTiltFromClientPoint(t.clientX, t.clientY);
+      }
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      activeTouchCountRef.current = e.touches.length;
+      if (e.touches.length === 0) {
+        onLeave();
+        clearFoilHalo();
+        return;
+      }
+      const t = e.touches[0]!;
+      syncFoilHalo(t.clientX, t.clientY);
+      applyTiltFromClientPoint(t.clientX, t.clientY, true);
+    };
+
     const passiveOpts: AddEventListenerOptions = { passive: true };
     document.addEventListener('pointermove', onGlobalPointerMove, passiveOpts);
+
+    const useTouchSwipe =
+      touchSwipeTiltEnabled &&
+      typeof window !== 'undefined' &&
+      ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (useTouchSwipe) {
+      document.addEventListener('touchstart', onTouchStart, touchCaptureOpts);
+      document.addEventListener('touchmove', onTouchMove, touchCaptureOpts);
+      document.addEventListener('touchend', onTouchEnd, touchCaptureOpts);
+      document.addEventListener('touchcancel', onTouchEnd, touchCaptureOpts);
+    }
 
     const onLeftViewportOrWindowBlur = () => {
       onLeave();
@@ -296,8 +352,15 @@ export function useCardTiltAndFoil({
 
     return () => {
       scheduleTickImplRef.current = null;
+      activeTouchCountRef.current = 0;
       tiltEl.classList.remove(tiltLayerHotClassName);
       document.removeEventListener('pointermove', onGlobalPointerMove);
+      if (useTouchSwipe) {
+        document.removeEventListener('touchstart', onTouchStart, touchCaptureOpts);
+        document.removeEventListener('touchmove', onTouchMove, touchCaptureOpts);
+        document.removeEventListener('touchend', onTouchEnd, touchCaptureOpts);
+        document.removeEventListener('touchcancel', onTouchEnd, touchCaptureOpts);
+      }
       clearFoilHalo();
       if (pointerTiltTracksDocument) {
         document.documentElement.removeEventListener('mouseleave', onLeftViewportOrWindowBlur);
@@ -316,6 +379,7 @@ export function useCardTiltAndFoil({
     reducedMotion,
     pointerTiltEnabled,
     pointerTiltTracksDocument,
+    touchSwipeTiltEnabled,
     tiltLayerHotClassName,
     areaRef,
     tiltLayerRef,

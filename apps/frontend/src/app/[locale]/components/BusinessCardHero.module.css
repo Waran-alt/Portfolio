@@ -37,6 +37,10 @@
     clamp(4.5rem, 16dvh, 8.5rem) max(1rem, env(safe-area-inset-left, 0px));
   overscroll-behavior: none;
   overflow: hidden;
+  /* Let full-screen swipes drive tilt without browser pan/zoom stealing the gesture. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
   color-scheme: dark;
   background-color: #020617;
   background-image: linear-gradient(to bottom right, #020617 0%, #0f172a 48%, #020617 100%);
@@ -611,6 +615,7 @@
   z-index: 11;
   pointer-events: auto;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .faceContactPhone,
@@ -818,6 +823,7 @@
   place-items: center;
   /* Must receive hover so the “detach” effect triggers only on the chip. */
   pointer-events: auto;
+  touch-action: manipulation;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.18);
   cursor: var(--landing-cursor-bright);

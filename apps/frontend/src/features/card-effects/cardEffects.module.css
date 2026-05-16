@@ -15,6 +15,7 @@
 
 .tiltArea {
   position: relative;
+  touch-action: none;
   perspective: 1200px;
   perspective-origin: 50% 40%;
   display: flex;
