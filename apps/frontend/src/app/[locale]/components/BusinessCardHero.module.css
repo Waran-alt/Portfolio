@@ -32,9 +32,8 @@
   align-items: center;
   justify-content: center;
   /* Extra vertical room so `.cardCastShadow` blur is not clipped by `overflow: hidden`. */
-  padding:
-    clamp(3.5rem, 14dvh, 7rem) max(1rem, env(safe-area-inset-right, 0px))
-    clamp(4.5rem, 16dvh, 8.5rem) max(1rem, env(safe-area-inset-left, 0px));
+  padding: clamp(3.5rem, 14dvh, 7rem) max(1rem, env(safe-area-inset-right, 0px)) clamp(4.5rem, 16dvh, 8.5rem)
+    max(1rem, env(safe-area-inset-left, 0px));
   overscroll-behavior: none;
   overflow: hidden;
   /* Let full-screen swipes drive tilt without browser pan/zoom stealing the gesture. */
@@ -202,6 +201,7 @@
   overflow: visible;
   padding-top: 1rem;
   padding-bottom: 1rem;
+  padding-inline: 0.65rem;
   --contact-foil-strength: 1;
   --contour-hatch-ink: color-mix(in srgb, #0f172a 78%, #3069d2 22%);
   --contour-hatch-line-alpha: 0.84;
@@ -386,6 +386,7 @@
 .faceContent {
   position: relative;
   z-index: 6;
+  width: 100%;
   height: 100%;
   box-sizing: border-box;
   -webkit-transform-style: preserve-3d;
@@ -408,61 +409,79 @@
   overflow: visible;
 }
 
-/* Contact face: details left, QR right; stay inside the card padding box. */
+/* Contact face: 2D grid layout (no per-column 3D) so panels keep fixed gaps on narrow screens. */
 .faceContactContent {
   --contact-block-size: 50cqh;
-  /* Forced min gap between details stack and QR — cqw alone collapses on narrow cards. */
-  --contact-column-gap: max(0.65rem, 5cqw);
+  --contact-details-width: 13rem;
+  --contact-column-gap: 0.75rem;
+  --contact-stack-gap: 0.5rem;
   --contact-layout-y: clamp(0.5rem, 14.25cqh, 1.4rem);
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: flex-start;
-  column-gap: var(--contact-column-gap);
-  row-gap: var(--contact-column-gap);
-  padding: var(--contact-layout-y) 0.75rem clamp(0.25rem, 1.5cqh, 0.5rem);
-  text-align: left;
-  min-height: 0;
-  max-height: 100%;
-  overflow: visible;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-}
-
-.faceContactDetailsHost {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  max-width: calc(100% - var(--contact-block-size) - var(--contact-column-gap));
-  overflow: visible;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-}
-
-.faceContactDetails3dHost {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  perspective: 380px;
-  perspective-origin: 50% 50%;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-}
-
-.faceContactMarkLayered {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  height: auto;
+  font-family: var(--font-contact-sans), 'DM Sans', system-ui, sans-serif;
+  font-optical-sizing: auto;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: var(--contact-layout-y) 0 clamp(0.25rem, 1.5cqh, 0.5rem);
+  text-align: left;
+  overflow: visible;
+  margin-top: 0.75rem;
 }
 
-.faceContactAside .faceContactMarkLayered {
-  width: fit-content;
+.faceContactLayout {
+  display: grid;
+  grid-template-columns: var(--contact-details-width) max-content;
+  grid-template-rows: max-content max-content;
+  column-gap: var(--contact-column-gap);
+  row-gap: var(--contact-stack-gap);
+  width: max-content;
+  max-width: 100%;
+  flex-shrink: 0;
+  align-items: start;
+  justify-items: stretch;
+  transform-style: flat;
+}
+
+.faceContactDetailsSlot {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.faceContactRoleSlot {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  min-width: 0;
+}
+
+.faceContactQrSlot {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+}
+
+/* Beat `cardEffects.markLayered` (`inline-block`) so both panels span the full 13rem column. */
+.faceContactLayout .faceContactSlotLayer {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 100%;
   max-width: none;
+  height: auto;
+  box-sizing: border-box;
+  transform-style: flat;
+}
+
+.faceContactPanelFlat {
+  /* Beat `cardEffects.markDetachedFloat` translateZ so grid gaps stay visible on narrow screens. */
+  transform: translateZ(0) !important;
+  transform-style: flat !important;
 }
 
 .faceContactDetailsShadow {
@@ -484,7 +503,7 @@
   /* Vertical alignment is per-variant (details float: top + links bottom; foot/QR: centered). */
   box-sizing: border-box;
   border-radius: 0.625rem;
-  padding: clamp(0.35rem, 1.5cqh, 0.6rem) clamp(0.5rem, 2.25cqw, 0.75rem);
+  padding: clamp(0.35rem, 1.5cqh, 0.6rem) clamp(0.55rem, 2.5cqw, 0.7rem);
   background: linear-gradient(155deg, #ffffff 0%, #f8fafc 45%, #e2e8f0 100%);
   box-shadow:
     0 0 0 1px rgb(255 255 255 / 0.78) inset,
@@ -494,14 +513,14 @@
 
 .faceContactDetailsFloat {
   width: 100%;
-  max-width: 100%;
-  height: var(--contact-block-size);
+  max-width: none;
+  flex-shrink: 0;
+  /* Grow with content so name / email are not clipped vertically */
+  height: auto;
   min-height: var(--contact-block-size);
-  max-height: var(--contact-block-size);
+  max-height: none;
   justify-content: flex-start;
   align-items: stretch;
-  transform: translateZ(54px);
-  transform-style: preserve-3d;
 }
 
 /* Compound: wins over any stray `.faceContactPanel` ordering in the CSS chunk. */
@@ -510,27 +529,16 @@
   align-items: stretch;
 }
 
-.faceContactDetailsFootShadow {
-  top: calc(100% + clamp(0.3rem, 1.25cqh, 0.5rem));
-  right: 0;
-  bottom: auto;
-  left: 0;
-  width: 100%;
-  height: calc(clamp(0.7rem, 4cqh, 0.85rem) + clamp(0.56rem, 2.3cqh, 0.9rem));
-}
-
 .faceContactDetailsFootFloat {
-  position: absolute;
-  top: calc(100% + clamp(0.3rem, 1.25cqh, 0.5rem));
-  left: 0;
+  position: relative;
   width: 100%;
+  min-width: 100%;
+  flex-shrink: 0;
   height: auto;
   min-height: calc(clamp(0.7rem, 4cqh, 0.85rem) + clamp(0.56rem, 2.3cqh, 0.9rem));
   max-height: none;
   justify-content: center;
-  padding: clamp(0.28rem, 1.15cqh, 0.45rem) clamp(0.5rem, 2.25cqw, 0.75rem);
-  transform: translateZ(54px);
-  transform-style: preserve-3d;
+  padding: clamp(0.28rem, 1.15cqh, 0.45rem) clamp(0.55rem, 2.5cqw, 0.7rem);
 }
 
 .faceContactDetailsFoot {
@@ -545,14 +553,13 @@
   min-width: 0;
   min-height: 0;
   width: 100%;
-  height: 100%;
+  height: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  /* Two rows: name (top) + links block (bottom); works even when `margin-top: auto` has no free space. */
   justify-content: space-between;
-  gap: clamp(0.2rem, 1.25cqh, 0.45rem);
+  gap: clamp(0.25rem, 1.35cqh, 0.55rem);
 }
 
 .faceContactLinks {
@@ -564,57 +571,52 @@
   gap: clamp(0.15rem, 1.1cqh, 0.35rem);
 }
 
-.faceContactAside {
-  flex: 0 0 var(--contact-block-size);
-  width: var(--contact-block-size);
-  min-width: var(--contact-block-size);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  overflow: visible;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-}
-
 .faceContactQrPanel {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  flex-shrink: 0;
   width: var(--contact-block-size);
   height: var(--contact-block-size);
+  min-width: var(--contact-block-size);
   min-height: var(--contact-block-size);
   max-height: var(--contact-block-size);
   aspect-ratio: 1;
   line-height: 0;
   text-decoration: none;
   color: inherit;
-  transform: translateZ(54px);
-  transform-style: preserve-3d;
 }
 
 .faceContactName {
   margin: 0;
   flex-shrink: 0;
+  max-width: 100%;
   line-height: 1.05;
   letter-spacing: 0.02em;
+  font-family: var(--font-unica-one), 'Unica One', system-ui, sans-serif;
+  overflow-wrap: anywhere;
   color: #0f172a;
 }
 
 .faceContactNameGiven {
-  font-size: clamp(0.95rem, 7cqh, 1.35rem);
+  font-size: clamp(1.05rem, 7.75cqh, 1.5rem);
   font-weight: 700;
 }
 
 .faceContactNameFamily {
-  font-size: clamp(0.72rem, 5.25cqh, 0.95rem);
-  font-weight: 700;
+  font-size: clamp(0.88rem, 5.75cqh, 1.08rem);
+  font-weight: 600;
 }
 
 .faceContactRole {
   margin: 0;
   flex-shrink: 0;
-  font-size: clamp(0.75rem, 4.5cqh, 0.9rem);
-  line-height: 1.2;
+  max-width: 100%;
+  font-size: clamp(0.82rem, 5cqh, 1rem);
+  font-weight: 500;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  font-family: inherit;
   color: rgb(71 85 105);
 }
 
@@ -632,11 +634,14 @@
 .faceContactEmail {
   flex-shrink: 0;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: clamp(0.7rem, 4cqh, 0.85rem);
-  line-height: 1.25;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: clamp(0.8rem, 4.75cqh, 0.95rem);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  font-family: inherit;
   color: rgb(30 41 59);
   text-decoration: none;
 }

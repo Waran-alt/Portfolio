@@ -37,7 +37,7 @@
  */
 
 import { useLocale } from 'i18n';
-import { Comic_Neue, Silkscreen, Unica_One } from 'next/font/google';
+import { Comic_Neue, DM_Sans, Silkscreen, Unica_One } from 'next/font/google';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 /** Imported CSS module object; cast below so class names are checked against a fixed key union. */
 import contactQrImage from '@/assets/qr-focus-on-pixel.png';
@@ -539,7 +539,20 @@ function drawPixelGridChromaCanvas(
 }
 
 
-const unicaOne = Unica_One({ weight: '400', subsets: ['latin'], display: 'swap' });
+const unicaOne = Unica_One({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-unica-one',
+  fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+});
+/** Readable sans for contact face (name, links, role); Unica One stays on title marks only. */
+const contactSans = DM_Sans({
+  weight: ['400', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-contact-sans',
+});
 const silkscreen = Silkscreen({ weight: '400', subsets: ['latin'], display: 'swap' });
 const comicNeue = Comic_Neue({ weight: '700', subsets: ['latin'], display: 'swap' });
 
@@ -571,9 +584,12 @@ const css = rawStyles as Record<
   | 'faceContent'
   | 'faceFrontTitleOnly'
   | 'faceContactContent'
-  | 'faceContactDetailsHost'
-  | 'faceContactDetails3dHost'
-  | 'faceContactMarkLayered'
+  | 'faceContactLayout'
+  | 'faceContactDetailsSlot'
+  | 'faceContactRoleSlot'
+  | 'faceContactQrSlot'
+  | 'faceContactSlotLayer'
+  | 'faceContactPanelFlat'
   | 'faceContactDetailsShadow'
   | 'faceContactPanel'
   | 'faceContactDetailsFloat'
@@ -582,7 +598,6 @@ const css = rawStyles as Record<
   | 'faceContactDetailsFootShadow'
   | 'faceContactDetails'
   | 'faceContactLinks'
-  | 'faceContactAside'
   | 'faceContactName'
   | 'faceContactNameGiven'
   | 'faceContactNameFamily'
@@ -1610,7 +1625,11 @@ export function BusinessCardHero({
   }, [contourHatch.fillMaskDataUrl, contourSeedCell]);
 
   return (
-    <main className={css.heroRoot} data-portfolio-home data-testid="portfolio-hero">
+    <main
+      className={`${css.heroRoot} ${unicaOne.variable} ${contactSans.variable}`}
+      data-portfolio-home
+      data-testid="portfolio-hero"
+    >
       <div className={css.perspective}>
         <div ref={tiltAreaRef} className={fx.tiltArea}>
           <div ref={tiltRef} className={fx.tiltLayer}>
@@ -1727,17 +1746,17 @@ export function BusinessCardHero({
                       </g>
                     </svg>
                   </div>
-                    <div className={`${css.faceContent} ${css.faceContactContent}`}>
-                      <div className={css.faceContactDetailsHost}>
+                    <div className={`${css.faceContent} ${css.faceContactContent} ${contactSans.className}`}>
+                      <div className={css.faceContactLayout}>
                         <div
-                          className={`${fx.parallaxTiltHost} ${fx.markLayered} ${css.faceContactMarkLayered} ${css.faceContactDetails3dHost}`}
+                          className={`${fx.markLayered} ${css.faceContactSlotLayer} ${css.faceContactDetailsSlot}`}
                         >
                           <span
                             className={`${fx.markSurfaceShadow} ${css.faceContactDetailsShadow}`}
                             aria-hidden
                           />
                           <div
-                            className={`${fx.markDetachedFloat} ${css.faceContactPanel} ${css.faceContactDetailsFloat}`}
+                            className={`${fx.markDetachedFloat} ${css.faceContactPanelFlat} ${css.faceContactPanel} ${css.faceContactDetailsFloat}`}
                           >
                             <div className={css.faceContactDetails}>
                               <p
@@ -1758,22 +1777,20 @@ export function BusinessCardHero({
                               </div>
                             </div>
                           </div>
-                          <span
-                            className={`${fx.markSurfaceShadow} ${css.faceContactDetailsShadow} ${css.faceContactDetailsFootShadow}`}
-                            aria-hidden
-                          />
+                        </div>
+                        <div
+                          className={`${fx.markLayered} ${css.faceContactSlotLayer} ${css.faceContactRoleSlot}`}
+                        >
                           <div
-                            className={`${fx.markDetachedFloat} ${css.faceContactPanel} ${css.faceContactDetailsFootFloat}`}
+                            className={`${fx.markDetachedFloat} ${css.faceContactPanelFlat} ${css.faceContactPanel} ${css.faceContactDetailsFootFloat}`}
                           >
                             <p className={`${css.faceContactDetailsFoot} ${css.faceContactRole}`}>
                               {copy.contactRole}
                             </p>
                           </div>
                         </div>
-                      </div>
-                      <div className={css.faceContactAside}>
                         <div
-                          className={`${fx.parallaxTiltHost} ${fx.markLayered} ${css.faceContactMarkLayered} ${css.faceContactDetails3dHost}`}
+                          className={`${fx.markLayered} ${css.faceContactSlotLayer} ${css.faceContactQrSlot}`}
                         >
                           <span
                             className={`${fx.markSurfaceShadow} ${css.faceContactDetailsShadow}`}
@@ -1783,7 +1800,7 @@ export function BusinessCardHero({
                             href={CONTACT_QR_URL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`${fx.markDetachedFloat} ${css.faceContactPanel} ${css.faceContactQrPanel}`}
+                            className={`${fx.markDetachedFloat} ${css.faceContactPanelFlat} ${css.faceContactPanel} ${css.faceContactQrPanel}`}
                             aria-label={CONTACT_QR_URL}
                           >
                             <img
