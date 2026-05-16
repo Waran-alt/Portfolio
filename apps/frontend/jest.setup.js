@@ -23,6 +23,38 @@ if (typeof window !== 'undefined') {
     point.matrixTransform = jest.fn().mockReturnValue(point);
     return point;
   };
+
+  // JSDOM: always provide `matchMedia` (some versions expose a non-callable stub).
+  window.matchMedia = jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  }));
+
+  // JSDOM has no Canvas 2D; `BusinessCardHero` contact mask uses `getContext('2d')`.
+  const origGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+    if (type === '2d') {
+      return {
+        createImageData: (w, h) => ({
+          data: new Uint8ClampedArray(Math.max(1, w) * Math.max(1, h) * 4),
+          width: w,
+          height: h,
+        }),
+        putImageData: jest.fn(),
+        getImageData: jest.fn(),
+        drawImage: jest.fn(),
+        fillRect: jest.fn(),
+        clearRect: jest.fn(),
+      };
+    }
+    return origGetContext.call(this, type, ...rest);
+  };
+  HTMLCanvasElement.prototype.toDataURL = function () {
+    return 'data:image/png;base64,';
+  };
 }
 
 // Provide a minimal mock for next/server when running in JSDOM to avoid ReferenceError: Request

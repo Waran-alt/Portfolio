@@ -1,14 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('LandingPage E2E', () => {
-  test('renders landing with rotating cube', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle' });
-    await page.waitForLoadState('domcontentloaded');
+test.describe('Home page E2E', () => {
+  test('renders portfolio hero shell', async ({ page }) => {
+    await page.goto('/en', { waitUntil: 'domcontentloaded' });
 
-    await expect(page.getByTestId('landing-root')).toBeVisible();
-    await expect(page.getByTestId('cube-wrapper')).toBeVisible();
-    await expect(page.getByTestId('cube')).toBeVisible();
+    const hero = page.getByTestId('portfolio-hero');
+    await expect(hero).toBeVisible();
+    await expect(hero).toHaveAttribute('data-portfolio-home');
   });
 });
-
-

@@ -1,7 +1,38 @@
 @import 'tailwindcss';
 @import 'tailwindcss/utilities';
 
+/*
+ * Full-viewport height chain: percentage / flex children need a definite chain; `min-height` alone on
+ * `body` does not always give `<main>` a usable block size when `overflow: hidden` is set on the
+ * document (see home page scroll lock). Keeps the shell dark even if a route’s `<main>` misses a fill.
+ */
+html {
+  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  background-color: #020617;
+}
+
 body {
   margin: 0;
   padding: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  background-color: #020617;
+}
+
+/* Home hero: `data-portfolio-home` on `<main>` — `body:has()` applies from first paint (no JS class race). */
+body:has(main[data-portfolio-home]) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-height: 100svh;
+  overflow: hidden;
+  background-color: #020617;
+}
+
+body:has(main[data-portfolio-home]) main[data-portfolio-home] {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }

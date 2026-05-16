@@ -6,7 +6,7 @@
  * see `features/card-effects/README.md`.
  */
 
-/* Landing cursors: bright on dark surfaces, dark on light card faces (see `/landing-demo`). */
+/* Full-viewport shell: layout + backdrop live here so the hero stays correct even if Tailwind utilities are not applied. */
 .heroRoot {
   --landing-cursor-bright:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><defs><radialGradient id="cursorGradientBright" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgb(255, 255, 255)" stop-opacity="0.2"/><stop offset="100%" stop-color="rgb(255, 255, 255)" stop-opacity="0.6"/></radialGradient></defs><circle cx="12" cy="12" r="6" fill="url(%23cursorGradientBright)"/></svg>')
@@ -17,6 +17,29 @@
       12 12,
     auto;
   cursor: var(--landing-cursor-bright);
+
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  /* Fill the flex slot from `body.portfolio-hero-scroll-host` and still work standalone. */
+  flex: 1 1 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Extra vertical room so `.cardCastShadow` blur is not clipped by `overflow: hidden`. */
+  padding:
+    clamp(3.5rem, 14dvh, 7rem) max(1rem, env(safe-area-inset-right, 0px))
+    clamp(4.5rem, 16dvh, 8.5rem) max(1rem, env(safe-area-inset-left, 0px));
+  overscroll-behavior: none;
+  overflow: hidden;
+  color-scheme: dark;
+  background-color: #020617;
+  background-image: linear-gradient(to bottom right, #020617 0%, #0f172a 48%, #020617 100%);
 }
 
 .heroCursorBright {
@@ -27,11 +50,15 @@
   cursor: var(--landing-cursor-dark);
 }
 
-/* Centers the card column in the viewport (parent is flex from Tailwind on `<main>`). */
+/* Column that hosts the tilt stack; full row width so flex centering on `.heroRoot` is reliable. */
 .perspective {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  flex: 0 1 auto;
 }
 
 /**
@@ -442,7 +469,7 @@
   mix-blend-mode: normal;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* Vertical alignment is per-variant (details float: top + links bottom; foot/QR: centered). */
   box-sizing: border-box;
   border-radius: 0.625rem;
   padding: clamp(0.35rem, 1.5cqh, 0.6rem) clamp(0.5rem, 2.25cqw, 0.75rem);
@@ -459,8 +486,16 @@
   height: var(--contact-block-size);
   min-height: var(--contact-block-size);
   max-height: var(--contact-block-size);
+  justify-content: flex-start;
+  align-items: stretch;
   transform: translateZ(54px);
   transform-style: preserve-3d;
+}
+
+/* Compound: wins over any stray `.faceContactPanel` ordering in the CSS chunk. */
+.faceContactPanel.faceContactDetailsFloat {
+  justify-content: flex-start;
+  align-items: stretch;
 }
 
 .faceContactDetailsFootShadow {
@@ -494,12 +529,26 @@
 }
 
 .faceContactDetails {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  /* Two rows: name (top) + links block (bottom); works even when `margin-top: auto` has no free space. */
+  justify-content: space-between;
+  gap: clamp(0.2rem, 1.25cqh, 0.45rem);
+}
+
+.faceContactLinks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  flex-shrink: 0;
   gap: clamp(0.15rem, 1.1cqh, 0.35rem);
 }
 

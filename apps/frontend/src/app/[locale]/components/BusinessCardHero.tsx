@@ -4,6 +4,8 @@
  * BusinessCardHero — interactive 3D business card (tilt + holo foil + flip).
  *
  * ## Layout (DOM)
+ * - `<main className={css.heroRoot} data-portfolio-home>`: `data-portfolio-home` lets `global.css`
+ *   use `body:has(...)` so the viewport flex shell applies on **first paint** (no `useEffect` delay).
  * - `tiltArea`: perspective + CSS variables for foil (`--foil-rotate-front/back`, origins).
  * - `tiltLayer`: receives `rotateX/rotateY` from JS (pointer parallax).
  * - `flipInner`: one panel; we swap its contents at flip midpoint (MemoOn landing pattern).
@@ -43,15 +45,15 @@ import rawFx from '@/features/card-effects/cardEffects.module.css';
 import rawStyles from './BusinessCardHero.module.css';
 import { FOCUS_MARK_VIEWBOX, FocusMarkVisiblePaths } from './focusMarkSvg';
 import {
-  fillPixelChromaFoilGrid,
-  type PixelChromaFoilGridRef,
+    fillPixelChromaFoilGrid,
+    type PixelChromaFoilGridRef,
 } from './pixelChromaGridFill';
 import type { PixelChromaTiltEllipseConfig } from './pixelChromaTiltEllipse';
 import {
-  PIXEL_SQUARE_REVEAL_DURATION_MS,
-  PIXEL_SQUARE_REVEAL_SPAN_MS,
-  PIXEL_WORD_FACE_CELL_KEYS,
-  pixelSquareRevealOpacity,
+    PIXEL_SQUARE_REVEAL_DURATION_MS,
+    PIXEL_SQUARE_REVEAL_SPAN_MS,
+    PIXEL_WORD_FACE_CELL_KEYS,
+    pixelSquareRevealOpacity,
 } from './pixelMarkMetrics';
 import { FocusMarkLayered, ProjectMarkLayered } from './TitleMarks';
 
@@ -578,6 +580,7 @@ const css = rawStyles as Record<
   | 'faceContactDetailsFoot'
   | 'faceContactDetailsFootShadow'
   | 'faceContactDetails'
+  | 'faceContactLinks'
   | 'faceContactAside'
   | 'faceContactName'
   | 'faceContactNameGiven'
@@ -1606,7 +1609,7 @@ export function BusinessCardHero({
   }, [contourHatch.fillMaskDataUrl, contourSeedCell]);
 
   return (
-    <main className={`${css.heroRoot} h-dvh overflow-hidden overscroll-none flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4`}>
+    <main className={css.heroRoot} data-portfolio-home data-testid="portfolio-hero">
       <div className={css.perspective}>
         <div ref={tiltAreaRef} className={fx.tiltArea}>
           <div ref={tiltRef} className={fx.tiltLayer}>
@@ -1744,12 +1747,14 @@ export function BusinessCardHero({
                                 <span className={css.faceContactNameGiven}>M</span>
                                 <span className={css.faceContactNameFamily}>{CONTACT_LAST_NAME}</span>
                               </p>
-                              <a href={CONTACT_PHONE_HREF} className={css.faceContactPhone}>
-                                {CONTACT_PHONE_DISPLAY}
-                              </a>
-                              <a href={`mailto:${CONTACT_EMAIL}`} className={css.faceContactEmail}>
-                                {CONTACT_EMAIL}
-                              </a>
+                              <div className={css.faceContactLinks}>
+                                <a href={CONTACT_PHONE_HREF} className={css.faceContactPhone}>
+                                  {CONTACT_PHONE_DISPLAY}
+                                </a>
+                                <a href={`mailto:${CONTACT_EMAIL}`} className={css.faceContactEmail}>
+                                  {CONTACT_EMAIL}
+                                </a>
+                              </div>
                             </div>
                           </div>
                           <span

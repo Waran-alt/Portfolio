@@ -1,25 +1,34 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 
+import { LocaleProvider } from 'i18n';
+
 import LandingPage from './page';
 
-describe('[locale]/page (LandingPage) - unit', () => {
+function renderHome() {
+  return render(
+    <LocaleProvider initialLocale="en">
+      <LandingPage />
+    </LocaleProvider>
+  );
+}
+
+describe('[locale]/page (home) - unit', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('renders the landing root and cube', () => {
-    render(<LandingPage />);
+  it('renders the portfolio hero shell', () => {
+    renderHome();
 
-    expect(screen.getByTestId('landing-root')).toBeInTheDocument();
-    expect(screen.getByTestId('cube-wrapper')).toBeInTheDocument();
-    expect(screen.getByTestId('cube')).toBeInTheDocument();
+    expect(screen.getByTestId('portfolio-hero')).toBeInTheDocument();
+    expect(screen.getByRole('main')).toHaveAttribute('data-portfolio-home');
   });
 
-  it('keeps the illumination light fixed without registering mousemove listeners', () => {
+  it('does not register window mousemove listeners (legacy cube behaviour)', () => {
     const addSpy = jest.spyOn(window, 'addEventListener');
 
-    render(<LandingPage />);
+    renderHome();
 
     const mouseMoveListenerRegistered = addSpy.mock.calls.some(([type]) => type === 'mousemove');
     expect(mouseMoveListenerRegistered).toBe(false);
