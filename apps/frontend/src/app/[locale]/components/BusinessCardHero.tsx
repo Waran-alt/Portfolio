@@ -562,6 +562,7 @@ const css = rawStyles as Record<
   | 'heroCursorBright'
   | 'heroCursorDark'
   | 'perspective'
+  | 'tiltLayerCenter'
   | 'cardCastShadow'
   | 'cardShell'
   | 'flipHost'
@@ -1632,7 +1633,7 @@ export function BusinessCardHero({
     >
       <div className={css.perspective}>
         <div ref={tiltAreaRef} className={fx.tiltArea}>
-          <div ref={tiltRef} className={fx.tiltLayer}>
+          <div ref={tiltRef} className={`${fx.tiltLayer} ${css.tiltLayerCenter}`}>
             <div ref={cardShellRef} className={css.cardShell}>
             {/* Blurred ellipse behind the card (translateZ); tilts with the shell. */}
             <div className={css.cardCastShadow} aria-hidden />

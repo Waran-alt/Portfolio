@@ -61,6 +61,9 @@
   justify-content: center;
   width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
+  padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px));
   flex: 0 1 auto;
 }
 
@@ -95,6 +98,8 @@
 .cardShell {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 100%;
   transform-style: preserve-3d;
   animation: cardEntrance 200ms cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
   overflow: visible;
@@ -116,6 +121,13 @@
   position: relative;
   z-index: 1;
   display: block;
+  width: min(
+    340px,
+    calc(100dvw - 2.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))
+  );
+  max-width: 100%;
+  margin-inline: auto;
+  box-sizing: border-box;
   transform-style: preserve-3d;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
@@ -149,11 +161,27 @@
 .flipInner {
   position: relative;
   z-index: 1;
-  width: min(90vw, 340px);
+  /* `100dvw` avoids iOS Safari treating `100vw` as wider than the visible viewport (horizontal bleed). */
+  width: min(
+    340px,
+    calc(100dvw - 2.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))
+  );
+  max-width: 100%;
   min-height: 200px;
+  margin-inline: auto;
   transform-style: preserve-3d;
   overflow: visible;
   /* The flip sets its own inline `transition`, so keep CSS transition off. */
+}
+
+/* Flex centering so tilt transforms don’t leave the card hugging the left edge on narrow viewports. */
+.tiltLayerCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* One side of the card; absolutely stacked; back face is pre-rotated 180° in CSS. */
@@ -198,7 +226,8 @@
 
 /* Contact face: masked laminate with contour strokes above foil. */
 .face.faceContact {
-  overflow: visible;
+  /* Clip contact grid inside the card (iOS WebKit paints wide children outside the face). */
+  overflow: hidden;
   padding-top: 1rem;
   padding-bottom: 1rem;
   padding-inline: 0.65rem;
@@ -411,8 +440,9 @@
 
 /* Contact face: 2D grid layout (no per-column 3D) so panels keep fixed gaps on narrow screens. */
 .faceContactContent {
-  --contact-block-size: 50cqh;
-  --contact-details-width: 13rem;
+  /* `cqw` = card face width (`container-type: size` on `.faceFront`). Keeps 13rem cap but shrinks on iOS. */
+  --contact-block-size: min(50cqh, 4.85rem);
+  --contact-details-width: min(13rem, calc(100cqw - var(--contact-block-size) - var(--contact-column-gap)));
   --contact-column-gap: 0.75rem;
   --contact-stack-gap: 0.5rem;
   --contact-layout-y: clamp(0.5rem, 14.25cqh, 1.4rem);
@@ -428,22 +458,49 @@
   box-sizing: border-box;
   padding: var(--contact-layout-y) 0 clamp(0.25rem, 1.5cqh, 0.5rem);
   text-align: left;
-  overflow: visible;
-  margin-top: 0.75rem;
+  overflow: hidden;
 }
 
 .faceContactLayout {
   display: grid;
-  grid-template-columns: var(--contact-details-width) max-content;
+  grid-template-columns: var(--contact-details-width) var(--contact-block-size);
   grid-template-rows: max-content max-content;
   column-gap: var(--contact-column-gap);
   row-gap: var(--contact-stack-gap);
-  width: max-content;
+  width: min(100%, calc(var(--contact-details-width) + var(--contact-column-gap) + var(--contact-block-size)));
   max-width: 100%;
   flex-shrink: 0;
+  margin-inline: auto;
   align-items: start;
   justify-items: stretch;
   transform-style: flat;
+}
+
+/* Narrow card (typical phone, ~340px): stack QR under contact column, centered — avoids iOS bleed. */
+@container card-front (max-width: 22rem) {
+  .faceContactLayout {
+    grid-template-columns: min(13rem, 100%);
+    grid-template-rows: max-content max-content max-content;
+    width: min(13rem, 100%);
+    justify-items: stretch;
+  }
+
+  .faceContactDetailsSlot {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .faceContactRoleSlot {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .faceContactQrSlot {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: center;
+    width: var(--contact-block-size);
+  }
 }
 
 .faceContactDetailsSlot {
@@ -578,7 +635,8 @@
   flex-shrink: 0;
   width: var(--contact-block-size);
   height: var(--contact-block-size);
-  min-width: var(--contact-block-size);
+  min-width: 0;
+  max-width: 100%;
   min-height: var(--contact-block-size);
   max-height: var(--contact-block-size);
   aspect-ratio: 1;
