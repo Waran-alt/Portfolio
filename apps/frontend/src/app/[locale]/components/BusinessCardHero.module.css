@@ -411,12 +411,15 @@
 /* Contact face: details left, QR right; stay inside the card padding box. */
 .faceContactContent {
   --contact-block-size: 50cqh;
+  /* Forced min gap between details stack and QR — cqw alone collapses on narrow cards. */
+  --contact-column-gap: max(0.65rem, 5cqw);
   --contact-layout-y: clamp(0.5rem, 14.25cqh, 1.4rem);
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: clamp(0.45rem, 2.25cqw, 0.75rem);
+  justify-content: flex-start;
+  column-gap: var(--contact-column-gap);
+  row-gap: var(--contact-column-gap);
   padding: var(--contact-layout-y) 0.75rem clamp(0.25rem, 1.5cqh, 0.5rem);
   text-align: left;
   min-height: 0;
@@ -427,19 +430,19 @@
 }
 
 .faceContactDetailsHost {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  max-width: 100%;
+  max-width: calc(100% - var(--contact-block-size) - var(--contact-column-gap));
   overflow: visible;
   -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
 }
 
 .faceContactDetails3dHost {
-  width: auto;
+  width: 100%;
   max-width: 100%;
   height: auto;
   perspective: 380px;
@@ -450,11 +453,16 @@
 
 .faceContactMarkLayered {
   position: relative;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   height: auto;
   display: flex;
   flex-direction: column;
+}
+
+.faceContactAside .faceContactMarkLayered {
+  width: fit-content;
+  max-width: none;
 }
 
 .faceContactDetailsShadow {
@@ -485,7 +493,7 @@
 }
 
 .faceContactDetailsFloat {
-  width: auto;
+  width: 100%;
   max-width: 100%;
   height: var(--contact-block-size);
   min-height: var(--contact-block-size);
@@ -557,7 +565,9 @@
 }
 
 .faceContactAside {
-  flex: 0 0 auto;
+  flex: 0 0 var(--contact-block-size);
+  width: var(--contact-block-size);
+  min-width: var(--contact-block-size);
   display: flex;
   align-items: flex-start;
   justify-content: center;
