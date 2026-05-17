@@ -653,6 +653,10 @@
   color: inherit;
 }
 
+.faceContactPanel.faceContactQrPanel {
+  padding: clamp(0.1rem, 0.45cqh, 0.18rem);
+}
+
 .faceContactName {
   margin: 0;
   flex-shrink: 0;
@@ -725,14 +729,14 @@
   height: 100%;
   min-height: 0;
   aspect-ratio: 1;
-  object-fit: contain;
-  border: none;
-  border-radius: 0.25rem;
-  background: transparent;
   padding: 0;
-  box-shadow: none;
-  /* Light QR pixels are transparent in the asset; multiply hides any residual white on the panel. */
-  mix-blend-mode: multiply;
+  box-sizing: border-box;
+}
+
+.faceContactQr svg {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Stacked title: merged wordmark, or focus / on (fallback). */

@@ -3401,6 +3401,7 @@ __metadata:
     postcss: "npm:^8.5.6"
     prettier: "npm:^3.6.2"
     prettier-plugin-tailwindcss: "npm:^0.7.1"
+    qr-code-styling: "npm:^1.9.2"
     react: "npm:^19.2.0"
     react-dom: "npm:^19.2.0"
     react-hook-form: "npm:^7.65.0"
@@ -13885,6 +13886,22 @@ __metadata:
   version: 7.0.1
   resolution: "pure-rand@npm:7.0.1"
   checksum: 10c0/9cade41030f5ec95f5d55a11a71404cd6f46b69becaad892097cd7f58e2c6248cd0a933349ca7d21336ab629f1da42ffe899699b671bc4651600eaf6e57f837e
+  languageName: node
+  linkType: hard
+
+"qr-code-styling@npm:^1.9.2":
+  version: 1.9.2
+  resolution: "qr-code-styling@npm:1.9.2"
+  dependencies:
+    qrcode-generator: "npm:^1.4.4"
+  checksum: 10c0/6296e115776ec7788dacc62f2ec0e54d861cfa2a82676bcf9adc693e8bce33552bd6bd92c9ff0478d2bff8610243f7010d7bd7bf85cf96fb41d8b60a36fa56e0
+  languageName: node
+  linkType: hard
+
+"qrcode-generator@npm:^1.4.4":
+  version: 1.5.2
+  resolution: "qrcode-generator@npm:1.5.2"
+  checksum: 10c0/4e0a43ba1c0212cf8ec39654cc7a5bebda96ee00453dc5732e98af4cf681c6786d2c189d4657d8d4fa6486f07573c1edb85fbb7af5e78972f843b7db8457a9b7
   languageName: node
   linkType: hard
 

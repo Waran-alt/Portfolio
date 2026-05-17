@@ -41,7 +41,7 @@ import { useLocale } from 'i18n';
 import { Comic_Neue, DM_Sans, Silkscreen, Unica_One } from 'next/font/google';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 /** Imported CSS module object; cast below so class names are checked against a fixed key union. */
-import contactQrImage from '@/assets/qr-focus-on-pixel.png';
+import { ContactQrCode } from '@/app/[locale]/components/ContactQrCode';
 import { useCardTiltAndFoil } from '@/features/card-effects';
 import rawFx from '@/features/card-effects/cardEffects.module.css';
 import rawStyles from './BusinessCardHero.module.css';
@@ -1806,13 +1806,7 @@ export function BusinessCardHero({
                             className={`${fx.markDetachedFloat} ${css.faceContactPanelFlat} ${css.faceContactPanel} ${css.faceContactQrPanel}`}
                             aria-label={CONTACT_QR_URL}
                           >
-                            <img
-                              src={contactQrImage.src}
-                              alt=""
-                              width={contactQrImage.width}
-                              height={contactQrImage.height}
-                              className={css.faceContactQr}
-                            />
+                            <ContactQrCode url={CONTACT_QR_URL} className={css.faceContactQr} />
                           </a>
                         </div>
                       </div>
