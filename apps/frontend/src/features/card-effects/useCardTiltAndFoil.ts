@@ -3,20 +3,20 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import {
-  FOIL_DOM_EPS,
-  FOIL_LAYER_INSET_FRAC,
-  FOIL_ROTATE_IDLE,
-  FOIL_SETTLE_EPS,
-  HALO_R_MIN_PX,
-  HALO_R_OF_SHORT_SIDE,
-  HALO_TRACK_PAD_PX,
-  LERP,
-  MAX_TILT_DEG,
-  POINTER_MOVE_EPS_SQ,
-  TILT_DOM_EPS,
-  TILT_SETTLE_EPS,
+    FOIL_DOM_EPS,
+    FOIL_LAYER_INSET_FRAC,
+    FOIL_ROTATE_IDLE,
+    FOIL_SETTLE_EPS,
+    HALO_R_MIN_PX,
+    HALO_R_OF_SHORT_SIDE,
+    HALO_TRACK_PAD_PX,
+    LERP,
+    MAX_TILT_DEG,
+    POINTER_MOVE_EPS_SQ,
+    TILT_DOM_EPS,
+    TILT_SETTLE_EPS,
 } from './cardEffects.constants';
-import { clamp, distancePointToRect, shortestDeltaDeg } from './cardEffectsMath';
+import { clamp, distancePointToRect, isPointInRect, shortestDeltaDeg } from './cardEffectsMath';
 
 export type CardTiltFoilRefs = {
   /** Host for `--foil-rotate-*`, `--foil-halo-*`, `--tilt-x/y`. */
@@ -45,6 +45,12 @@ export type UseCardTiltAndFoilOptions = CardTiltFoilRefs & {
    * than `pointermove` alone on mobile; resets tilt when the finger lifts. Defaults to true.
    */
   touchSwipeTiltEnabled?: boolean;
+  /**
+   * With `pointerTiltTracksDocument`, keep the card shell and `.parallaxTiltHost` marks (title,
+   * corner chip) flat while the pointer is inside `haloBoundsRef`. `--tilt-x/y` (foil, chroma),
+   * foil angle, and halo still follow the pointer everywhere.
+   */
+  cardTiltFrozenOverCardBounds?: boolean;
   /** When true, lerp and write `--foil-rotate-back`; otherwise front. */
   showingBack: boolean;
   /** e.g. `fx.tiltLayerHot` from `cardEffects.module.css`. */
@@ -62,6 +68,7 @@ export function useCardTiltAndFoil({
   pointerTiltEnabled = true,
   pointerTiltTracksDocument = false,
   touchSwipeTiltEnabled = true,
+  cardTiltFrozenOverCardBounds = false,
   showingBack,
   areaRef,
   tiltLayerRef,
@@ -77,12 +84,20 @@ export function useCardTiltAndFoil({
 
   const targetRef = useRef({ x: 0, y: 0 });
   const currentRef = useRef({ x: 0, y: 0 });
+  const cardTiltTargetRef = useRef({ x: 0, y: 0 });
+  const cardTiltCurrentRef = useRef({ x: 0, y: 0 });
+  const markParallaxTargetRef = useRef({ x: 0, y: 0 });
+  const markParallaxCurrentRef = useRef({ x: 0, y: 0 });
   const foilAngleTargetRef = useRef(FOIL_ROTATE_IDLE);
   const foilCurrentFrontRef = useRef(FOIL_ROTATE_IDLE);
   const foilCurrentBackRef = useRef(FOIL_ROTATE_IDLE);
   const domAppliedRef = useRef({
-    tiltX: 0,
-    tiltY: 0,
+    cardTiltX: 0,
+    cardTiltY: 0,
+    markParallaxX: 0,
+    markParallaxY: 0,
+    effectTiltX: 0,
+    effectTiltY: 0,
     foilFront: FOIL_ROTATE_IDLE,
     foilBack: FOIL_ROTATE_IDLE,
   });
@@ -114,17 +129,49 @@ export function useCardTiltAndFoil({
       const c = currentRef.current;
       const dom = domAppliedRef.current;
 
-      let tiltSettled = false;
+      let effectTiltSettled = false;
       {
         const dx = t.x - c.x;
         const dy = t.y - c.y;
         if (Math.abs(dx) < TILT_SETTLE_EPS && Math.abs(dy) < TILT_SETTLE_EPS) {
           c.x = t.x;
           c.y = t.y;
-          tiltSettled = true;
+          effectTiltSettled = true;
         } else {
           c.x += dx * LERP;
           c.y += dy * LERP;
+        }
+      }
+
+      const cardT = cardTiltTargetRef.current;
+      const cardC = cardTiltCurrentRef.current;
+      let cardTiltSettled = false;
+      {
+        const dx = cardT.x - cardC.x;
+        const dy = cardT.y - cardC.y;
+        if (Math.abs(dx) < TILT_SETTLE_EPS && Math.abs(dy) < TILT_SETTLE_EPS) {
+          cardC.x = cardT.x;
+          cardC.y = cardT.y;
+          cardTiltSettled = true;
+        } else {
+          cardC.x += dx * LERP;
+          cardC.y += dy * LERP;
+        }
+      }
+
+      const markT = markParallaxTargetRef.current;
+      const markC = markParallaxCurrentRef.current;
+      let markParallaxSettled = false;
+      {
+        const dx = markT.x - markC.x;
+        const dy = markT.y - markC.y;
+        if (Math.abs(dx) < TILT_SETTLE_EPS && Math.abs(dy) < TILT_SETTLE_EPS) {
+          markC.x = markT.x;
+          markC.y = markT.y;
+          markParallaxSettled = true;
+        } else {
+          markC.x += dx * LERP;
+          markC.y += dy * LERP;
         }
       }
 
@@ -153,15 +200,35 @@ export function useCardTiltAndFoil({
       }
 
       if (
-        Math.abs(c.x - dom.tiltX) >= TILT_DOM_EPS ||
-        Math.abs(c.y - dom.tiltY) >= TILT_DOM_EPS ||
-        (tiltSettled && (c.x !== dom.tiltX || c.y !== dom.tiltY))
+        Math.abs(cardC.x - dom.cardTiltX) >= TILT_DOM_EPS ||
+        Math.abs(cardC.y - dom.cardTiltY) >= TILT_DOM_EPS ||
+        (cardTiltSettled && (cardC.x !== dom.cardTiltX || cardC.y !== dom.cardTiltY))
       ) {
-        tiltEl.style.transform = `rotateX(${c.y}deg) rotateY(${c.x}deg)`;
+        tiltEl.style.transform = `rotateX(${cardC.y}deg) rotateY(${cardC.x}deg)`;
+        dom.cardTiltX = cardC.x;
+        dom.cardTiltY = cardC.y;
+      }
+
+      if (
+        Math.abs(markC.x - dom.markParallaxX) >= TILT_DOM_EPS ||
+        Math.abs(markC.y - dom.markParallaxY) >= TILT_DOM_EPS ||
+        (markParallaxSettled && (markC.x !== dom.markParallaxX || markC.y !== dom.markParallaxY))
+      ) {
+        areaEl.style.setProperty('--mark-parallax-tilt-x', String(markC.x));
+        areaEl.style.setProperty('--mark-parallax-tilt-y', String(markC.y));
+        dom.markParallaxX = markC.x;
+        dom.markParallaxY = markC.y;
+      }
+
+      if (
+        Math.abs(c.x - dom.effectTiltX) >= TILT_DOM_EPS ||
+        Math.abs(c.y - dom.effectTiltY) >= TILT_DOM_EPS ||
+        (effectTiltSettled && (c.x !== dom.effectTiltX || c.y !== dom.effectTiltY))
+      ) {
         areaEl.style.setProperty('--tilt-x', String(c.x));
         areaEl.style.setProperty('--tilt-y', String(c.y));
-        dom.tiltX = c.x;
-        dom.tiltY = c.y;
+        dom.effectTiltX = c.x;
+        dom.effectTiltY = c.y;
         onTiltAppliedRef.current?.(c.x, c.y);
       }
 
@@ -185,7 +252,7 @@ export function useCardTiltAndFoil({
         }
       }
 
-      if (!tiltSettled || !foilSettled) {
+      if (!effectTiltSettled || !cardTiltSettled || !markParallaxSettled || !foilSettled) {
         tiltEl.classList.add(tiltLayerHotClassName);
         scheduleTickImplRef.current?.();
       } else {
@@ -231,8 +298,17 @@ export function useCardTiltAndFoil({
     const onLeave = () => {
       lastPointerRef.current = { x: NaN, y: NaN };
       targetRef.current = { x: 0, y: 0 };
+      cardTiltTargetRef.current = { x: 0, y: 0 };
+      markParallaxTargetRef.current = { x: 0, y: 0 };
       foilAngleTargetRef.current = FOIL_ROTATE_IDLE;
       scheduleTick();
+    };
+
+    const isPointerOverCardBounds = (clientX: number, clientY: number) => {
+      if (!cardTiltFrozenOverCardBounds) return false;
+      const cardRect = haloBoundsRef.current?.getBoundingClientRect();
+      if (!cardRect || cardRect.width < 1 || cardRect.height < 1) return false;
+      return isPointInRect(clientX, clientY, cardRect);
     };
 
     const applyTiltFromClientPoint = (clientX: number, clientY: number, force = false) => {
@@ -258,18 +334,34 @@ export function useCardTiltAndFoil({
       const nextTy = -nyClamped * MAX_TILT_DEG;
       const nextAng = (Math.atan2(clientY - cy, clientX - cx) * 180) / Math.PI;
 
+      const freezeShell =
+        cardTiltFrozenOverCardBounds &&
+        pointerTiltTracksDocument &&
+        isPointerOverCardBounds(clientX, clientY);
+      const shellTarget = freezeShell ? { x: 0, y: 0 } : { x: nextTx, y: nextTy };
+
       const t = targetRef.current;
-      if (
+      const ct = cardTiltTargetRef.current;
+      const mt = markParallaxTargetRef.current;
+      const effectUnchanged =
         Math.abs(nextTx - t.x) < TILT_DOM_EPS &&
         Math.abs(nextTy - t.y) < TILT_DOM_EPS &&
-        Math.abs(shortestDeltaDeg(foilAngleTargetRef.current, nextAng)) < FOIL_DOM_EPS
-      ) {
+        Math.abs(shortestDeltaDeg(foilAngleTargetRef.current, nextAng)) < FOIL_DOM_EPS;
+      const shellUnchanged =
+        Math.abs(shellTarget.x - ct.x) < TILT_DOM_EPS &&
+        Math.abs(shellTarget.y - ct.y) < TILT_DOM_EPS &&
+        Math.abs(shellTarget.x - mt.x) < TILT_DOM_EPS &&
+        Math.abs(shellTarget.y - mt.y) < TILT_DOM_EPS;
+
+      if (effectUnchanged && shellUnchanged) {
         return;
       }
 
       t.x = nextTx;
       t.y = nextTy;
       foilAngleTargetRef.current = nextAng;
+      cardTiltTargetRef.current = shellTarget;
+      markParallaxTargetRef.current = shellTarget;
       scheduleTick();
     };
 
@@ -380,6 +472,7 @@ export function useCardTiltAndFoil({
     pointerTiltEnabled,
     pointerTiltTracksDocument,
     touchSwipeTiltEnabled,
+    cardTiltFrozenOverCardBounds,
     tiltLayerHotClassName,
     areaRef,
     tiltLayerRef,

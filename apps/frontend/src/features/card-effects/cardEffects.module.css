@@ -10,7 +10,8 @@
  * - `--foil-rotate-front` / `--foil-rotate-back`: conic “from” angle (deg).
  * - `--foil-at-x` / `--foil-at-y`: conic center.
  * - `--foil-halo-x` / `--foil-halo-y` / `--foil-halo-r`: cursor halo for masked foils.
- * - `--tilt-x` / `--tilt-y`: smoothed tilt (deg) for parallax children.
+ * - `--tilt-x` / `--tilt-y`: smoothed tilt for foil / chroma (always tracks the pointer).
+ * - `--mark-parallax-tilt-x` / `--mark-parallax-tilt-y`: title + corner chip parallax (can freeze on-card).
  */
 
 .tiltArea {
@@ -30,6 +31,8 @@
   --foil-halo-r: 0px;
   --tilt-x: 0;
   --tilt-y: 0;
+  --mark-parallax-tilt-x: 0;
+  --mark-parallax-tilt-y: 0;
 }
 
 .tiltLayer {
@@ -44,7 +47,8 @@
 
 .parallaxTiltHost {
   transform-style: preserve-3d;
-  transform: translateZ(18px) rotateX(calc(var(--tilt-y) * 0.22deg)) rotateY(calc(var(--tilt-x) * 0.28deg));
+  transform: translateZ(18px) rotateX(calc(var(--mark-parallax-tilt-y) * 0.22deg))
+    rotateY(calc(var(--mark-parallax-tilt-x) * 0.28deg));
   will-change: transform;
   overflow: visible;
 }

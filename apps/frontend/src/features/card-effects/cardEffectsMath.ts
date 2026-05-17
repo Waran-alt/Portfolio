@@ -2,6 +2,11 @@ export function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
+/** True when the point lies inside the rectangle (inclusive edges). */
+export function isPointInRect(px: number, py: number, rect: DOMRect): boolean {
+  return px >= rect.left && px <= rect.right && py >= rect.top && py <= rect.bottom;
+}
+
 /** Distance from point to axis-aligned rectangle (0 if inside). */
 export function distancePointToRect(px: number, py: number, rect: DOMRect): number {
   const nx = clamp(px, rect.left, rect.right);

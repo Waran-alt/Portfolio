@@ -22,9 +22,10 @@
  * (single RAF lerp; only the visible face updates `--foil-rotate-*`; hidden faces use `.foilPaused`).
  * Pointer tilt unlocks only after `.cardShell` entrance **and** title-face chroma stagger
  * (`pixelStaggerComplete`), unless reduced motion or a non-title face (no stagger).
- * Tilt tracks the cursor on the page (`pointerTiltTracksDocument`); on touch devices, `touchSwipeTiltEnabled`
- * maps screen swipes to the same tilt and resets when the finger lifts. Leaving the viewport or blurring
- * the window resets the card to neutral tilt (pointer).
+ * Tilt tracks the cursor on the page (`pointerTiltTracksDocument`) except the card shell, title marks, and
+ * corner chip while the pointer is over the card (`cardTiltFrozenOverCardBounds`); foil, halo, and chroma
+ * still follow the pointer everywhere.
+ * On touch devices, `touchSwipeTiltEnabled` maps screen swipes to the same tilt and resets when the finger lifts.
  *
  * ## Performance tactics
  * - No idle RAF: schedule frames only while something is easing.
@@ -1123,6 +1124,7 @@ export function BusinessCardHero({
     reducedMotion,
     pointerTiltEnabled: pointerTiltUnlocked,
     pointerTiltTracksDocument: true,
+    cardTiltFrozenOverCardBounds: true,
     showingBack: showingBackFoil,
     areaRef: tiltAreaRef,
     tiltLayerRef: tiltRef,

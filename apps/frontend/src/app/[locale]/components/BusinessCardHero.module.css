@@ -62,8 +62,7 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
-    max(0.75rem, env(safe-area-inset-right, 0px));
+  padding-inline: max(0.75rem, env(safe-area-inset-left, 0px)) max(0.75rem, env(safe-area-inset-right, 0px));
   flex: 0 1 auto;
 }
 
@@ -121,10 +120,7 @@
   position: relative;
   z-index: 1;
   display: block;
-  width: min(
-    340px,
-    calc(100dvw - 2.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))
-  );
+  width: min(340px, calc(100dvw - 2.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   max-width: 100%;
   margin-inline: auto;
   box-sizing: border-box;
@@ -162,10 +158,7 @@
   position: relative;
   z-index: 1;
   /* `100dvw` avoids iOS Safari treating `100vw` as wider than the visible viewport (horizontal bleed). */
-  width: min(
-    340px,
-    calc(100dvw - 2.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))
-  );
+  width: min(340px, calc(100dvw - 2.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   max-width: 100%;
   min-height: 200px;
   margin-inline: auto;
@@ -459,6 +452,7 @@
   padding: var(--contact-layout-y) 0 clamp(0.25rem, 1.5cqh, 0.5rem);
   text-align: left;
   overflow: hidden;
+  margin-top: 1rem;
 }
 
 .faceContactLayout {
@@ -476,18 +470,22 @@
   transform-style: flat;
 }
 
-/* Narrow card (typical phone, ~340px): stack QR under contact column, centered — avoids iOS bleed. */
-@container card-front (max-width: 22rem) {
+/*
+ * Very narrow face only (~≤280px): details on top, role + QR on one row below.
+ * Do not use 22rem here — a ~340px card is <22rem and used to stack 3 rows, clipping the QR.
+ */
+@container card-front (max-width: 17.5rem) {
   .faceContactLayout {
-    grid-template-columns: min(13rem, 100%);
-    grid-template-rows: max-content max-content max-content;
-    width: min(13rem, 100%);
+    grid-template-columns: minmax(0, 1fr) var(--contact-block-size);
+    grid-template-rows: max-content max-content;
+    width: min(100%, calc(var(--contact-details-width) + var(--contact-column-gap) + var(--contact-block-size)));
     justify-items: stretch;
   }
 
   .faceContactDetailsSlot {
-    grid-column: 1;
+    grid-column: 1 / -1;
     grid-row: 1;
+    width: 100%;
   }
 
   .faceContactRoleSlot {
@@ -496,9 +494,9 @@
   }
 
   .faceContactQrSlot {
-    grid-column: 1;
-    grid-row: 3;
-    justify-self: center;
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
     width: var(--contact-block-size);
   }
 }
@@ -519,7 +517,8 @@
 
 .faceContactQrSlot {
   grid-column: 2;
-  grid-row: 1;
+  /* Span details + role so the QR stays visible on the right (default card width). */
+  grid-row: 1 / -1;
   align-self: start;
 }
 
