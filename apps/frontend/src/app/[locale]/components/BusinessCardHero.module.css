@@ -468,6 +468,15 @@
   align-items: start;
   justify-items: stretch;
   transform-style: flat;
+  /*
+   * Subtle XY shift off-card only: `--mark-parallax-tilt-*` is driven on `.tiltArea` and stays 0
+   * while the pointer is over the card (same freeze as title / corner chip).
+   */
+  --contact-layout-shift: 0.32px;
+  transform: translate(
+    calc(var(--mark-parallax-tilt-x, 0) * var(--contact-layout-shift)),
+    calc(var(--mark-parallax-tilt-y, 0) * var(--contact-layout-shift))
+  );
 }
 
 /*
@@ -1066,5 +1075,9 @@
 
   .contourHatchLaminateFoil {
     opacity: 0.24;
+  }
+
+  .faceContactLayout {
+    transform: none;
   }
 }
