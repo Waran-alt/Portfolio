@@ -851,9 +851,48 @@
   background: linear-gradient(155deg, #1e293b 0%, #0f172a 50%, #020617 100%);
   color: #f1f5f9;
   padding: 1.75rem 1.5rem;
+  container-type: size;
+  container-name: card-back;
   /* Mirrored origin so the “top-right” highlight matches the flipped face. */
   --foil-at-x: 108%;
   --foil-at-y: -8%;
+}
+
+/* About face copy: module styles (not Tailwind) so prod builds keep font + spacing. */
+.faceBackContent {
+  font-family: var(--font-contact-sans), 'DM Sans', system-ui, sans-serif;
+  font-optical-sizing: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.faceBackLabel {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+}
+
+.faceBackBody {
+  margin: 0;
+  font-size: clamp(0.9rem, 4.5cqh, 1rem);
+  font-weight: 400;
+  line-height: 1.625;
+  color: rgb(226 232 240);
+}
+
+.faceBackFoot {
+  margin: 1.5rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: rgb(100 116 139);
 }
 
 /* Moving specular stripe; sits between foil and text. */

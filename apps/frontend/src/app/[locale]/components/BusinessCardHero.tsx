@@ -574,6 +574,10 @@ const css = rawStyles as Record<
   | 'faceFront'
   | 'faceContact'
   | 'faceBack'
+  | 'faceBackContent'
+  | 'faceBackLabel'
+  | 'faceBackBody'
+  | 'faceBackFoot'
   | 'contourHatch'
   | 'contourHatchLaminate'
   | 'contourHatchLaminateAmbient'
@@ -1708,12 +1712,10 @@ export function BusinessCardHero({
                     aria-hidden
                   />
                   <div className={css.sheen} aria-hidden />
-                  <div className={css.faceContent}>
-                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400 mb-3">
-                      {copy.about}
-                    </p>
-                    <p className="text-base leading-relaxed text-slate-200">{resolvedBackBody}</p>
-                    <p className="mt-6 text-xs text-slate-500">focus-on-pixel.com</p>
+                  <div className={`${css.faceContent} ${css.faceBackContent} ${contactSans.className}`}>
+                    <p className={css.faceBackLabel}>{copy.about}</p>
+                    <p className={css.faceBackBody}>{resolvedBackBody}</p>
+                    <p className={css.faceBackFoot}>focus-on-pixel.com</p>
                   </div>
                 </div>
                 ) : (
