@@ -11,6 +11,7 @@ import {
     HALO_R_OF_SHORT_SIDE,
     HALO_TRACK_PAD_PX,
     LERP,
+    MAX_CARD_SHELL_TILT_DEG,
     MAX_TILT_DEG,
     POINTER_MOVE_EPS_SQ,
     TILT_DOM_EPS,
@@ -332,13 +333,16 @@ export function useCardTiltAndFoil({
       const nyClamped = clamp(ny, -1, 1);
       const nextTx = nxClamped * MAX_TILT_DEG;
       const nextTy = -nyClamped * MAX_TILT_DEG;
+      const cardTx = nxClamped * MAX_CARD_SHELL_TILT_DEG;
+      const cardTy = -nyClamped * MAX_CARD_SHELL_TILT_DEG;
       const nextAng = (Math.atan2(clientY - cy, clientX - cx) * 180) / Math.PI;
 
       const freezeShell =
         cardTiltFrozenOverCardBounds &&
         pointerTiltTracksDocument &&
         isPointerOverCardBounds(clientX, clientY);
-      const shellTarget = freezeShell ? { x: 0, y: 0 } : { x: nextTx, y: nextTy };
+      const markTarget = freezeShell ? { x: 0, y: 0 } : { x: nextTx, y: nextTy };
+      const cardTarget = freezeShell ? { x: 0, y: 0 } : { x: cardTx, y: cardTy };
 
       const t = targetRef.current;
       const ct = cardTiltTargetRef.current;
@@ -348,10 +352,10 @@ export function useCardTiltAndFoil({
         Math.abs(nextTy - t.y) < TILT_DOM_EPS &&
         Math.abs(shortestDeltaDeg(foilAngleTargetRef.current, nextAng)) < FOIL_DOM_EPS;
       const shellUnchanged =
-        Math.abs(shellTarget.x - ct.x) < TILT_DOM_EPS &&
-        Math.abs(shellTarget.y - ct.y) < TILT_DOM_EPS &&
-        Math.abs(shellTarget.x - mt.x) < TILT_DOM_EPS &&
-        Math.abs(shellTarget.y - mt.y) < TILT_DOM_EPS;
+        Math.abs(cardTarget.x - ct.x) < TILT_DOM_EPS &&
+        Math.abs(cardTarget.y - ct.y) < TILT_DOM_EPS &&
+        Math.abs(markTarget.x - mt.x) < TILT_DOM_EPS &&
+        Math.abs(markTarget.y - mt.y) < TILT_DOM_EPS;
 
       if (effectUnchanged && shellUnchanged) {
         return;
@@ -360,8 +364,8 @@ export function useCardTiltAndFoil({
       t.x = nextTx;
       t.y = nextTy;
       foilAngleTargetRef.current = nextAng;
-      cardTiltTargetRef.current = shellTarget;
-      markParallaxTargetRef.current = shellTarget;
+      cardTiltTargetRef.current = cardTarget;
+      markParallaxTargetRef.current = markTarget;
       scheduleTick();
     };
 

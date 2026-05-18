@@ -4,6 +4,8 @@
  */
 
 export const MAX_TILT_DEG = 15;
+/** Max `rotateX` / `rotateY` on the card shell (`.tiltLayer`); lower than `MAX_TILT_DEG` for subtler follow. */
+export const MAX_CARD_SHELL_TILT_DEG = 8;
 /** Interpolation factor per frame for tilt and foil (0–1); lower = smoother, slower. */
 export const LERP = 0.12;
 /**
