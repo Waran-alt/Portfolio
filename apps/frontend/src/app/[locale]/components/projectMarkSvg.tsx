@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * Merged “focus-” + “on” artwork (source: `private/samples/project.svg`).
@@ -11,6 +10,35 @@ export const PROJECT_MARK_Y = 30;
 export const PROJECT_MARK_W = 306;
 export const PROJECT_MARK_H = 129;
 
+/** Pixel band height inside the merged mark (legacy `PixelMark` viewBox ratio). */
+export const PROJECT_PIXEL_BAND_HEIGHT_UU = 62.5;
+
+/** “focus-on” band above the pixel row inside the merged mark. */
+export const PROJECT_UPPER_BAND_HEIGHT_UU = PROJECT_MARK_H - PROJECT_PIXEL_BAND_HEIGHT_UU;
+
+/** Y origin of the pixel band in merged mark user units. */
+export const PROJECT_PIXEL_BAND_Y =
+  PROJECT_MARK_Y + PROJECT_UPPER_BAND_HEIGHT_UU;
+
+export const PROJECT_UPPER_VIEWBOX = `${PROJECT_MARK_X} ${PROJECT_MARK_Y} ${PROJECT_MARK_W} ${PROJECT_UPPER_BAND_HEIGHT_UU}`;
+
+export const PROJECT_PIXEL_VIEWBOX = `${PROJECT_MARK_X} ${PROJECT_PIXEL_BAND_Y} ${PROJECT_MARK_W} ${PROJECT_PIXEL_BAND_HEIGHT_UU}`;
+
+/**
+ * ViewBox point: top-left of “-” before “pixel” (face grid cell 16, 17 when snapped).
+ * WebKit uses `getScreenCTM()` at this point instead of `getBoundingClientRect()` on the SVG.
+ */
+export const PROJECT_PIXEL_HYPHEN_ANCHOR_VB = {
+  x: 50.1,
+  y: PROJECT_MARK_Y + PROJECT_MARK_H - PROJECT_PIXEL_BAND_HEIGHT_UU + 2 * 12.5,
+} as const;
+
+/** Same anchor in `PROJECT_PIXEL_VIEWBOX` coordinates (WebKit split pixel band). */
+export const PROJECT_PIXEL_HYPHEN_ANCHOR_PIXEL_BAND = {
+  x: PROJECT_PIXEL_HYPHEN_ANCHOR_VB.x,
+  y: PROJECT_PIXEL_HYPHEN_ANCHOR_VB.y - PROJECT_PIXEL_BAND_Y,
+} as const;
+
 /** Blue layer: main lettering (foil silhouette). */
 export const PROJECT_BLUE_D =
   'M75.5,97.65q6,3.55,13.8,3.55q7.8,0,13.85,-3.55q6.05,-3.55,9.5,-9.6q3.45,-6.05,3.45,-13.55q0,-7.6,-3.45,-13.6q-3.45,-6,-9.5,-9.55q-6.05,-3.55,-13.85,-3.55q-7.8,0,-13.8,3.55q-6,3.55,-9.5,9.6q-3.5,6.05,-3.5,13.55q0,7.5,3.5,13.55q3.5,6.05,9.5,9.6zm23,-6.85q-3.9,2.5,-9.2,2.5q-5.2,0,-9.15,-2.5q-3.95,-2.5,-6.15,-6.75q-2.2,-4.25,-2.2,-9.55q0,-5.3,2.2,-9.55q2.2,-4.25,6.15,-6.75q3.95,-2.5,9.15,-2.5q5.3,0,9.2,2.5q3.9,2.5,6.1,6.75q2.2,4.25,2.2,9.55q0,5.3,-2.2,9.55q-2.2,4.25,-6.1,6.75zm40,5.8q6.2,3.4,14.1,3.4l6,0l0,-7.9l-6.3,0q-5.1,0,-9.15,-2.35q-4.05,-2.35,-6.4,-6.35q-2.35,-4,-2.35,-8.9q0,-4.9,2.35,-8.9q2.35,-4,6.4,-6.35q4.05,-2.35,9.15,-2.35l6.3,0l0,-7.9l-6,0q-7.9,0,-14.1,3.4q-6.2,3.4,-9.8,9.15q-3.6,5.75,-3.6,12.95q0,7.2,3.6,12.95q3.6,5.75,9.8,9.15zm42.15,1.75q5.45,2.85,12.35,2.85q6.9,0,12.3,-2.85q5.4,-2.85,8.5,-7.95q3.1,-5.1,3.1,-11.9l0,-29.5l-9.3,0l0,29.4q0,4.6,-2.05,7.95q-2.05,3.35,-5.4,5.15q-3.35,1.8,-7.25,1.8q-3.8,0,-7.15,-1.8q-3.35,-1.8,-5.35,-5.15q-2,-3.35,-2,-7.95l0,-29.4l-9.3,0l0,29.5q0,6.8,3.05,11.9q3.05,5.1,8.5,7.95zm50.15,-6.25l0,7.9l25.5,0q4.7,0,8.25,-2.2q3.55,-2.2,5.55,-5.75q2,-3.55,2,-7.65q0,-4.8,-1.95,-8.1q-1.95,-3.3,-5.7,-5.05q-3.75,-1.75,-9.25,-1.75l-9.8,0q-3.4,0,-5.25,-1.85q-1.85,-1.85,-1.85,-4.35q0,-2.6,1.8,-4.5q1.8,-1.9,4.9,-1.9l22.6,0l0,-7.9l-23.5,0q-4.4,0,-7.8,2.05q-3.4,2.05,-5.3,5.35q-1.9,3.3,-1.9,7.2q0,4.6,2.05,7.8q2.05,3.2,5.7,4.85q3.65,1.65,8.55,1.65l10.3,0q2.3,0,3.95,0.95q1.65,0.95,2.45,2.5q0.8,1.55,0.8,3.35q0,1.9,-0.9,3.6q-0.9,1.7,-2.65,2.75q-1.75,1.05,-4.15,1.05l-24.4,0zm50.1,-14l0,-8.4l28.3,0l0,8.4l-28.3,0zm-263.4,76.55q6,3.55,13.8,3.55q7.8,0,13.85,-3.55q6.05,-3.55,9.5,-9.6q3.45,-6.05,3.45,-13.55q0,-7.6,-3.45,-13.6q-3.45,-6,-9.5,-9.55q-6.05,-3.55,-13.85,-3.55q-7.8,0,-13.8,3.55q-6,3.55,-9.5,9.6q-3.5,6.05,-3.5,13.55q0,7.5,3.5,13.55q3.5,6.05,9.5,9.6zm23,-6.85q-3.9,2.5,-9.2,2.5q-5.2,0,-9.15,-2.5q-3.95,-2.5,-6.15,-6.75q-2.2,-4.25,-2.2,-9.55q0,-5.3,2.2,-9.55q2.2,-4.25,6.15,-6.75q3.95,-2.5,9.15,-2.5q5.3,0,9.2,2.5q3.9,2.5,6.1,6.75q2.2,4.25,2.2,9.55q0,5.3,-2.2,9.55q-2.2,4.25,-6.1,6.75zm35,6.85q6,3.55,13.8,3.55q7.8,0,13.85,-3.55q6.05,-3.55,9.5,-9.6q3.45,-6.05,3.45,-13.55q0,-7.6,-3.45,-13.6q-3.45,-6,-9.5,-9.55q-6.05,-3.55,-13.85,-3.55q-7.8,0,-13.8,3.55q-6,3.55,-9.5,9.6q-3.5,6.05,-3.5,13.55q0,7.5,3.5,13.55q3.5,6.05,9.5,9.6z';
@@ -22,6 +50,16 @@ export const PROJECT_RED_D =
 /** Green layer: structural bar (foil silhouette). */
 export const PROJECT_GREEN_D =
   'M44.4,30q-5.7,0,-9.85,2.45q-4.15,2.45,-6.4,6.7q-2.25,4.25,-2.25,9.55l0,21l-21.9,0l0,8.4l21.9,0l0,21.9l9.6,0l0,-21.9l22.553,0l0,-8.4l-22.553,0l0,-22.2q0,-3.9,2.45,-6.45q2.45,-2.55,6.45,-2.55l264.6,0l0,-8.5l-264.6,0z';
+
+/** Solid navy project wordmark for WebKit face 0 (no `foreignObject` / mask rect). */
+export function ProjectMarkFlatFill() {
+  return (
+    <>
+      <path d={PROJECT_BLUE_D} fillRule="evenodd" />
+      <path d={PROJECT_GREEN_D} fillRule="evenodd" />
+    </>
+  );
+}
 
 /** Mask: foil where blue ∪ green, minus red (hole through ink above the stems). */
 export function ProjectMarkMaskPaths() {

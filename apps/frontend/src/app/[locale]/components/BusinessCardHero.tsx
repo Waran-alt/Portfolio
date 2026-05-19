@@ -43,14 +43,16 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 /** Imported CSS module object; cast below so class names are checked against a fixed key union. */
 import { ContactQrCode } from '@/app/[locale]/components/ContactQrCode';
 import { useCardTiltAndFoil } from '@/features/card-effects';
-import { useIosDevice } from '@/hooks/useIosDevice';
 import rawFx from '@/features/card-effects/cardEffects.module.css';
+import { useSafariWebKit } from '@/hooks/useSafariWebKit';
 import rawStyles from './BusinessCardHero.module.css';
 import { FOCUS_MARK_VIEWBOX, FocusMarkVisiblePaths } from './focusMarkSvg';
 import {
     fillPixelChromaFoilGrid,
     type PixelChromaFoilGridRef,
 } from './pixelChromaGridFill';
+import { PIXEL_MARK_GRID_ORIGIN } from './pixelMarkMetrics';
+import { PROJECT_PIXEL_HYPHEN_ANCHOR_VB } from './projectMarkSvg';
 import type { PixelChromaTiltEllipseConfig } from './pixelChromaTiltEllipse';
 import {
     PIXEL_SQUARE_REVEAL_DURATION_MS,
@@ -620,6 +622,7 @@ const css = rawStyles as Record<
   | 'titleTriRow2'
   | 'titleTriOn'
   | 'titleTriProject'
+  | 'titleTriProjectWebKitSnap'
   | 'cornerArrowPerspective'
   | 'cornerArrow3dHost'
   | 'cornerArrowFloating'
@@ -627,7 +630,7 @@ const css = rawStyles as Record<
   | 'cornerArrowFloatingLight'
   | 'cornerArrowChipFrontAngle'
   | 'cornerArrowChipUsesBackAngle'
-  | 'cornerArrowIosFlat'
+  | 'cornerArrowFlatFoil'
   | 'cornerArrowSvg',
   string
 >;
@@ -927,9 +930,10 @@ export function BusinessCardHero({
 
   /** Active face inside `flipInner` (0 title, 1 about, 2 contact); swapped at flip midpoint. */
   const [cardFace, setCardFace] = useState<CardFace>(0);
-  const isIos = useIosDevice();
-  /** iOS Safari: flat navy on title SVG + corner chip (face 0 only). */
-  const iosFace0FlatFoil = isIos && cardFace === 0;
+  const isSafariWebKit = useSafariWebKit();
+  /** WebKit (iOS + Safari): flat navy on title SVG + corner chip (face 0 only). */
+  const webkitFace0FlatFoil = isSafariWebKit && cardFace === 0;
+  const webkitProjectGridSnap = isSafariWebKit && cardFace === 0;
   /** Face 1 (about) drives back-side holo variables; faces 0 and 2 use front holo. */
   const showingBackFoil = cardFace === 1;
   /** Mirrors OS “reduce motion”; when true, pointer-driven animation effect does not run. */
@@ -1169,6 +1173,58 @@ export function BusinessCardHero({
       if (frame) cancelAnimationFrame(frame);
     };
   }, [cardFace, reducedMotion, cardEntranceDone, pixelStaggerComplete, refreshPixelChroma]);
+
+  /**
+   * WebKit/Safari only: align the “-” in the pixel band to face grid cell (16, 17).
+   * Other browsers keep the default layout (single merged mark at 54cqh).
+   */
+  useLayoutEffect(() => {
+    if (!webkitProjectGridSnap || !cardEntranceDone) return;
+    const face = faceFront0Ref.current;
+    if (!face) return;
+
+    const clearSnap = () => {
+      face.style.removeProperty('--pixel-mark-snap-x');
+      face.style.removeProperty('--pixel-mark-snap-y');
+    };
+
+    const sync = () => {
+      const svg = face.querySelector<SVGSVGElement>('[data-pixel-mark-grid]');
+      const cell = readPixelGridCellPx(face, pixelGridBgRef.current);
+      if (!svg || !cell) {
+        clearSnap();
+        return;
+      }
+
+      const ctm = svg.getScreenCTM();
+      if (!ctm) {
+        clearSnap();
+        return;
+      }
+
+      const fr = face.getBoundingClientRect();
+      const targetX = fr.left + PIXEL_MARK_GRID_ORIGIN.col * cell;
+      const targetY = fr.top + (PIXEL_MARK_GRID_ORIGIN.row + 2) * cell;
+
+      const pt = svg.createSVGPoint();
+      pt.x = PROJECT_PIXEL_HYPHEN_ANCHOR_VB.x;
+      pt.y = PROJECT_PIXEL_HYPHEN_ANCHOR_VB.y;
+      const anchorScreen = pt.matrixTransform(ctm);
+
+      const dx = targetX - anchorScreen.x;
+      const dy = targetY - anchorScreen.y;
+      face.style.setProperty('--pixel-mark-snap-x', `${Math.round(dx * 100) / 100}px`);
+      face.style.setProperty('--pixel-mark-snap-y', `${Math.round(dy * 100) / 100}px`);
+    };
+
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(face);
+    return () => {
+      ro.disconnect();
+      clearSnap();
+    };
+  }, [webkitProjectGridSnap, cardEntranceDone, pixelStaggerComplete]);
 
   /** Defer pixel grid / PIXEL snap until `cardEntrance` on `.cardShell` finishes (layout was unstable mid-animation). */
   useLayoutEffect(() => {
@@ -1671,14 +1727,16 @@ export function BusinessCardHero({
                         <div className={`${css.titleTriLayout} ${fx.parallaxTiltHost}`}>
                           {titleFrontLayout.onIsSvg ? (
                             <>
-                              <div className={css.titleTriProject}>
-                                <ProjectMarkLayered flatFoil={iosFace0FlatFoil} />
+                              <div
+                                className={`${css.titleTriProject} ${webkitProjectGridSnap ? css.titleTriProjectWebKitSnap : ''}`}
+                              >
+                                <ProjectMarkLayered flatFoil={webkitFace0FlatFoil} />
                               </div>
                             </>
                           ) : (
                             <>
                               <div className={css.titleTriFocus}>
-                                <FocusMarkLayered flatFoil={iosFace0FlatFoil} />
+                                <FocusMarkLayered flatFoil={webkitFace0FlatFoil} />
                               </div>
                               <div className={css.titleTriRow2}>
                                 <div className={css.titleTriOn}>
@@ -1823,7 +1881,7 @@ export function BusinessCardHero({
                     <div className={`${fx.parallaxTiltHost} ${css.cornerArrow3dHost}`}>
                       <button
                         type="button"
-                        className={`${css.cornerArrowFloating} ${css.cornerArrowDetachedFloat} ${cornerArrowChipAngleClass} ${cornerArrowChipLight ? css.cornerArrowFloatingLight : ''} ${iosFace0FlatFoil ? css.cornerArrowIosFlat : ''}`}
+                        className={`${css.cornerArrowFloating} ${css.cornerArrowDetachedFloat} ${cornerArrowChipAngleClass} ${cornerArrowChipLight ? css.cornerArrowFloatingLight : ''} ${webkitFace0FlatFoil ? css.cornerArrowFlatFoil : ''}`}
                         onClick={toggleFlip}
                         aria-label={flipAriaLabel}
                       >

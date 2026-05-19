@@ -1,4 +1,4 @@
-import { useId, type HTMLAttributes } from 'react';
+import { useId, type HTMLAttributes, type ReactNode } from 'react';
 
 import rawFx from '@/features/card-effects/cardEffects.module.css';
 import rawStyles from './BusinessCardHero.module.css';
@@ -10,6 +10,7 @@ import {
   FOCUS_O_CY,
   FOCUS_O_R,
   FOCUS_O_STROKE_USER,
+  FocusMarkFlatFill,
   FocusMarkMaskPaths,
 } from './focusMarkSvg';
 import {
@@ -18,6 +19,7 @@ import {
   PROJECT_MARK_W,
   PROJECT_MARK_X,
   PROJECT_MARK_Y,
+  ProjectMarkFlatFill,
   ProjectMarkMaskPaths,
   ProjectMarkVisibleStrokes,
 } from './projectMarkSvg';
@@ -40,7 +42,7 @@ const fx = rawFx as Record<
   string
 >;
 
-/** Flat fill on iOS face 0 (no `foreignObject` holo). Matches `.markFoilBg` mid-tone. */
+/** Flat fill on WebKit face 0 (no `foreignObject` holo). Matches `.markFoilBg` mid-tone. */
 export const MARK_FLAT_NAVY = '#0f172a';
 
 type MarkFoilLayerProps = {
@@ -50,19 +52,16 @@ type MarkFoilLayerProps = {
   y: number;
   width: number;
   height: number;
+  flatFill: ReactNode;
 };
 
-function MarkFoilLayer({ flatFoil, maskId, x, y, width, height }: MarkFoilLayerProps) {
+function MarkFoilLayer({ flatFoil, flatFill, maskId, x, y, width, height }: MarkFoilLayerProps) {
   if (flatFoil) {
+    /* Masked paths only — a masked `<rect>` paints a card-sized slab on WebKit. */
     return (
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill={MARK_FLAT_NAVY}
-        mask={`url(#${maskId})`}
-      />
+      <g mask={`url(#${maskId})`} fill={MARK_FLAT_NAVY} stroke="none" color={MARK_FLAT_NAVY}>
+        {flatFill}
+      </g>
     );
   }
 
@@ -143,6 +142,7 @@ export function FocusMarkLayered({ flatFoil = false }: { flatFoil?: boolean }) {
 
         <MarkFoilLayer
           flatFoil={flatFoil}
+          flatFill={<FocusMarkFlatFill />}
           maskId={maskId}
           x={0}
           y={0}
@@ -231,7 +231,20 @@ export function OnMarkLayered({ flatFoil = false }: { flatFoil?: boolean }) {
           </mask>
         </defs>
 
-        <MarkFoilLayer flatFoil={flatFoil} maskId={maskId} x={vb.x} y={vb.y} width={vb.w} height={vb.h} />
+        <MarkFoilLayer
+          flatFoil={flatFoil}
+          flatFill={
+            <>
+              <circle cx="26.801" cy="26.701" r="40" />
+              <circle cx="112.201" cy="26.701" r="40" />
+            </>
+          }
+          maskId={maskId}
+          x={vb.x}
+          y={vb.y}
+          width={vb.w}
+          height={vb.h}
+        />
 
         <g fill="none" stroke="currentColor" strokeWidth="0.25mm" vectorEffect="non-scaling-stroke">
           <circle cx="26.801" cy="26.701" r="40" />
@@ -282,6 +295,7 @@ export function ProjectMarkLayered({ flatFoil = false }: { flatFoil?: boolean })
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMinYMin meet"
         aria-hidden
+        data-pixel-mark-grid
         style={{ overflow: 'visible' }}
       >
         <defs>
@@ -302,6 +316,7 @@ export function ProjectMarkLayered({ flatFoil = false }: { flatFoil?: boolean })
 
         <MarkFoilLayer
           flatFoil={flatFoil}
+          flatFill={<ProjectMarkFlatFill />}
           maskId={maskId}
           x={PROJECT_MARK_X}
           y={PROJECT_MARK_Y}

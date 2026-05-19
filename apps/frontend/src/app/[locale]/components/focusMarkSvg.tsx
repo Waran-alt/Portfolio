@@ -25,6 +25,26 @@ const PATH_DS_NO_O: readonly string[] = [
   'M 295.8 48.1 L 267.5 48.1 L 267.5 39.7 L 295.8 39.7 L 295.8 48.1 Z',
 ];
 
+/** Solid navy letter shapes for WebKit face 0 (no `foreignObject` / mask rect). */
+export function FocusMarkFlatFill() {
+  return (
+    <>
+      <path d={PATH_DS_NO_O[0]!} />
+      <circle
+        cx={FOCUS_O_CX}
+        cy={FOCUS_O_CY}
+        r={FOCUS_O_R}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={FOCUS_O_STROKE_USER * 2}
+      />
+      {PATH_DS_NO_O.slice(1).map((d, i) => (
+        <path key={`rest-${i}`} d={d} />
+      ))}
+    </>
+  );
+}
+
 /** White-filled paths for `<mask>` holes (focus word silhouette). “o” = filled disk like `OnMarkLayered` masks. */
 export function FocusMarkMaskPaths() {
   return (

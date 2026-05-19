@@ -813,6 +813,18 @@
   margin-top: 15px;
 }
 
+/*
+ * WebKit/Safari only: same merged mark as other browsers at 54cqh (do not use ~45cqh — that shrinks
+ * “focus-on”). JS translate snaps “-pixel” to the face grid.
+ */
+.titleTriProjectWebKitSnap {
+  height: 54cqh;
+  transform: translate(
+    var(--pixel-mark-snap-x, 0px),
+    var(--pixel-mark-snap-y, 0px)
+  );
+}
+
 .titleTriProjectSvg {
   display: block;
   height: 100%;
@@ -1069,13 +1081,13 @@
   filter: saturate(1.62) contrast(1.2);
 }
 
-/* iOS face 0: flat navy chip (no holo pseudo-layers). */
-.cornerArrowIosFlat {
+/* WebKit face 0: flat navy chip (no holo pseudo-layers). */
+.cornerArrowFlatFoil {
   background: #0f172a;
 }
 
-.cornerArrowIosFlat::before,
-.cornerArrowIosFlat::after {
+.cornerArrowFlatFoil::before,
+.cornerArrowFlatFoil::after {
   content: none;
   display: none;
 }
