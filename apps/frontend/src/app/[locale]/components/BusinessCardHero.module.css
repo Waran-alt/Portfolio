@@ -160,11 +160,20 @@
   /* `100dvw` avoids iOS Safari treating `100vw` as wider than the visible viewport (horizontal bleed). */
   width: min(340px, calc(100dvw - 2.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   max-width: 100%;
-  min-height: 200px;
+  /* Landscape business-card ratio (340×214 design); without this, height collapses and marks clip. */
+  aspect-ratio: 340 / 214;
+  height: auto;
+  min-height: 0;
   margin-inline: auto;
   transform-style: preserve-3d;
   overflow: visible;
   /* The flip sets its own inline `transition`, so keep CSS transition off. */
+}
+
+@supports not (aspect-ratio: 1) {
+  .flipInner {
+    min-height: 214px;
+  }
 }
 
 /* Flex centering so tilt transforms don’t leave the card hugging the left edge on narrow viewports. */
@@ -246,9 +255,9 @@
   --contour-seed-foil-hatch-angle-offset: 0deg;
 }
 
-/* Tighter top inset when the stacked SVG title is shown so “focus” sits higher on the card. */
+/* Title face: inset room for lifted SVG marks (foil bleed + translateZ shadows). */
 .faceFront:has(.faceFrontTitleOnly) {
-  padding-top: 1.05rem;
+  padding: 1.35rem 1.45rem 1.5rem;
 }
 
 .pixelGridBg {
@@ -805,9 +814,9 @@
   align-items: flex-start;
   justify-content: flex-start;
   line-height: 1;
-  height: 54cqh;
+  height: min(54cqh, 52%);
   width: fit-content;
-  max-width: 100%;
+  max-width: calc(100% - 0.125rem);
   perspective: 380px;
   transform-style: preserve-3d;
   margin-top: 15px;
