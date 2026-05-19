@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type HTMLAttributes } from 'react';
 
 import rawFx from '@/features/card-effects/cardEffects.module.css';
 import rawStyles from './BusinessCardHero.module.css';
@@ -40,7 +40,57 @@ const fx = rawFx as Record<
   string
 >;
 
-export function FocusMarkLayered() {
+/** Flat fill on iOS face 0 (no `foreignObject` holo). Matches `.markFoilBg` mid-tone. */
+export const MARK_FLAT_NAVY = '#0f172a';
+
+type MarkFoilLayerProps = {
+  flatFoil: boolean;
+  maskId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+function MarkFoilLayer({ flatFoil, maskId, x, y, width, height }: MarkFoilLayerProps) {
+  if (flatFoil) {
+    return (
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={MARK_FLAT_NAVY}
+        mask={`url(#${maskId})`}
+      />
+    );
+  }
+
+  return (
+    <foreignObject x={x} y={y} width={width} height={height} mask={`url(#${maskId})`}>
+      <MarkFoilForeignObjectBody />
+    </foreignObject>
+  );
+}
+
+/** XHTML root for SVG `foreignObject` — required for reliable sizing/clipping on iOS Safari. */
+function MarkFoilForeignObjectBody() {
+  const rootProps = {
+    xmlns: 'http://www.w3.org/1999/xhtml',
+    className: fx.markFoilHost,
+    style: { display: 'block', width: '100%', height: '100%', overflow: 'hidden' as const },
+  } as HTMLAttributes<HTMLDivElement> & { xmlns: string };
+
+  return (
+    <div {...rootProps}>
+      <div className={fx.markFoilBg} />
+      <div className={fx.markFoilAmbient} />
+      <div className={fx.markFoilMasked} />
+    </div>
+  );
+}
+
+export function FocusMarkLayered({ flatFoil = false }: { flatFoil?: boolean }) {
   const id = useId();
   const maskId = `focusFoilMask-${id}`;
   const shadowMaskId = `focusFoilMaskShadow-${id}`;
@@ -91,13 +141,14 @@ export function FocusMarkLayered() {
           </mask>
         </defs>
 
-        <foreignObject x="0" y="0" width={FOCUS_MARK_W} height={FOCUS_MARK_H} mask={`url(#${maskId})`}>
-          <div className={fx.markFoilHost}>
-            <div className={fx.markFoilBg} />
-            <div className={fx.markFoilAmbient} />
-            <div className={fx.markFoilMasked} />
-          </div>
-        </foreignObject>
+        <MarkFoilLayer
+          flatFoil={flatFoil}
+          maskId={maskId}
+          x={0}
+          y={0}
+          width={FOCUS_MARK_W}
+          height={FOCUS_MARK_H}
+        />
 
         <g fill="none" stroke="currentColor" strokeWidth={FOCUS_O_STROKE_USER} vectorEffect="non-scaling-stroke">
           <circle cx={FOCUS_O_CX} cy={FOCUS_O_CY} r={FOCUS_O_R} fill="none" />
@@ -107,7 +158,7 @@ export function FocusMarkLayered() {
   );
 }
 
-export function OnMarkLayered() {
+export function OnMarkLayered({ flatFoil = false }: { flatFoil?: boolean }) {
   const id = useId();
   const maskId = `onHolesMask-${id}`;
   const shadowMaskId = `onHolesMaskShadow-${id}`;
@@ -180,13 +231,7 @@ export function OnMarkLayered() {
           </mask>
         </defs>
 
-        <foreignObject x={vb.x} y={vb.y} width={vb.w} height={vb.h} mask={`url(#${maskId})`}>
-          <div className={fx.markFoilHost}>
-            <div className={fx.markFoilBg} />
-            <div className={fx.markFoilAmbient} />
-            <div className={fx.markFoilMasked} />
-          </div>
-        </foreignObject>
+        <MarkFoilLayer flatFoil={flatFoil} maskId={maskId} x={vb.x} y={vb.y} width={vb.w} height={vb.h} />
 
         <g fill="none" stroke="currentColor" strokeWidth="0.25mm" vectorEffect="non-scaling-stroke">
           <circle cx="26.801" cy="26.701" r="40" />
@@ -197,7 +242,7 @@ export function OnMarkLayered() {
   );
 }
 
-export function ProjectMarkLayered() {
+export function ProjectMarkLayered({ flatFoil = false }: { flatFoil?: boolean }) {
   const id = useId();
   const maskId = `projectFoilMask-${id}`;
   const shadowMaskId = `projectFoilMaskShadow-${id}`;
@@ -255,19 +300,14 @@ export function ProjectMarkLayered() {
           </mask>
         </defs>
 
-        <foreignObject
+        <MarkFoilLayer
+          flatFoil={flatFoil}
+          maskId={maskId}
           x={PROJECT_MARK_X}
           y={PROJECT_MARK_Y}
           width={PROJECT_MARK_W}
           height={PROJECT_MARK_H}
-          mask={`url(#${maskId})`}
-        >
-          <div className={fx.markFoilHost}>
-            <div className={fx.markFoilBg} />
-            <div className={fx.markFoilAmbient} />
-            <div className={fx.markFoilMasked} />
-          </div>
-        </foreignObject>
+        />
 
         <ProjectMarkVisibleStrokes />
       </svg>

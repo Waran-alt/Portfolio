@@ -57,9 +57,11 @@
 
 .markFoilHost {
   position: relative;
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  /* Safari: HTML inside SVG `foreignObject` can paint outside the mask box without clipping. */
+  overflow: hidden;
 }
 
 .markFoilBg {
@@ -176,8 +178,11 @@
 .markLayered {
   position: relative;
   display: inline-block;
-  width: 100%;
+  /* Shrink-wrap SVG marks; `width: 100%` made Safari expand foil to the full card width. */
+  width: auto;
   height: 100%;
+  max-width: 100%;
+  vertical-align: top;
   transform-style: preserve-3d;
 }
 

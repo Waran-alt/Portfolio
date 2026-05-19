@@ -217,6 +217,16 @@
   overflow: visible;
 }
 
+/*
+ * iOS Safari: clip title-face bleed from `foreignObject` foil without flattening contact layout
+ * (contact uses `.faceContact` + `overflow: hidden` on the face).
+ */
+@supports (-webkit-touch-callout: none) {
+  .face.faceFront:not(.faceContact) {
+    overflow: hidden;
+  }
+}
+
 /* Contact face: masked laminate with contour strokes above foil. */
 .face.faceContact {
   /* Clip contact grid inside the card (iOS WebKit paints wide children outside the face). */
@@ -920,6 +930,9 @@
   height: 34px;
   transform-style: preserve-3d;
   pointer-events: none;
+  overflow: hidden;
+  border-radius: 9999px;
+  contain: layout paint;
 }
 
 .cornerArrow3dHost {
@@ -937,7 +950,7 @@
   filter: none;
 }
 
-/* Bottom-right “flip me” affordance: dark “back face” surface + same back holo as `.faceBack`. */
+/* Bottom-right “flip me” affordance: substrate + holo on the button (no nested absolute foils). */
 .cornerArrowFloating {
   position: relative;
   width: 100%;
@@ -952,13 +965,15 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   cursor: var(--landing-cursor-bright);
   color: rgba(241, 245, 249, 0.88);
-  background: transparent;
-  overflow: visible;
+  background: linear-gradient(155deg, #1e293b 0%, #0f172a 50%, #020617 100%);
+  overflow: hidden;
   transform-style: preserve-3d;
   z-index: 1;
+  isolation: isolate;
   /* Match back face holo origin (see `.faceBack`). */
   --foil-at-x: 108%;
   --foil-at-y: -8%;
+  --foil-angle: var(--foil-rotate-front);
   /* Depth: `translateZ` on `.cornerArrowDetachedFloat`; avoid hard offset rings at rest. */
   box-shadow:
     0 6px 12px -8px rgb(0 0 0 / 0.22),
@@ -970,24 +985,61 @@
     filter 220ms ease;
 }
 
-.cornerArrowStack {
+/* Holo on pseudo-elements so Safari never sizes `inset: -20%` foils to the card face. */
+.cornerArrowFloating::before,
+.cornerArrowFloating::after {
+  content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  overflow: hidden;
-  z-index: 0;
   pointer-events: none;
-  /* Keep foil blend modes contained without flattening the button’s 3D lift. */
-  isolation: isolate;
+  z-index: 0;
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0,
+      transparent 2px,
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(255, 255, 255, 0.04) 3px
+    ),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0,
+      transparent 6px,
+      rgba(255, 255, 255, 0.025) 6px,
+      rgba(255, 255, 255, 0.025) 7px
+    ),
+    conic-gradient(
+      from calc(var(--foil-angle) * 1deg) at var(--foil-at-x) var(--foil-at-y),
+      rgba(168, 85, 247, 0) 0deg,
+      rgba(56, 189, 248, 0.35) 55deg,
+      rgba(251, 191, 36, 0.3) 115deg,
+      rgba(244, 114, 182, 0.32) 175deg,
+      rgba(129, 140, 248, 0.28) 235deg,
+      rgba(45, 212, 191, 0.25) 295deg,
+      rgba(168, 85, 247, 0) 360deg
+    );
+  background-blend-mode: soft-light, soft-light, normal;
 }
 
-.cornerArrowFaceBg {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  z-index: 0;
-  background: linear-gradient(155deg, #1e293b 0%, #0f172a 50%, #020617 100%);
-  pointer-events: none;
+.cornerArrowFloating::before {
+  opacity: 0.14;
+  mix-blend-mode: color-dodge;
+  filter: saturate(1.12) contrast(1.02);
+}
+
+.cornerArrowFloating::after {
+  opacity: 0.3;
+  mix-blend-mode: color-dodge;
+  filter: saturate(1.25) contrast(1.05);
+}
+
+.cornerArrowChipFrontAngle {
+  --foil-angle: var(--foil-rotate-front);
+}
+
+.cornerArrowChipUsesBackAngle {
+  --foil-angle: var(--foil-rotate-back);
 }
 
 .cornerArrowFloatingLight {
@@ -996,22 +1048,36 @@
   color: rgba(15, 23, 42, 0.9);
   border-color: rgb(15 23 42 / 0.1);
   cursor: var(--landing-cursor-dark);
+  background: linear-gradient(155deg, #ffffff 0%, #f8fafc 42%, #e2e8f0 100%);
   box-shadow:
     0 4px 10px -6px rgb(15 23 42 / 0.1),
     inset 0 0 0 1px rgb(15 23 42 / 0.08),
     inset 0 1px 0 0 rgb(255 255 255 / 0.94);
 }
 
-.cornerArrowFaceBgLight {
-  background: linear-gradient(155deg, #ffffff 0%, #f8fafc 42%, #e2e8f0 100%);
+.cornerArrowFloatingLight::before {
+  mix-blend-mode: multiply;
+  background-blend-mode: normal;
+  opacity: 0.18;
+  filter: saturate(1.55) contrast(1.18);
 }
 
-.cornerArrowFloatingLight .cornerArrowStack {
-  isolation: auto;
+.cornerArrowFloatingLight::after {
+  mix-blend-mode: multiply;
+  background-blend-mode: normal;
+  opacity: 0.26;
+  filter: saturate(1.62) contrast(1.2);
 }
 
-.cornerArrowChipUsesBackAngle {
-  --foil-angle: var(--foil-rotate-back);
+/* iOS face 0: flat navy chip (no holo pseudo-layers). */
+.cornerArrowIosFlat {
+  background: #0f172a;
+}
+
+.cornerArrowIosFlat::before,
+.cornerArrowIosFlat::after {
+  content: none;
+  display: none;
 }
 
 .cornerArrowFloatingLight:hover {
@@ -1023,10 +1089,6 @@
     inset 0 1px 0 0 rgb(255 255 255 / 0.96);
 }
 
-.cornerArrowFloatingLight:hover .cornerArrowFaceBg {
-  filter: brightness(1.02);
-}
-
 .cornerArrowFloating:focus-visible {
   outline: 2px solid rgb(96 165 250);
   outline-offset: 4px;
@@ -1035,12 +1097,17 @@
 .cornerArrowFloating:hover {
   /* Hover choreography: rotate up, return, end with a small jiggle. */
   animation: cornerChipHover 320ms cubic-bezier(0.2, 1, 0.2, 1) both;
+  filter: brightness(1.06);
   box-shadow:
     0 34px 52px -14px rgb(0 0 0 / 0.68),
     0 20px 34px -12px rgb(0 0 0 / 0.48),
     0 8px 16px -4px rgb(0 0 0 / 0.4),
     inset 0 0 0 1px rgb(255 255 255 / 0.18),
     inset 0 1px 0 0 rgb(255 255 255 / 0.12);
+}
+
+.cornerArrowFloatingLight:hover {
+  filter: brightness(1.02);
 }
 
 .cornerArrowFloating:hover .cornerArrowSvg {
@@ -1055,8 +1122,45 @@
   display: block;
 }
 
-.cornerArrowFloating:hover .cornerArrowFaceBg {
-  filter: brightness(1.08);
+/* iOS Safari: drop chip `translateZ` hover (3D + blend modes bleed outside the 34px disc). */
+@supports (-webkit-touch-callout: none) {
+  .cornerArrow3dHost {
+    transform: none !important;
+    transform-style: flat;
+    perspective: none;
+    will-change: auto;
+  }
+
+  .cornerArrowDetachedFloat {
+    transform: none !important;
+    transform-style: flat;
+  }
+
+  .cornerArrowFloating {
+    transform-style: flat;
+  }
+
+  .cornerArrowFloating:hover {
+    animation-name: cornerChipHoverIos;
+  }
+}
+
+@keyframes cornerChipHoverIos {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  28% {
+    transform: rotate(40deg) scale(1.06);
+  }
+  62% {
+    transform: rotate(-15deg) scale(1.02);
+  }
+  84% {
+    transform: rotate(8deg) scale(1.04);
+  }
+  100% {
+    transform: rotate(0deg) scale(1.01);
+  }
 }
 
 @keyframes cornerChipHover {

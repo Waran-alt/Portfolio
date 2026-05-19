@@ -43,6 +43,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 /** Imported CSS module object; cast below so class names are checked against a fixed key union. */
 import { ContactQrCode } from '@/app/[locale]/components/ContactQrCode';
 import { useCardTiltAndFoil } from '@/features/card-effects';
+import { useIosDevice } from '@/hooks/useIosDevice';
 import rawFx from '@/features/card-effects/cardEffects.module.css';
 import rawStyles from './BusinessCardHero.module.css';
 import { FOCUS_MARK_VIEWBOX, FocusMarkVisiblePaths } from './focusMarkSvg';
@@ -624,10 +625,9 @@ const css = rawStyles as Record<
   | 'cornerArrowFloating'
   | 'cornerArrowDetachedFloat'
   | 'cornerArrowFloatingLight'
-  | 'cornerArrowStack'
-  | 'cornerArrowFaceBg'
-  | 'cornerArrowFaceBgLight'
+  | 'cornerArrowChipFrontAngle'
   | 'cornerArrowChipUsesBackAngle'
+  | 'cornerArrowIosFlat'
   | 'cornerArrowSvg',
   string
 >;
@@ -927,6 +927,9 @@ export function BusinessCardHero({
 
   /** Active face inside `flipInner` (0 title, 1 about, 2 contact); swapped at flip midpoint. */
   const [cardFace, setCardFace] = useState<CardFace>(0);
+  const isIos = useIosDevice();
+  /** iOS Safari: flat navy on title SVG + corner chip (face 0 only). */
+  const iosFace0FlatFoil = isIos && cardFace === 0;
   /** Face 1 (about) drives back-side holo variables; faces 0 and 2 use front holo. */
   const showingBackFoil = cardFace === 1;
   /** Mirrors OS “reduce motion”; when true, pointer-driven animation effect does not run. */
@@ -948,9 +951,8 @@ export function BusinessCardHero({
 
   const cardCursorClass = cardFace === 1 ? css.heroCursorBright : css.heroCursorDark;
   const cornerArrowChipLight = cardFace === 1 || cardFace === 2;
-  const cornerArrowChipFoilSubstrateClass = cornerArrowChipLight ? fx.foilSubstrateLight : '';
-  const cornerArrowChipFoilAngleClass =
-    cardFace === 1 ? css.cornerArrowChipUsesBackAngle : fx.foilChipUsesFrontAngle;
+  const cornerArrowChipAngleClass =
+    cardFace === 1 ? css.cornerArrowChipUsesBackAngle : css.cornerArrowChipFrontAngle;
 
   // --- Refs for pointer / animation (avoid re-renders on every move) ---
 
@@ -1670,13 +1672,13 @@ export function BusinessCardHero({
                           {titleFrontLayout.onIsSvg ? (
                             <>
                               <div className={css.titleTriProject}>
-                                <ProjectMarkLayered />
+                                <ProjectMarkLayered flatFoil={iosFace0FlatFoil} />
                               </div>
                             </>
                           ) : (
                             <>
                               <div className={css.titleTriFocus}>
-                                <FocusMarkLayered />
+                                <FocusMarkLayered flatFoil={iosFace0FlatFoil} />
                               </div>
                               <div className={css.titleTriRow2}>
                                 <div className={css.titleTriOn}>
@@ -1818,24 +1820,13 @@ export function BusinessCardHero({
 
                 {/* Floating “sub-container” affordance: every face; positioned relative to flipInner. */}
                 <div className={css.cornerArrowPerspective}>
-                    <div className={`${fx.parallaxTiltHost} ${fx.markLayered} ${css.cornerArrow3dHost}`}>
+                    <div className={`${fx.parallaxTiltHost} ${css.cornerArrow3dHost}`}>
                       <button
                         type="button"
-                        className={`${css.cornerArrowFloating} ${css.cornerArrowDetachedFloat} ${cornerArrowChipLight ? css.cornerArrowFloatingLight : ''}`}
+                        className={`${css.cornerArrowFloating} ${css.cornerArrowDetachedFloat} ${cornerArrowChipAngleClass} ${cornerArrowChipLight ? css.cornerArrowFloatingLight : ''} ${iosFace0FlatFoil ? css.cornerArrowIosFlat : ''}`}
                         onClick={toggleFlip}
                         aria-label={flipAriaLabel}
                       >
-                        <span className={css.cornerArrowStack} aria-hidden>
-                          <span
-                            className={`${css.cornerArrowFaceBg} ${cornerArrowChipLight ? css.cornerArrowFaceBgLight : ''}`}
-                          />
-                          <span
-                            className={`${fx.foilBackAmbient} ${cornerArrowChipFoilAngleClass} ${cornerArrowChipFoilSubstrateClass}`}
-                          />
-                          <span
-                            className={`${fx.foil} ${fx.foilBack} ${cornerArrowChipFoilAngleClass} ${cornerArrowChipFoilSubstrateClass}`}
-                          />
-                        </span>
                         <svg
                           className={css.cornerArrowSvg}
                           viewBox="0 0 24 24"
