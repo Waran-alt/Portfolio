@@ -32,7 +32,7 @@ EXPOSE 80 443
 ENTRYPOINT ["dumb-init", "--"]
 
 # Health check with better timeout
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=120s --timeout=5s --start-period=40s --retries=3 \
   CMD curl -f ${NGINX_URL}/health || exit 1
 
 # Development target (uses runtime certificate generation)

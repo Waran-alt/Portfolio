@@ -105,7 +105,7 @@ ENV FRONTEND_PORT=3000
 ENTRYPOINT ["dumb-init", "--"]
 
 # Health check with better timeout
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=120s --timeout=5s --start-period=40s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:${PORT:-3000} || exit 1
 
 # server.js is created by next build from the standalone output
@@ -131,7 +131,7 @@ RUN mkdir -p apps/frontend/src apps/frontend/public
 EXPOSE ${FRONTEND_PORT}
 
 # Health check for development
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=120s --timeout=5s --start-period=40s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider ${NGINX_URL}:${FRONTEND_PORT} || exit 1
 
 # Start development server (this should keep the container running)

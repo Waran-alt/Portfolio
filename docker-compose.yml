@@ -20,9 +20,10 @@ services:
       - portfolio_network    # Custom network for service communication
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]  # Check if PostgreSQL is ready to accept connections
-      interval: ${HEALTH_CHECK_INTERVAL:-30s}    # How often to run health check
-      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}      # How long to wait for health check
-      retries: ${HEALTH_CHECK_RETRIES:-3}        # Number of consecutive failures before marking unhealthy
+      interval: ${HEALTH_CHECK_INTERVAL:-120s}   # How often to run health check
+      timeout: ${HEALTH_CHECK_TIMEOUT:-5s}       # How long to wait for health check
+      retries: ${HEALTH_CHECK_RETRIES:-3}      # Consecutive failures before unhealthy
+      start_period: ${HEALTH_CHECK_START_PERIOD:-40s}
     labels:
       - "com.portfolio.service=postgres"         # Service identification
       - "com.portfolio.environment=development"  # Environment identification
@@ -64,9 +65,10 @@ services:
       - NODE_ENV=development # Force development environment
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'curl -f http://127.0.0.1:$${BACKEND_PORT}/api/health || exit 1'"]  # Check API health endpoint directly
-      interval: ${HEALTH_CHECK_INTERVAL:-30s}
-      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      interval: ${HEALTH_CHECK_INTERVAL:-120s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-5s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
+      start_period: ${HEALTH_CHECK_START_PERIOD:-40s}
     labels:
       - "com.portfolio.service=backend"
       - "com.portfolio.environment=development"
@@ -110,10 +112,10 @@ services:
       - WATCHPACK_POLLING_INTERVAL=1000
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:${FRONTEND_PORT} || exit 1"]  # Use IPv4 to avoid IPv6 issues
-      interval: ${HEALTH_CHECK_INTERVAL:-30s}
-      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      interval: ${HEALTH_CHECK_INTERVAL:-120s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-5s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
-      start_period: 60s      # Give Next.js more time to start up
+      start_period: ${HEALTH_CHECK_START_PERIOD:-40s}
     labels:
       - "com.portfolio.service=frontend"
       - "com.portfolio.environment=development"
@@ -150,9 +152,10 @@ services:
       - portfolio_network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://127.0.0.1/health || exit 1"]  # Check nginx health endpoint internally
-      interval: ${HEALTH_CHECK_INTERVAL:-30s}
-      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      interval: ${HEALTH_CHECK_INTERVAL:-120s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-5s}
       retries: ${HEALTH_CHECK_RETRIES:-3}
+      start_period: ${HEALTH_CHECK_START_PERIOD:-40s}
     labels:
       - "com.portfolio.service=nginx"
       - "com.portfolio.environment=development"

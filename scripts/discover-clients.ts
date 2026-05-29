@@ -207,10 +207,10 @@ function generateDockerComposeServices(clients: DiscoveredClient[]): { services:
       - BACKEND_URL=http://${backendServiceName}:${client.ports.backend}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:${client.ports.frontend} || exit 1"]
-      interval: \${HEALTH_CHECK_INTERVAL:-30s}
-      timeout: \${HEALTH_CHECK_TIMEOUT:-10s}
+      interval: \${HEALTH_CHECK_INTERVAL:-120s}
+      timeout: \${HEALTH_CHECK_TIMEOUT:-5s}
       retries: \${HEALTH_CHECK_RETRIES:-3}
-      start_period: 60s
+      start_period: \${HEALTH_CHECK_START_PERIOD:-40s}
     labels:
       - "com.portfolio.service=${serviceName}"
       - "com.portfolio.client=${client.id}"
@@ -249,9 +249,10 @@ function generateDockerComposeServices(clients: DiscoveredClient[]): { services:
       - POSTGRES_DB=${client.database.name}
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'curl -f http://127.0.0.1:${client.ports.backend}${client.backend?.healthPath ?? '/api/health'} || exit 1'"]
-      interval: \${HEALTH_CHECK_INTERVAL:-30s}
-      timeout: \${HEALTH_CHECK_TIMEOUT:-10s}
+      interval: \${HEALTH_CHECK_INTERVAL:-120s}
+      timeout: \${HEALTH_CHECK_TIMEOUT:-5s}
       retries: \${HEALTH_CHECK_RETRIES:-3}
+      start_period: \${HEALTH_CHECK_START_PERIOD:-40s}
     labels:
       - "com.portfolio.service=${backendServiceName}"
       - "com.portfolio.client=${client.id}"

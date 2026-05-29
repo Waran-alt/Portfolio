@@ -92,7 +92,7 @@ EXPOSE ${BACKEND_PORT}
 ENTRYPOINT ["dumb-init", "--"]
 
 # Health check with better timeout
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=120s --timeout=5s --start-period=40s --retries=3 \
   CMD curl -f ${NGINX_URL}:${BACKEND_PORT}/api/health || exit 1
 
 # Start the application
@@ -122,7 +122,7 @@ ENV PORT=${BACKEND_PORT}
 EXPOSE ${BACKEND_PORT} ${BACKEND_DEBUG_PORT}
 
 # Health check for development
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=120s --timeout=5s --start-period=40s --retries=3 \
   CMD curl -f ${NGINX_URL}:${BACKEND_PORT}/api/health || exit 1
 
 # Start development server with debugging
