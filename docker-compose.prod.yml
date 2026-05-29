@@ -1,4 +1,13 @@
 # Docker Compose v2 format (version field is obsolete)
+# CPU caps (~1.05 vCPU always-on): postgres 0.30 + backend 0.25 + frontend 0.25 + nginx 0.15 + redis 0.10.
+# On a 1 vCPU VPS shared with other apps, lower caps or run only docker-compose.deploy.yml (landing).
+# One-time host tuning: sudo bash scripts/hostinger-vps-docker-tuning.sh
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   # PostgreSQL Database
@@ -24,9 +33,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+    logging: *default-logging
     deploy:
       resources:
         limits:
+          cpus: "0.30"
           memory: 512M
         reservations:
           memory: 256M
@@ -64,9 +75,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+    logging: *default-logging
     deploy:
       resources:
         limits:
+          cpus: "0.25"
           memory: 512M
         reservations:
           memory: 256M
@@ -100,9 +113,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+    logging: *default-logging
     deploy:
       resources:
         limits:
+          cpus: "0.25"
           memory: 512M
         reservations:
           memory: 256M
@@ -138,9 +153,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+    logging: *default-logging
     deploy:
       resources:
         limits:
+          cpus: "0.15"
           memory: 256M
         reservations:
           memory: 128M
@@ -166,9 +183,11 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+    logging: *default-logging
     deploy:
       resources:
         limits:
+          cpus: "0.10"
           memory: 256M
         reservations:
           memory: 128M

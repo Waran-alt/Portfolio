@@ -298,6 +298,8 @@ For a **private** repo, add a [Hostinger deploy SSH key](https://www.hostinger.c
 
 **Nginx on the VPS:** use `tools/nginx/examples/focus-on-pixel.com.conf` as a starting point, then Certbot (or Hostinger SSL) and `nginx -t` / reload. Do not reuse another app’s ports on the same host (e.g. keep this landing on **3000** if another stack uses **3002** / **4002**).
 
+**Small VPS:** the landing compose caps CPU/RAM and rotates logs; on first setup (once per host, shared with other Docker apps) run `sudo bash scripts/hostinger-vps-docker-tuning.sh` over SSH. See [Docker guide](./documentation/DOCKER_README.md#git-deploy-vps-provider).
+
 **Manual deploy on the VPS** (project directory is often `/docker/portfolio`; Hostinger may materialize the file as `docker-compose.yml` rather than `docker-compose.deploy.yml`):
 
 ```bash
@@ -314,7 +316,7 @@ If the compose file is still named `docker-compose.deploy.yml`, use `docker comp
 
 ### Full stack (API + database)
 
-When you need the complete monorepo in production (Postgres, backend, internal Nginx), use `docker-compose.prod.yml` locally or on a VPS—not the Hostinger landing workflow above.
+When you need the complete monorepo in production (Postgres, backend, internal Nginx), use `docker-compose.prod.yml` locally or on a VPS—not the Hostinger landing workflow above. That file sets per-service CPU limits (~1.05 vCPU total) and the same log rotation as the landing deploy.
 
 ```bash
 # Build and start production environment

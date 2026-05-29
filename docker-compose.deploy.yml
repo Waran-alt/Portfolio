@@ -7,7 +7,15 @@
 # Notes:
 # - Binds to 127.0.0.1 so the app is not public without a reverse proxy.
 # - No Postgres, backend, or JWT secrets for this deploy mode.
+# - CPU/RAM caps keep the landing from saturating a small VPS shared with other stacks.
+# - One-time VPS tuning: sudo bash scripts/hostinger-vps-docker-tuning.sh
 name: portfolio-landing
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   frontend:
@@ -30,3 +38,9 @@ services:
       NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL:-https://focus-on-pixel.com}
     ports:
       - "127.0.0.1:3000:3000"
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 512M

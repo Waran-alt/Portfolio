@@ -306,6 +306,8 @@ docker compose -f docker-compose.deploy.yml up -d --build
 
 This deploy mode serves the public landing only (Next.js). Containers bind to `127.0.0.1` and your VPS reverse proxy handles `focus-on-pixel.com` and TLS. No Postgres, backend, or JWT secrets are required for this path.
 
+**Small VPS (shared with other Docker stacks):** `docker-compose.deploy.yml` caps the landing at **0.25 CPU** / **512M RAM** and rotates container logs (`json-file`, 10m × 3). Run once on the host as root: `sudo bash scripts/hostinger-vps-docker-tuning.sh` (serializes Docker layer downloads; shared with MemoOn-Card and other projects on the same VPS).
+
 An example Nginx vhost is available at `tools/nginx/examples/focus-on-pixel.com.conf`.
 
 ### Production Features
