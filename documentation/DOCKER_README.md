@@ -296,19 +296,21 @@ docker-compose -f docker-compose.prod.yml build
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-### Git deploy (VPS provider)
+### Hostinger / VPS production (recommended)
 
-If your VPS provider runs a deploy on each commit pushed, prefer the single-file compose setup:
+**Manual deploy via GitHub Actions** → GHCR pull on the VPS (`docker-compose.hostinger.yml`). See **[DEPLOYMENT-HOSTINGER.md](./DEPLOYMENT-HOSTINGER.md)**.
+
+### Local or emergency VPS build
 
 ```bash
 docker compose -f docker-compose.deploy.yml up -d --build
 ```
 
-This deploy mode serves the public landing only (Next.js). Containers bind to `127.0.0.1` and your VPS reverse proxy handles `focus-on-pixel.com` and TLS. No Postgres, backend, or JWT secrets are required for this path.
+Serves the public landing only (Next.js). Containers bind to `127.0.0.1`; host nginx handles `focus-on-pixel.com` and TLS. No Postgres, backend, or JWT secrets for this path.
 
-**Small VPS (shared with other Docker stacks):** `docker-compose.deploy.yml` caps the landing at **0.25 CPU** / **512M RAM** and rotates container logs (`json-file`, 10m × 3). Run once on the host as root: `sudo bash scripts/hostinger-vps-docker-tuning.sh` (serializes Docker layer downloads; shared with MemoOn-Card and other projects on the same VPS).
+**Small VPS:** both compose files cap the landing at **0.25 CPU** / **512M RAM** and rotate logs. One-time host tuning: `sudo bash scripts/hostinger-vps-docker-tuning.sh`.
 
-An example Nginx vhost is available at `tools/nginx/examples/focus-on-pixel.com.conf`.
+Example Nginx vhost: `tools/nginx/examples/focus-on-pixel.com.conf`.
 
 ### Production Features
 

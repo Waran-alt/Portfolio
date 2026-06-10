@@ -134,7 +134,8 @@ Portfolio/
 └── 🐳 Docker & Deployment
     ├── docker-compose.yml          # Development environment
     ├── docker-compose.prod.yml     # Full production stack (API + Postgres)
-    ├── docker-compose.deploy.yml   # Public landing only (Next.js)
+    ├── docker-compose.hostinger.yml # Hostinger prod (GHCR pull)
+    ├── docker-compose.deploy.yml   # Local / emergency VPS build (landing)
     └── Makefile                    # Convenient commands
 ```
 
@@ -278,9 +279,11 @@ The project uses service-specific environment files for secure configuration man
 
 ### Public landing (Hostinger / VPS)
 
-The default production path for **focus-on-pixel.com** deploys **only the Next.js landing** (`docker-compose.deploy.yml`). It does not start PostgreSQL, the Express API, or JWT/session secrets. The container listens on **127.0.0.1**; Nginx on the VPS terminates TLS and proxies to that port (default **3000**).
+The default production path for **focus-on-pixel.com** deploys **only the Next.js landing** (`docker-compose.hostinger.yml` — GHCR pull on the VPS). It does not start PostgreSQL, the Express API, or JWT/session secrets. The container listens on **127.0.0.1**; Nginx on the VPS terminates TLS and proxies to that port (default **3000**).
 
-**Automated deploy (GitHub Actions):** push to `main` runs `.github/workflows/deploy-hostinger.yml` via Hostinger’s `deploy-on-vps` action (`project-name: portfolio`).
+**CI:** push to `main` runs `.github/workflows/ci.yml` (lint, frontend build, audit).
+
+**Production deploy (manual):** after CI is green, run **Actions → Deploy landing to Hostinger → Run workflow** (`.github/workflows/deploy-hostinger.yml`). Images are built on GitHub Actions, pushed to **GHCR**, and the VPS **pulls** them — no Docker build on the host. First deploy: check **`force_full`**. Full procedure: [DEPLOYMENT-HOSTINGER.md](./documentation/DEPLOYMENT-HOSTINGER.md).
 
 Configure in the GitHub repo under **Settings → Secrets and variables → Actions → Repository** (not Environment):
 
@@ -298,17 +301,17 @@ For a **private** repo, add a [Hostinger deploy SSH key](https://www.hostinger.c
 
 **Nginx on the VPS:** use `tools/nginx/examples/focus-on-pixel.com.conf` as a starting point, then Certbot (or Hostinger SSL) and `nginx -t` / reload. Do not reuse another app’s ports on the same host (e.g. keep this landing on **3000** if another stack uses **3002** / **4002**).
 
-**Small VPS:** the landing compose caps CPU/RAM and rotates logs; on first setup (once per host, shared with other Docker apps) run `sudo bash scripts/hostinger-vps-docker-tuning.sh` over SSH. See [Docker guide](./documentation/DOCKER_README.md#git-deploy-vps-provider).
+**Small VPS:** `docker-compose.hostinger.yml` caps CPU/RAM and rotates logs; prune is project-scoped. On first host setup (once, shared with MemoOn-Card / other stacks) run `sudo bash scripts/hostinger-vps-docker-tuning.sh` over SSH. See [DEPLOYMENT-HOSTINGER.md](./documentation/DEPLOYMENT-HOSTINGER.md).
 
-**Manual deploy on the VPS** (project directory is often `/docker/portfolio`; Hostinger may materialize the file as `docker-compose.yml` rather than `docker-compose.deploy.yml`):
+**Emergency rebuild on the VPS** (slow on small VPS — prefer the GitHub deploy workflow):
 
 ```bash
 cd /docker/portfolio
-docker compose build --no-cache frontend
-docker compose up -d
+docker compose -f docker-compose.deploy.yml build --no-cache frontend
+docker compose -f docker-compose.deploy.yml up -d
 ```
 
-If the compose file is still named `docker-compose.deploy.yml`, use `docker compose -f docker-compose.deploy.yml` instead.
+Normal prod updates use `docker-compose.hostinger.yml` via the manual GitHub workflow (see [DEPLOYMENT-HOSTINGER.md](./documentation/DEPLOYMENT-HOSTINGER.md)).
 
 **Checks:** `https://focus-on-pixel.com/fr` (landing). If the site does not update after a push, inspect the Hostinger build log on the VPS (often `.build.log` under the project directory) and `docker logs portfolio_frontend_deploy`.
 

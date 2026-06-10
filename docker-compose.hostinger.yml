@@ -1,0 +1,116 @@
+# Hostinger production — pull pre-built landing image from GHCR (no build on VPS).
+# Built and pushed by .github/workflows/deploy-hostinger.yml (manual Run workflow).
+# Required env (injected by deploy workflow): FRONTEND_IMAGE, FRONTEND_IMAGE_TAG, plus app vars.
+#
+# Post-deploy: one-shot `post-deploy-prune` removes old portfolio GHCR images via docker.sock.
+# Local / emergency rebuild on VPS: docker-compose.deploy.yml (build on host).
+# Host nginx terminates TLS and proxies to 127.0.0.1:3000 (see tools/nginx/examples/).
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  frontend:
+    image: ${FRONTEND_IMAGE:?Set FRONTEND_IMAGE}:${FRONTEND_IMAGE_TAG:?Set FRONTEND_IMAGE_TAG}
+    pull_policy: missing
+    container_name: portfolio_frontend_deploy
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${FRONTEND_PORT:-3000}
+      HOSTNAME: "0.0.0.0"
+      NGINX_URL: http://127.0.0.1
+      NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL:-https://focus-on-pixel.com}
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 512M
+
+  # One-shot after each deploy: prune unused portfolio GHCR images on the VPS (docker.sock).
+  # POSIX sh only — Hostinger syncs the compose file, not scripts/. Manual SSH: scripts/vps-prune-project-images.sh
+  post-deploy-prune:
+    image: docker:27-cli
+    pull_policy: missing
+    environment:
+      PROJECT_SLUG: portfolio
+      KEEP_UNUSED: ${VPS_PRUNE_KEEP_UNUSED:-1}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      frontend:
+        condition: service_started
+    network_mode: none
+    logging: *default-logging
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.15"
+          memory: 128M
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        # POSIX sh only (docker:27-cli has no bash; avoid apk — network may be blocked on VPS)
+        PROJECT_SLUG="$${PROJECT_SLUG:-portfolio}"
+        KEEP_UNUSED="$${KEEP_UNUSED:-1}"
+        DRY_RUN="$${DRY_RUN:-0}"
+        case "$$KEEP_UNUSED" in
+          ''|*[!0-9]*) echo "KEEP_UNUSED must be a non-negative integer (got: $$KEEP_UNUSED)" >&2; exit 1 ;;
+        esac
+        echo "==> Prune project images: $$PROJECT_SLUG (KEEP_UNUSED=$$KEEP_UNUSED, DRY_RUN=$$DRY_RUN)"
+        IN_USE=""
+        for ref in $$(docker ps -a --filter "name=$$PROJECT_SLUG" --format '{{.Image}}' 2>/dev/null); do
+          [ -n "$$ref" ] || continue
+          id=$$(docker image inspect --format '{{.Id}}' "$$ref" 2>/dev/null || echo "")
+          [ -n "$$id" ] || continue
+          IN_USE="$$IN_USE $$id "
+        done
+        echo "    Images in use by $$PROJECT_SLUG containers: $$(echo "$$IN_USE" | wc -w | tr -d ' ')"
+        removed=0
+        kept=0
+        for pattern in "ghcr.io/*/portfolio-frontend"; do
+          list=$$(mktemp)
+          docker image ls "$$pattern" --format '{{.ID}}|{{.Repository}}:{{.Tag}}|{{.CreatedAt}}' 2>/dev/null \
+            | sort -t'|' -k3 -r >"$$list" || true
+          if [ ! -s "$$list" ]; then
+            echo "    No images for pattern: $$pattern"
+            rm -f "$$list"
+            continue
+          fi
+          unused_kept=0
+          while IFS='|' read -r id ref _created; do
+            [ -n "$$id" ] || continue
+            case " $$IN_USE " in
+              *" $$id "*) echo "    keep (in use): $$ref"; kept=$$((kept + 1)); continue ;;
+            esac
+            if [ "$$unused_kept" -lt "$$KEEP_UNUSED" ]; then
+              echo "    keep (history): $$ref"
+              unused_kept=$$((unused_kept + 1))
+              kept=$$((kept + 1))
+              continue
+            fi
+            if [ "$$DRY_RUN" = "1" ]; then
+              echo "    would remove: $$ref ($$id)"
+            else
+              echo "    remove: $$ref"
+              docker rmi "$$ref" 2>/dev/null || docker rmi -f "$$id" 2>/dev/null || true
+            fi
+            removed=$$((removed + 1))
+          done <"$$list"
+          rm -f "$$list"
+        done
+        if [ "$$DRY_RUN" = "1" ]; then
+          dangling=$$(docker images -f "dangling=true" -q 2>/dev/null | wc -l | tr -d ' ')
+          echo "    dangling layers (not removed in dry-run): $$dangling"
+        else
+          docker image prune -f >/dev/null 2>&1 || true
+        fi
+        echo "==> Done: kept=$$kept removed=$$removed"

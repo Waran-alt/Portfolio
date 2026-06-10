@@ -1,7 +1,10 @@
-# Git-deploy friendly compose file for the public landing (Next.js only).
+# Local / emergency VPS build for the public landing (Next.js only).
+#
+# Hostinger production (GHCR pull, no VPS build): docker-compose.hostinger.yml
+# Deploy: manual workflow .github/workflows/deploy-hostinger.yml — see documentation/DEPLOYMENT-HOSTINGER.md
 #
 # Intended use:
-# - Push to main → Hostinger / VPS runs `docker compose -f docker-compose.deploy.yml up -d --build`
+# - Local prod-like run or SSH fallback: `docker compose -f docker-compose.deploy.yml up -d --build`
 # - VPS nginx routes https://focus-on-pixel.com → 127.0.0.1:3000
 #
 # Notes:

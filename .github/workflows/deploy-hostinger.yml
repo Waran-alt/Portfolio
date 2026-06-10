@@ -1,24 +1,204 @@
-# Deploy the public landing (Next.js only) on push to main.
+# Deploy Portfolio landing to Hostinger VPS (manual, targeted).
 #
-# One-time setup: Settings → Secrets and variables → Actions → Repository.
-# - Secret: HOSTINGER_API_KEY
-# - Variables: HOSTINGER_VM_ID, NEXT_PUBLIC_FRONTEND_URL, FRONTEND_PORT (optional)
+# Trigger: workflow_dispatch only. CI (.github/workflows/ci.yml) does not deploy.
+#
+# Secrets, variables, VPS setup, and deploy procedure:
+#   documentation/DEPLOYMENT-HOSTINGER.md
+#
+# Compose on VPS: docker-compose.hostinger.yml (GHCR pull, no build on VPS).
 
 name: Deploy landing to Hostinger
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch, tag, or SHA). Empty = default branch HEAD."
+        required: false
+        default: ""
+      force_full:
+        description: "Rebuild and redeploy the frontend image (ignore path filter)."
+        type: boolean
+        default: false
+
+concurrency:
+  group: hostinger-deploy-portfolio
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
+
+env:
+  DOCKER_BUILDKIT: "1"
 
 jobs:
-  deploy:
-    name: Deploy
+  plan:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.sha.outputs.value }}
+      skip_deploy: ${{ steps.plan.outputs.skip_deploy }}
+      build_frontend: ${{ steps.plan.outputs.build_frontend }}
+      frontend_tag: ${{ steps.plan.outputs.frontend_tag }}
+      frontend_image: ${{ steps.image.outputs.frontend }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Resolve commit SHA
+        id: sha
+        run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve GHCR image name
+        id: image
+        run: |
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "frontend=ghcr.io/${owner}/portfolio-frontend" >> "$GITHUB_OUTPUT"
+
+      - name: Restore deploy baseline cache
+        uses: actions/cache/restore@v4
+        with:
+          path: deploy-baseline.json
+          key: deploy-baseline-${{ github.repository }}
+          restore-keys: |
+            deploy-baseline-${{ github.repository }}
+
+      - name: Read deploy baseline
+        id: baseline
+        env:
+          VAR_SHA: ${{ vars.LAST_DEPLOYED_SHA }}
+          VAR_FRONTEND: ${{ vars.LAST_DEPLOYED_FRONTEND_TAG }}
+        run: |
+          last_sha=""
+          last_frontend=""
+          if [[ -f deploy-baseline.json ]]; then
+            last_sha=$(jq -r '.sha // empty' deploy-baseline.json)
+            last_frontend=$(jq -r '.frontend_tag // empty' deploy-baseline.json)
+          fi
+          [[ -z "$last_sha" && -n "$VAR_SHA" ]] && last_sha="$VAR_SHA"
+          [[ -z "$last_frontend" && -n "$VAR_FRONTEND" ]] && last_frontend="$VAR_FRONTEND"
+          {
+            echo "sha=$last_sha"
+            echo "frontend_tag=$last_frontend"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Detect changed paths
+        if: ${{ !inputs.force_full && steps.baseline.outputs.sha != '' }}
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          base: ${{ steps.baseline.outputs.sha }}
+          filters: |
+            frontend:
+              - 'apps/frontend/**'
+              - 'packages/shared/**'
+              - 'packages/i18n/**'
+              - 'package.json'
+              - 'yarn.lock'
+              - '.yarnrc.yml'
+            stack:
+              - 'docker-compose.hostinger.yml'
+              - '.github/workflows/deploy-hostinger.yml'
+
+      - name: Plan deploy scope and image tag
+        id: plan
+        env:
+          SHA: ${{ steps.sha.outputs.value }}
+          LAST_SHA: ${{ steps.baseline.outputs.sha }}
+          LAST_FRONTEND: ${{ steps.baseline.outputs.frontend_tag }}
+          FORCE_FULL: ${{ inputs.force_full }}
+          CHANGED_FRONTEND: ${{ steps.changes.outputs.frontend }}
+          CHANGED_STACK: ${{ steps.changes.outputs.stack }}
+        run: |
+          build_frontend=false
+
+          if [[ "$FORCE_FULL" == "true" || -z "$LAST_SHA" ]]; then
+            build_frontend=true
+          else
+            [[ "$CHANGED_FRONTEND" == "true" || "$CHANGED_STACK" == "true" ]] && build_frontend=true
+          fi
+
+          frontend_tag="${LAST_FRONTEND:-$LAST_SHA}"
+          $build_frontend && frontend_tag="$SHA"
+
+          skip=false
+          if [[ "$build_frontend" != "true" ]]; then
+            skip=true
+          fi
+
+          {
+            echo "skip_deploy=$skip"
+            echo "build_frontend=$build_frontend"
+            echo "frontend_tag=$frontend_tag"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "## Deploy plan" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`$SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Skip deploy: **$skip**" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Build frontend: **$build_frontend** → tag \`$frontend_tag\`" >> "$GITHUB_STEP_SUMMARY"
+
+  build-and-push:
+    needs: plan
+    if: needs.plan.outputs.skip_deploy != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/frontend/Dockerfile
+          target: runner
+          push: true
+          tags: |
+            ${{ needs.plan.outputs.frontend_image }}:${{ needs.plan.outputs.sha }}
+            ${{ needs.plan.outputs.frontend_image }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_FRONTEND_URL=${{ vars.NEXT_PUBLIC_FRONTEND_URL || 'https://focus-on-pixel.com' }}
+          cache-from: type=gha,scope=portfolio-frontend
+          cache-to: type=gha,mode=max,scope=portfolio-frontend
+
+  deploy:
+    needs: [plan, build-and-push]
+    if: needs.plan.outputs.skip_deploy != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+
+      - name: Validate Hostinger compose uses GHCR pull (no VPS build)
+        run: |
+          COMPOSE="${{ vars.HOSTINGER_COMPOSE_FILE || 'docker-compose.hostinger.yml' }}"
+          test -f "$COMPOSE" || { echo "Compose file not found: $COMPOSE"; exit 1; }
+          grep -q 'FRONTEND_IMAGE' "$COMPOSE" || { echo "Missing FRONTEND_IMAGE in $COMPOSE"; exit 1; }
+          if grep -qE '^\s+build:' "$COMPOSE"; then
+            echo "::error::$COMPOSE must not build on the VPS (use GHCR pull)."
+            exit 1
+          fi
 
       - name: Deploy to Hostinger VPS
         uses: hostinger/deploy-on-vps@v2
@@ -26,9 +206,52 @@ jobs:
           api-key: ${{ secrets.HOSTINGER_API_KEY }}
           virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
           project-name: portfolio
-          docker-compose-path: docker-compose.deploy.yml
+          docker-compose-path: ${{ vars.HOSTINGER_COMPOSE_FILE || 'docker-compose.hostinger.yml' }}
           environment-variables: |
             NODE_ENV=production
+            GIT_SHA=${{ needs.plan.outputs.sha }}
+            FRONTEND_IMAGE=${{ needs.plan.outputs.frontend_image }}
+            FRONTEND_IMAGE_TAG=${{ needs.plan.outputs.frontend_tag }}
             FRONTEND_PORT=${{ vars.FRONTEND_PORT || '3000' }}
             NEXT_PUBLIC_FRONTEND_URL=${{ vars.NEXT_PUBLIC_FRONTEND_URL || 'https://focus-on-pixel.com' }}
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            VPS_PRUNE_KEEP_UNUSED=${{ vars.VPS_PRUNE_KEEP_UNUSED || '1' }}
+
+  prune-ghcr:
+    needs: [plan, deploy]
+    if: needs.plan.outputs.skip_deploy != 'true' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+
+      - name: Prune old GHCR package versions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_VERSIONS: ${{ vars.GHCR_PRUNE_KEEP_VERSIONS || '2' }}
+          DEPLOYED_TAGS: ${{ needs.plan.outputs.frontend_tag }}
+          PACKAGE_NAMES: portfolio-frontend
+        run: bash scripts/ghcr-prune-project-packages.sh
+
+  record-deploy:
+    needs: [plan, deploy]
+    if: needs.plan.outputs.skip_deploy != 'true' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Save deploy baseline (Actions cache)
+        run: |
+          jq -n \
+            --arg sha "${{ needs.plan.outputs.sha }}" \
+            --arg frontend_tag "${{ needs.plan.outputs.frontend_tag }}" \
+            '{sha: $sha, frontend_tag: $frontend_tag}' \
+            > deploy-baseline.json
+          cat deploy-baseline.json
+
+      - name: Persist deploy baseline cache
+        uses: actions/cache/save@v4
+        with:
+          path: deploy-baseline.json
+          key: deploy-baseline-${{ github.repository }}

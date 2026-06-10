@@ -2,19 +2,20 @@ name: CI
 
 on:
   push:
-    branches: ['**'] # Run on pushes to all branches
+    branches: ['**']
   pull_request:
     branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'yarn'
@@ -24,6 +25,12 @@ jobs:
 
       - name: Run code quality checks
         run: yarn code-quality:check
+
+      - name: Build frontend
+        run: yarn build:frontend
+        env:
+          NEXT_PUBLIC_FRONTEND_URL: https://focus-on-pixel.com
+          NEXT_PUBLIC_API_URL: ''
 
       - name: Run security audit
         run: yarn npm audit
