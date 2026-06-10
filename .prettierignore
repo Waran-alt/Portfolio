@@ -2,6 +2,10 @@
 node_modules/
 .pnp
 .pnp.js
+.yarn/sdks/
+
+# Editor / tooling (not application source)
+.cursor/
 
 # Build outputs
 dist/

@@ -13,11 +13,11 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to deploy (branch, tag, or SHA). Empty = default branch HEAD."
+        description: 'Git ref to deploy (branch, tag, or SHA). Empty = default branch HEAD.'
         required: false
-        default: ""
+        default: ''
       force_full:
-        description: "Rebuild and redeploy the frontend image (ignore path filter)."
+        description: 'Rebuild and redeploy the frontend image (ignore path filter).'
         type: boolean
         default: false
 
@@ -31,7 +31,7 @@ permissions:
   actions: read
 
 env:
-  DOCKER_BUILDKIT: "1"
+  DOCKER_BUILDKIT: '1'
 
 jobs:
   plan:
