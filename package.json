@@ -53,6 +53,7 @@
     "build:all": "yarn build",
     "clean:all": "yarn clean",
     "build:frontend": "yarn workspace @portfolio/frontend build",
+    "build:landing": "yarn workspace @portfolio/shared build && yarn workspace @portfolio/frontend build",
     "build:backend": "yarn workspace @portfolio/backend build",
     "test:frontend": "yarn workspace @portfolio/frontend test",
     "test:backend": "yarn workspace @portfolio/backend test",

@@ -47,9 +47,9 @@ jobs:
           FRONTEND_IMAGE_TAG=ci \
           docker compose -f docker-compose.hostinger.yml config --quiet
 
-      - name: Build frontend (Next.js landing)
+      - name: Build landing (shared + Next.js)
         timeout-minutes: 15
-        run: yarn build:frontend
+        run: yarn build:landing
         env:
           NEXT_PUBLIC_FRONTEND_URL: https://focus-on-pixel.com
           NEXT_PUBLIC_API_URL: ''

@@ -10,7 +10,7 @@ image from **GHCR** — no Docker build on the host.
 
 ## Flow
 
-1. **Push to `main`** → workflow **CI** runs (lint, `yarn build:frontend`, audit).
+1. **Push to `main`** → workflow **CI** runs (`yarn build:landing`, compose validate, audit).
 2. **Deploy is manual** → **Actions → Deploy landing to Hostinger → Run workflow** (after CI is
    green).
 3. Workflow builds the frontend image on GitHub Actions, pushes to GHCR, Hostinger VPS **pulls** and
